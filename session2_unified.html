@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2차시: 비밀을 지켜라 - 통합 학습앱</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1a1a2e;--ink2:#4a4a68;--ink3:#8888a4;
+  --bg:#f7f7fb;--card:#fff;--border:#ebebf0;
+  --theme:#a855f7;--theme-light:#faf5ff;--theme-dark:#9333ea;
+  --ok:#10b981;--ok-light:#ecfdf5;
+  --err:#f43f5e;--err-light:#fff1f2;
+  --warn:#f59e0b;--warn-light:#fffbeb;
+  --shadow:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.06);
+  --radius:14px;
+  --font:'Pretendard','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'Fira Code','Consolas',monospace;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:15px;line-height:1.75;
+  padding-top:60px;padding-bottom:48px;min-height:100vh}
+
+/* ===== STICKY NAV ===== */
+.sticky-nav{
+  position:fixed;top:0;left:0;right:0;height:56px;background:#fff;
+  border-bottom:1px solid var(--border);display:flex;align-items:center;
+  padding:0 16px;z-index:200;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,.04);
+}
+.nav-title{font-weight:800;font-size:15px;color:var(--theme);white-space:nowrap;letter-spacing:-.2px;flex-shrink:0}
+.nav-progress{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;min-width:40px;margin:0 8px}
+.nav-progress-fill{height:100%;background:linear-gradient(90deg,var(--theme),var(--ok));border-radius:3px;transition:width .5s ease;width:0%}
+.nav-dots{display:flex;gap:4px;flex-shrink:0}
+.nav-dot{
+  width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;border:2px solid var(--border);color:var(--ink3);
+  background:#fff;cursor:default;transition:all .25s ease;user-select:none;
+}
+.nav-dot.locked{opacity:.5}
+.nav-dot.unlocked{border-color:var(--theme);color:var(--theme);background:var(--theme-light);cursor:pointer}
+.nav-dot.unlocked:hover{transform:scale(1.1);box-shadow:0 2px 8px rgba(168,85,247,.25)}
+.nav-dot.active{border-color:var(--theme-dark);color:#fff;background:var(--theme);cursor:pointer;transform:scale(1.05)}
+.nav-dot.done{border-color:var(--ok);color:#fff;background:var(--ok);cursor:pointer}
+
+main{max-width:820px;margin:0 auto;padding:24px 20px}
+
+/* ===== SECTION ===== */
+.app-section{display:none;animation:fadeIn .35s ease}
+.app-section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-4px)}}
+@keyframes celebrate{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes popIn{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+
+.section-header{margin-bottom:20px}
+.section-badge{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 12px;border-radius:20px;
+  font-size:12px;font-weight:700;letter-spacing:.01em;margin-bottom:8px;
+}
+.badge-warmup{background:#fef9ed;color:#a16207}
+.badge-concept{background:var(--theme-light);color:var(--theme)}
+.badge-explore{background:#eef0ff;color:#4338ca}
+.badge-deepen{background:#f5f0ff;color:#7c3aed}
+.badge-challenge{background:#fef2f2;color:#b91c1c}
+.badge-reflect{background:var(--ok-light);color:#15803d}
+.badge-buffer{background:#fff7ed;color:#c2410c}
+.section-header h2{font-size:clamp(20px,3.5vw,26px);font-weight:800;line-height:1.35;color:var(--ink)}
+.section-header p.subtitle{font-size:15px;color:var(--ink2);margin-top:4px}
+
+/* ===== CARD ===== */
+.card{
+  background:var(--card);border-radius:var(--radius);border:1px solid var(--border);
+  box-shadow:var(--shadow);padding:24px;margin-bottom:20px;
+}
+.card h4{font-size:16px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;color:var(--ink)}
+.card .num{
+  background:var(--theme);color:#fff;width:26px;height:26px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;
+}
+
+/* ===== LAYOUT A: Zone ===== */
+.layout-zone .zone-concept{
+  background:var(--theme-light);border-left:3px solid var(--theme);
+  padding:16px 20px;border-radius:10px;margin:12px 0;font-size:15px;
+}
+.layout-zone .zone-activity{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;
+}
+
+/* ===== LAYOUT B: Card Flow ===== */
+.cardflow-steps{display:flex;gap:8px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+.cardflow-dot{
+  width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;transition:all .25s ease;position:relative;cursor:pointer;
+}
+.cardflow-dot.locked{background:var(--bg);color:var(--ink3);border:2px solid var(--border);cursor:default}
+.cardflow-dot.active{background:var(--theme);color:#fff;border:2px solid var(--theme);transform:scale(1.1);box-shadow:0 2px 12px rgba(168,85,247,.3)}
+.cardflow-dot.done{background:var(--ok);color:#fff;border:2px solid var(--ok);cursor:pointer}
+.cardflow-dot-label{position:absolute;top:44px;font-size:10px;color:var(--ink3);white-space:nowrap;font-weight:600}
+.cardflow-card{display:none;animation:fadeIn .3s ease}
+.cardflow-card.active{display:block}
+
+/* ===== LAYOUT C: Split Panel ===== */
+.layout-split{display:grid;grid-template-columns:2fr 3fr;gap:20px;align-items:start}
+.split-left{
+  position:sticky;top:72px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);max-height:calc(100vh - 88px);overflow-y:auto;
+}
+.split-right{min-width:0}
+
+/* ===== LAYOUT D: Mission Board ===== */
+.mission-header{text-align:center;padding:16px 0 20px}
+.mission-xp-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin:8px 0}
+.mission-xp-fill{height:100%;background:linear-gradient(90deg,var(--theme),var(--ok));border-radius:4px;transition:width .6s ease}
+.mission-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:24px;margin-bottom:16px;box-shadow:var(--shadow);
+}
+
+/* ===== BOXES ===== */
+.info-box{background:var(--theme-light);border-left:3px solid var(--theme);padding:14px 18px;border-radius:10px;margin:12px 0;font-size:15px}
+.warn-box{background:var(--warn-light);border-left:3px solid var(--warn);padding:14px 18px;border-radius:10px;margin:12px 0;font-size:14px}
+.success-box{background:var(--ok-light);border-left:3px solid var(--ok);padding:14px 18px;border-radius:10px;margin:12px 0;font-size:15px}
+.err-box{background:var(--err-light);border-left:3px solid var(--err);padding:14px 18px;border-radius:10px;margin:12px 0;font-size:14px}
+.quote-box{background:#f8f9fa;border-left:3px solid var(--ink3);padding:16px 20px;border-radius:10px;margin:12px 0;font-style:italic;font-size:15px;color:var(--ink2)}
+
+/* ===== INPUTS ===== */
+textarea{
+  width:100%;border:2px solid var(--border);border-radius:10px;padding:12px 14px;
+  font-family:var(--font);font-size:15px;line-height:1.65;resize:vertical;min-height:72px;
+  color:var(--ink);background:var(--card);transition:border-color .2s,box-shadow .2s;
+}
+textarea:focus{border-color:var(--theme);outline:none;box-shadow:0 0 0 3px rgba(168,85,247,.12)}
+.inline-input{
+  display:inline-block;border:none;border-bottom:2px solid var(--border);
+  width:60px;text-align:center;font-family:var(--font);font-size:inherit;font-weight:700;
+  color:var(--theme);background:transparent;padding:2px 4px;transition:border-color .2s;
+}
+.inline-input:focus{outline:none;border-bottom-color:var(--theme)}
+.inline-input.correct{border-bottom-color:var(--ok);color:var(--ok)}
+.inline-input.incorrect{border-bottom-color:var(--err);color:var(--err);animation:shake .4s}
+.inline-input.wide{width:120px}
+.digit-input{
+  width:44px;height:44px;text-align:center;font-family:var(--mono);font-size:20px;font-weight:700;
+  border:2px solid var(--border);border-radius:8px;transition:all .2s ease;background:#fff;color:var(--ink);
+}
+.digit-input:focus{border-color:var(--theme);outline:none;box-shadow:0 0 0 3px rgba(168,85,247,.15)}
+.digit-input.correct{border-color:var(--ok);background:var(--ok-light)}
+.digit-input.incorrect{border-color:var(--err);background:var(--err-light);animation:shake .4s}
+
+/* ===== TABLE ===== */
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+th,td{border:1px solid var(--border);padding:10px 12px;text-align:center}
+th{background:transparent;color:var(--ink);font-weight:700;font-size:13px;border-bottom:2px solid var(--border)}
+td{background:var(--card);color:var(--ink)}
+
+/* Alpha Reference Table */
+.alpha-ref{font-size:11px;margin:8px 0}
+.alpha-ref th{padding:5px 4px;font-size:12px;font-weight:800;color:var(--theme);border-bottom:2px solid rgba(168,85,247,.2)}
+.alpha-ref td{padding:4px;font-family:var(--mono);font-weight:600;color:var(--ink2)}
+
+/* ===== FLOATING ALPHA TABLE ===== */
+.alpha-fab{
+  position:fixed;bottom:24px;right:24px;z-index:900;
+  width:52px;height:52px;border-radius:50%;
+  background:var(--theme);color:#fff;border:none;cursor:pointer;
+  font-size:18px;font-weight:800;box-shadow:0 4px 16px rgba(168,85,247,.35);
+  transition:all .2s ease;display:flex;align-items:center;justify-content:center;
+}
+.alpha-fab:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(168,85,247,.45)}
+.alpha-fab.open{border-radius:14px 14px 0 0;width:auto;padding:0 20px;height:40px;bottom:auto;right:auto}
+.alpha-panel{
+  position:fixed;bottom:84px;right:16px;z-index:899;
+  background:#fff;border:2px solid var(--theme);border-radius:14px;
+  padding:14px 16px;box-shadow:0 8px 32px rgba(0,0,0,.12);
+  transform:translateY(20px);opacity:0;pointer-events:none;
+  transition:all .25s ease;max-width:calc(100vw - 32px);
+}
+.alpha-panel.visible{transform:translateY(0);opacity:1;pointer-events:auto}
+.alpha-panel .alpha-grid{
+  display:grid;grid-template-columns:repeat(13,1fr);gap:2px;font-size:11px;text-align:center;
+}
+.alpha-panel .alpha-grid .letter{
+  background:var(--theme);color:#fff;font-weight:700;padding:5px 3px;border-radius:5px 5px 0 0;
+}
+.alpha-panel .alpha-grid .number{
+  background:var(--theme-light);color:var(--theme-dark);font-weight:600;padding:4px 3px;border-radius:0 0 5px 5px;
+}
+.alpha-panel-title{font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.alpha-panel-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--ink3);padding:0 4px}
+
+/* ===== BUTTONS ===== */
+.btn{
+  padding:12px 28px;border-radius:10px;font-size:15px;font-weight:600;border:none;cursor:pointer;
+  transition:all .2s ease;min-height:44px;display:inline-flex;align-items:center;gap:8px;font-family:var(--font);
+}
+.btn-primary{background:var(--theme);color:#fff}
+.btn-primary:hover{background:var(--theme-dark);transform:translateY(-1px);box-shadow:0 4px 12px rgba(168,85,247,.3)}
+.btn-primary:disabled{background:var(--ink3);cursor:not-allowed;transform:none;box-shadow:none}
+.btn-secondary{background:#fff;color:var(--theme);border:1.5px solid var(--theme)}
+.btn-secondary:hover{background:var(--theme-light)}
+.btn-success{background:var(--ok);color:#fff}
+.btn-success:hover{background:#059669}
+.btn-sm{padding:8px 18px;font-size:14px;border-radius:8px}
+.btn-complete{
+  display:none;width:100%;padding:14px;border-radius:12px;font-size:16px;font-weight:700;
+  border:none;cursor:pointer;background:var(--theme);color:#fff;margin-top:24px;font-family:var(--font);
+  transition:all .2s ease;
+}
+.btn-complete:hover{background:var(--theme-dark);transform:translateY(-1px)}
+.choice-group{display:flex;gap:10px;margin:8px 0;flex-wrap:wrap}
+.choice-btn{
+  padding:9px 22px;border:2px solid var(--border);border-radius:10px;background:var(--card);
+  cursor:pointer;font-size:14px;font-weight:600;color:var(--ink);transition:all .2s ease;font-family:var(--font);
+}
+.choice-btn:hover{border-color:var(--theme);background:var(--theme-light);color:var(--theme)}
+.choice-btn.selected{border-color:var(--theme);background:var(--theme);color:#fff}
+
+/* Caesar Wheel */
+.wheel-container{text-align:center;margin:16px 0}
+.wheel-container svg{max-width:340px;width:100%;cursor:grab}
+.wheel-controls{display:flex;align-items:center;gap:12px;justify-content:center;margin:12px 0}
+.wheel-controls input[type=range]{flex:1;max-width:200px;accent-color:var(--theme)}
+.cipher-display{
+  font-family:var(--mono);font-size:clamp(16px,3vw,22px);font-weight:700;
+  letter-spacing:2px;text-align:center;padding:14px;background:var(--theme-light);
+  border-radius:10px;margin:12px 0;color:var(--theme);word-break:break-all;
+}
+.plain-display{
+  font-family:var(--mono);font-size:clamp(16px,3vw,22px);font-weight:700;
+  letter-spacing:2px;text-align:center;padding:14px;background:var(--ok-light);
+  border-radius:10px;margin:12px 0;color:var(--ok);word-break:break-all;
+}
+
+/* Arrow Mapping */
+.arrow-container{text-align:center;margin:12px 0}
+.arrow-container svg{max-width:280px;width:100%}
+.slider-row{display:flex;align-items:center;gap:8px;margin:8px 0;flex-wrap:wrap}
+.slider-row label{font-weight:700;font-size:14px;white-space:nowrap}
+.slider-row input[type=range]{flex:1;accent-color:var(--theme)}
+.slider-row .val{font-family:var(--mono);font-weight:800;color:var(--theme);min-width:28px;text-align:center}
+.collision-warn{color:var(--err);font-size:13px;font-weight:600;margin-top:4px;min-height:20px}
+
+/* Brute Force */
+.brute-list{max-height:300px;overflow-y:auto;font-family:var(--mono);font-size:13px;
+  border:1px solid var(--border);border-radius:10px;padding:8px;margin:12px 0;background:var(--bg)}
+.brute-item{padding:6px 10px;border-radius:6px;margin:2px 0;cursor:pointer;transition:background .15s}
+.brute-item:hover{background:var(--theme-light)}
+.brute-item.found{background:var(--ok-light);font-weight:700;border:1px solid var(--ok)}
+
+/* Assess table */
+.assess-table{width:100%;border-collapse:collapse;margin:14px 0}
+.assess-table th,.assess-table td{border:1px solid var(--border);padding:12px 10px;text-align:center;font-size:14px}
+.assess-table th{background:transparent;color:var(--ink);font-weight:700;border-bottom:2px solid var(--border)}
+.assess-table input[type=radio]{width:18px;height:18px;cursor:pointer;accent-color:var(--theme)}
+
+/* XP Toast & Badge */
+.xp-toast{
+  position:fixed;bottom:24px;right:24px;z-index:300;
+  background:var(--theme);color:#fff;padding:12px 22px;border-radius:12px;
+  font-weight:700;font-size:15px;box-shadow:0 8px 24px rgba(168,85,247,.3);
+  transform:translateY(100px);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;
+}
+.xp-toast.show{transform:translateY(0);opacity:1}
+.xp-badge{
+  position:fixed;bottom:24px;left:24px;z-index:250;
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:8px 16px;font-size:13px;font-weight:700;color:var(--theme);
+  box-shadow:var(--shadow);display:flex;align-items:center;gap:6px;
+}
+.xp-badge .xp-val{font-size:18px;color:var(--ok)}
+
+.eq{font-family:'Cambria Math','Times New Roman',serif;font-size:17px;font-style:italic}
+.eq-block{text-align:center;margin:12px 0;font-size:17px;font-family:'Cambria Math','Times New Roman',serif}
+.mono{font-family:var(--mono)}
+details{margin-top:8px}
+details summary{cursor:pointer;color:var(--warn);font-weight:600;font-size:14px;padding:4px 0}
+details summary:hover{color:#d97706}
+
+/* Coprime Grid */
+.coprime-grid{display:grid;grid-template-columns:repeat(13,1fr);gap:4px;margin:12px 0}
+.coprime-cell{
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;
+  cursor:pointer;transition:all .2s;user-select:none;
+}
+.coprime-cell.header{background:var(--theme-light);color:var(--theme);cursor:default;font-size:11px}
+.coprime-cell.coprime{background:var(--ok-light);border-color:var(--ok);color:var(--ok)}
+.coprime-cell.not-coprime{background:var(--err-light);border-color:var(--err);color:var(--err)}
+
+/* Responsive */
+@media(max-width:700px){
+  .layout-split{grid-template-columns:1fr}
+  .split-left{position:static;max-height:none}
+}
+@media(max-width:600px){
+  .sticky-nav{padding:0 10px;gap:6px}
+  .nav-title{font-size:13px}
+  .nav-dot{width:24px;height:24px;font-size:10px}
+  main{padding:16px 12px}
+  .card{padding:18px 16px}
+  table{font-size:12px}
+  th,td{padding:7px 5px}
+  .digit-input{width:36px;height:36px;font-size:16px}
+  .cardflow-dot{width:34px;height:34px;font-size:12px}
+  .xp-badge{bottom:12px;left:12px;padding:6px 12px;font-size:12px}
+  .xp-toast{bottom:12px;right:12px;padding:10px 16px;font-size:13px}
+  .btn{padding:10px 20px;font-size:14px}
+  .coprime-grid{grid-template-columns:repeat(13,1fr);gap:2px}
+  .coprime-cell{font-size:10px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== STICKY NAV ===== -->
+<nav class="sticky-nav">
+  <span class="nav-title">2차시: 비밀을 지켜라</span>
+  <div class="nav-progress"><div class="nav-progress-fill" id="progressFill"></div></div>
+  <div class="nav-dots" id="navDots"></div>
+</nav>
+
+<!-- XP Badge -->
+<div class="xp-badge">&#x2B50; XP <span class="xp-val" id="xpDisplay">0</span></div>
+<div class="xp-toast" id="xpToast"></div>
+
+<!-- ===== FLOATING ALPHA TABLE ===== -->
+<button class="alpha-fab" id="alphaFab" onclick="toggleAlphaPanel()" title="알파벳-숫자 대응표">A&#x2194;0</button>
+<div class="alpha-panel" id="alphaPanel">
+  <div class="alpha-panel-title">
+    <span>알파벳-숫자 대응표</span>
+    <button class="alpha-panel-close" onclick="toggleAlphaPanel()">&times;</button>
+  </div>
+  <div class="alpha-grid" id="floatingAlphaGrid"></div>
+</div>
+
+<main>
+
+<!-- ============================================================ -->
+<!-- SECTION 1: Alphabet Reference + Intro (Split Panel) -->
+<!-- ============================================================ -->
+<section id="sec-1" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-concept">&#x1F520; 대응표</span>
+    <h2>알파벳-숫자 대응표</h2>
+    <p class="subtitle">이 수업 내내 사용하는 핵심 참조표입니다</p>
+  </div>
+  <div class="layout-split">
+    <div class="split-left">
+      <h4 style="font-size:14px;margin-bottom:8px;color:var(--theme)">&#x1F4CB; A-Z &#x2194; 0-25</h4>
+      <table class="alpha-ref">
+        <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th><th>K</th><th>L</th><th>M</th></tr>
+        <tr><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td></tr>
+      </table>
+      <table class="alpha-ref">
+        <tr><th>N</th><th>O</th><th>P</th><th>Q</th><th>R</th><th>S</th><th>T</th><th>U</th><th>V</th><th>W</th><th>X</th><th>Y</th><th>Z</th></tr>
+        <tr><td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td><td>20</td><td>21</td><td>22</td><td>23</td><td>24</td><td>25</td></tr>
+      </table>
+      <div class="info-box" style="margin-top:12px;font-size:13px">
+        <strong>핵심</strong>: 글자를 숫자로 바꾸면 수학 연산으로 암호를 만들 수 있습니다!
+      </div>
+    </div>
+    <div class="split-right">
+      <div class="card">
+        <h4>&#x1F44B; 2차시에 오신 것을 환영합니다!</h4>
+        <p>1차시에서 mod 연산으로 오류를 잡았다면, 이번에는 <strong>비밀 메시지를 만드는 법</strong>을 배웁니다.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:16px;text-align:center">
+          <div style="padding:14px;background:var(--theme-light);border-radius:10px">
+            <div style="font-size:24px">&#x2795;</div>
+            <div style="font-weight:700;font-size:13px;margin-top:4px">시저 암호</div>
+            <div style="font-size:12px;color:var(--ink3)">더하기</div>
+          </div>
+          <div style="padding:14px;background:#f0fdf4;border-radius:10px">
+            <div style="font-size:24px">&#x2716;</div>
+            <div style="font-weight:700;font-size:13px;margin-top:4px">곱하기 암호</div>
+            <div style="font-size:12px;color:var(--ink3)">서로소</div>
+          </div>
+          <div style="padding:14px;background:#fef2f2;border-radius:10px">
+            <div style="font-size:24px">&#x1F500;</div>
+            <div style="font-weight:700;font-size:13px;margin-top:4px">아핀 암호</div>
+            <div style="font-size:12px;color:var(--ink3)">합체!</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="SM.complete(1)" style="width:100%">시작하기 &#x2192;</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: Warmup (Zone) -->
+<!-- ============================================================ -->
+<section id="sec-2" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-warmup">W 워밍업</span>
+    <h2>지난 시간을 떠올리며</h2>
+  </div>
+  <div class="layout-zone">
+    <div class="card">
+      <h4><span class="num">1</span> W-1. mod 연산 복습</h4>
+      <table>
+        <tr><th>문제</th><th>답</th></tr>
+        <tr><td style="text-align:left">(a) 17 mod 5</td><td><input class="inline-input" data-save="w1a" data-answer="2" type="text" placeholder="?"></td></tr>
+        <tr><td style="text-align:left">(b) 30 mod 26</td><td><input class="inline-input" data-save="w1b" data-answer="4" type="text" placeholder="?"></td></tr>
+        <tr><td style="text-align:left">(c) 52 mod 26</td><td><input class="inline-input" data-save="w1c" data-answer="0" type="text" placeholder="?"></td></tr>
+        <tr><td style="text-align:left">(d) (7 + 21) mod 26</td><td><input class="inline-input" data-save="w1d" data-answer="2" type="text" placeholder="?"></td></tr>
+      </table>
+      <div style="text-align:right;margin-top:8px">
+        <button class="btn btn-sm btn-primary" onclick="VH.checkSection(2)">&#x2714; 확인</button>
+      </div>
+      <div id="sec2-result"></div>
+    </div>
+    <div class="card">
+      <h4><span class="num">2</span> W-2. 연결 질문</h4>
+      <div class="quote-box">"mod 연산이 오류를 잡을 수 있다면, <strong>비밀 메시지를 만드는 데</strong>도 쓸 수 있을까?"</div>
+      <textarea rows="3" placeholder="나의 아이디어:"></textarea>
+    </div>
+    <button class="btn btn-complete" id="sec2-complete-btn" onclick="SM.complete(2)" style="display:block">다음 섹션으로 &#x2192;</button>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: Caesar Cipher (Card Flow - 4 Steps) -->
+<!-- ============================================================ -->
+<section id="sec-3" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-explore">E1 탐구</span>
+    <h2>더하기 암호 (시저 암호)</h2>
+    <p class="subtitle">로마의 시저가 사용했던 가장 오래된 암호</p>
+  </div>
+  <div class="layout-cardflow">
+    <div class="cardflow-steps" id="cf3-steps">
+      <div class="cardflow-dot active" data-step="1" onclick="CF3.goTo(1)">1<span class="cardflow-dot-label">시저 휠</span></div>
+      <div class="cardflow-dot locked" data-step="2" onclick="CF3.goTo(2)">2<span class="cardflow-dot-label">공식</span></div>
+      <div class="cardflow-dot locked" data-step="3" onclick="CF3.goTo(3)">3<span class="cardflow-dot-label">연습</span></div>
+      <div class="cardflow-dot locked" data-step="4" onclick="CF3.goTo(4)">4<span class="cardflow-dot-label">약점</span></div>
+    </div>
+
+    <!-- Step 1: Caesar Wheel -->
+    <div class="cardflow-card active" id="cf3-card-1">
+      <div class="card">
+        <h4>&#x1F3A1; 시저 휠로 해독하기</h4>
+        <p>암호문: <strong class="mono" style="font-size:18px;color:var(--err)">"DWWDFN DW GDZQ"</strong></p>
+        <p style="margin-top:8px;color:var(--ink2)">안쪽 원을 돌려서 의미 있는 문장을 찾아보세요!</p>
+        <div class="wheel-container">
+          <svg id="caesarWheel" viewBox="0 0 400 400" width="340" height="340"></svg>
+        </div>
+        <div class="wheel-controls">
+          <span style="font-weight:700;font-size:14px">k = <span id="wheelKeyDisplay">0</span></span>
+          <input type="range" id="wheelSlider" min="0" max="25" value="0">
+        </div>
+        <div id="m1DecryptResult" class="cipher-display">DWWDFN DW GDZQ</div>
+        <div style="text-align:center;margin-top:12px">
+          <button class="btn btn-success" onclick="checkWheelAnswer()">&#x2705; 이게 원문이다!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Formula + CODE -->
+    <div class="cardflow-card" id="cf3-card-2">
+      <div class="card">
+        <h4>&#x1F4D0; 시저 암호의 공식</h4>
+        <div class="info-box"><strong>암호화</strong>: E(x) &equiv; (x + k) mod 26 &nbsp;&nbsp;(k는 비밀 키)</div>
+        <p style="margin-top:12px"><strong>k = 7</strong>일 때 <strong class="mono">"CODE"</strong>를 암호화하세요.</p>
+        <table>
+          <tr><th>원래</th><td>C</td><td>O</td><td>D</td><td>E</td></tr>
+          <tr><th>번호</th><td><input class="inline-input" style="width:40px" data-answer="2" data-save="c_n1" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="14" data-save="c_n2" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="3" data-save="c_n3" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="4" data-save="c_n4" type="text"></td></tr>
+          <tr><th>+7 mod26</th><td><input class="inline-input" style="width:40px" data-answer="9" data-save="c_s1" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="21" data-save="c_s2" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="10" data-save="c_s3" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="11" data-save="c_s4" type="text"></td></tr>
+          <tr><th>암호</th><td><input class="inline-input" style="width:40px" data-answer="J" data-save="c_c1" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="V" data-save="c_c2" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="K" data-save="c_c3" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="L" data-save="c_c4" type="text"></td></tr>
+        </table>
+        <div style="text-align:right;margin-top:8px">
+          <button class="btn btn-sm btn-primary" onclick="checkCaesarFormula()">&#x2714; 확인</button>
+        </div>
+        <div id="cf3s2-result"></div>
+      </div>
+    </div>
+
+    <!-- Step 3: Decrypt KHOOR + Practice -->
+    <div class="cardflow-card" id="cf3-card-3">
+      <div class="card">
+        <h4>&#x1F504; 복호화 &mdash; 거꾸로 되돌리기</h4>
+        <div class="info-box"><strong>복호화</strong>: D(y) &equiv; (y &minus; k + 26) mod 26</div>
+        <p style="margin-top:12px">암호문 <strong class="mono">"KHOOR"</strong>을 k = 3으로 복호화하세요.</p>
+        <table>
+          <tr><th>암호</th><td>K</td><td>H</td><td>O</td><td>O</td><td>R</td></tr>
+          <tr><th>번호</th><td><input class="inline-input" style="width:40px" data-answer="10" data-save="d_n1" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="7" data-save="d_n2" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="14" data-save="d_n3" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="14" data-save="d_n4" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="17" data-save="d_n5" type="text"></td></tr>
+          <tr><th>&minus;3+26 mod26</th><td><input class="inline-input" style="width:40px" data-answer="7" data-save="d_s1" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="4" data-save="d_s2" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="11" data-save="d_s3" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="11" data-save="d_s4" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="14" data-save="d_s5" type="text"></td></tr>
+          <tr><th>원문</th><td><input class="inline-input" style="width:40px" data-answer="H" data-save="d_c1" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="E" data-save="d_c2" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="L" data-save="d_c3" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="L" data-save="d_c4" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="O" data-save="d_c5" type="text"></td></tr>
+        </table>
+        <div style="text-align:right;margin-top:8px">
+          <button class="btn btn-sm btn-primary" onclick="checkDecrypt()">&#x2714; 확인</button>
+        </div>
+        <div id="cf3s3-result"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h4>&#x1F4DD; 자유 연습</h4>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+          <div class="choice-group">
+            <button class="choice-btn selected" onclick="setPracticeMode('encrypt',this)">&#x1F512; 암호화</button>
+            <button class="choice-btn" onclick="setPracticeMode('decrypt',this)">&#x1F513; 복호화</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <label style="font-weight:700;font-size:14px">k =</label>
+            <input type="number" id="practiceK" value="5" min="0" max="25" style="width:50px;padding:6px;border:2px solid var(--border);border-radius:8px;text-align:center;font-weight:700" oninput="doPractice()">
+          </div>
+        </div>
+        <input type="text" id="practiceInput" placeholder="메시지를 입력하세요 (영문)" style="width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;font-size:16px;font-family:var(--mono)" oninput="doPractice()">
+        <div id="practiceOutput" class="cipher-display" style="margin-top:12px">결과가 여기 표시됩니다</div>
+        <div style="text-align:center;margin-top:12px">
+          <button class="btn btn-sm btn-secondary" onclick="CF3.unlock(4)">다음: 시저 암호의 약점 &#x2192;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Brute Force Weakness -->
+    <div class="cardflow-card" id="cf3-card-4">
+      <div class="card">
+        <h4>&#x1F4A5; 시저 암호의 약점</h4>
+        <p>(a) 가능한 키의 수: <input class="inline-input" data-save="bf_keys" data-answer="25" type="text" placeholder="?">개</p>
+        <p style="margin-top:12px">(b) 전부 시도하면 원문을 찾을 수 있나요?</p>
+        <div class="choice-group">
+          <button class="choice-btn" onclick="toggleChoice(this)">네</button>
+          <button class="choice-btn" onclick="toggleChoice(this)">아니오</button>
+        </div>
+      </div>
+      <div class="card">
+        <h4>&#x1F50D; 전수조사 체험</h4>
+        <p style="color:var(--ink2);margin-bottom:8px">암호문 "KHOOR"의 모든 가능한 복호화를 봅니다:</p>
+        <button class="btn btn-sm btn-primary" onclick="caesarBrute()">&#x25B6; 전수조사 실행</button>
+        <div class="brute-list" id="caesarBruteList" style="display:none"></div>
+      </div>
+      <div class="card">
+        <p><strong>(c)</strong> 시저 암호가 전수조사에 약한 이유:</p>
+        <textarea rows="2" placeholder="이유를 써보세요"></textarea>
+      </div>
+      <button class="btn-complete" id="cf3-complete-btn" onclick="SM.complete(3)">다음 섹션으로 &#x2192;</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: Multiplicative Cipher (Split Panel) -->
+<!-- ============================================================ -->
+<section id="sec-4" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-explore">E2 탐구</span>
+    <h2>곱하기 암호 &mdash; "되는 수"와 "안 되는 수"</h2>
+  </div>
+  <div class="layout-split">
+    <div class="split-left">
+      <h4 style="font-size:14px;margin-bottom:8px;color:var(--theme)">&#x1F3AF; 화살표 매핑</h4>
+      <div class="slider-row">
+        <label>a =</label>
+        <input type="range" id="multSlider" min="1" max="25" value="5" oninput="updateArrowMap()">
+        <span class="val" id="multVal">5</span>
+      </div>
+      <div class="arrow-container">
+        <svg id="arrowSvg" viewBox="0 0 260 520" width="260"></svg>
+      </div>
+      <div class="collision-warn" id="collisionWarn"></div>
+      <div class="info-box" style="font-size:13px;margin-top:8px">
+        <strong>빨간 화살표</strong> = 충돌! 서로 다른 글자가 같은 곳으로 가면 복호화 불가
+      </div>
+    </div>
+    <div class="split-right">
+      <div class="card">
+        <h4><span class="num">4</span> E-4. 곱하기로 암호 만들기</h4>
+        <div class="info-box"><strong>암호화</strong>: E(x) &equiv; (x &times; a) mod 26</div>
+        <p style="margin-top:12px"><strong>a = 5</strong>일 때 <strong class="mono">"DOG"</strong>를 암호화하세요.</p>
+        <table>
+          <tr><th>원래</th><td>D</td><td>O</td><td>G</td></tr>
+          <tr><th>번호</th><td><input class="inline-input" style="width:40px" data-answer="3" data-save="m_n1" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="14" data-save="m_n2" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="6" data-save="m_n3" type="text"></td></tr>
+          <tr><th>&times;5 mod26</th><td><input class="inline-input" style="width:40px" data-answer="15" data-save="m_s1" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="18" data-save="m_s2" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="4" data-save="m_s3" type="text"></td></tr>
+          <tr><th>암호</th><td><input class="inline-input" style="width:40px" data-answer="P" data-save="m_c1" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="S" data-save="m_c2" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="E" data-save="m_c3" type="text"></td></tr>
+        </table>
+        <div style="text-align:right;margin-top:8px">
+          <button class="btn btn-sm btn-primary" onclick="checkMultiply()">&#x2714; 확인</button>
+        </div>
+        <div id="sec4-result"></div>
+      </div>
+      <div class="card">
+        <h4><span class="num">5</span> E-5. 문제 발생!</h4>
+        <p><strong>a = 2</strong>일 때 N(13번)을 계산:</p>
+        <p class="mono" style="margin:12px 0">13 &times; 2 = 26, &nbsp; 26 &equiv; <input class="inline-input" data-answer="0" data-save="col_r" type="text" placeholder="?"> (mod 26) &rarr; 글자: <input class="inline-input" data-answer="A" data-save="col_l" type="text" placeholder="?"></p>
+        <div class="err-box">A(0번)도 0, N(13번)도 0! 서로 다른 글자가 같은 암호문이 됩니다!</div>
+        <p style="margin-top:12px">복호화할 때 어떤 문제가 생길까요?</p>
+        <textarea rows="2" placeholder="문제를 설명해보세요"></textarea>
+      </div>
+      <div class="card">
+        <h4><span class="num">6</span> E-6. 패턴 찾기</h4>
+        <p>왼쪽 슬라이더로 a = 1~25를 실험하고 아래 표를 채우세요.</p>
+        <div style="overflow-x:auto">
+          <table style="font-size:12px">
+            <tr><th>a</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td><td>13</td></tr>
+            <tr><th>O/X</th><td style="color:var(--ok);font-weight:700">O</td><td style="color:var(--err);font-weight:700">X</td><td><input class="inline-input" style="width:28px;font-size:12px" data-answer="O" data-save="ox3" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" data-answer="X" data-save="ox4" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" data-answer="O" data-save="ox5" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" data-answer="X" data-save="ox6" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" data-answer="O" data-save="ox7" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" data-answer="X" data-save="ox8" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" data-answer="O" data-save="ox9" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" data-answer="X" data-save="ox10" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" data-answer="O" data-save="ox11" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" data-answer="X" data-save="ox12" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" data-answer="X" data-save="ox13" type="text"></td></tr>
+          </table>
+        </div>
+        <p style="margin-top:12px">O인 수들: <input class="inline-input wide" data-save="coprime_list" type="text" style="width:220px" placeholder="1, 3, 5, ..."></p>
+        <p style="margin-top:8px">X인 수들의 공통점:</p>
+        <textarea rows="2" placeholder="공통점을 써보세요"></textarea>
+        <div class="info-box" style="margin-top:12px">
+          두 수의 공약수가 1뿐일 때 <strong>서로소</strong>라 합니다.<br>
+          "키 a가 사용 가능하려면 a와 26이 <input class="inline-input wide" data-save="coprime_def" type="text" placeholder="???">이어야 한다."
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="SM.complete(4)" style="width:100%">다음 섹션으로 &#x2192;</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 5: Coprime Deep (Zone) -->
+<!-- ============================================================ -->
+<section id="sec-5" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-deepen">D 심화</span>
+    <h2>왜 서로소여야 하는가?</h2>
+  </div>
+  <div class="layout-zone">
+    <div class="card">
+      <h4><span class="num">1</span> D-1. 겹침의 원인 추적</h4>
+      <table>
+        <tr><th>a와 26의 관계</th><th>글자 대응의 성질</th><th>복호화?</th></tr>
+        <tr><td>서로소</td><td>일대일 대응 (겹침 없음)</td><td style="color:var(--ok);font-weight:700">가능</td></tr>
+        <tr><td>서로소 아님</td><td><input class="inline-input wide" style="width:200px" data-save="d1_answer" type="text" placeholder="???"></td><td style="color:var(--err);font-weight:700">불가능</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h4><span class="num">2</span> D-2. 서로소인 수 세기</h4>
+      <p>26 = 2 &times; 13이므로 1~25 사이에서:</p>
+      <p style="margin:8px 0">2의 배수: <input class="inline-input" data-save="d2a" data-answer="12" type="text" placeholder="?">개 &nbsp;|&nbsp; 13의 배수: <input class="inline-input" data-save="d2b" data-answer="1" type="text" placeholder="?">개</p>
+      <p>26과 서로소인 수의 개수 = 25 &minus; <input class="inline-input" data-save="d2c" data-answer="12" type="text" placeholder="?"> &minus; <input class="inline-input" data-save="d2d" data-answer="1" type="text" placeholder="?"> = <input class="inline-input" data-save="d2e" data-answer="12" type="text" placeholder="?">개</p>
+      <div style="text-align:right;margin-top:8px">
+        <button class="btn btn-sm btn-primary" onclick="VH.checkSection(5)">&#x2714; 확인</button>
+      </div>
+      <div id="sec5-result"></div>
+      <div class="info-box" style="margin-top:12px">
+        "n 이하에서 n과 서로소인 수의 개수"를 <strong>오일러 파이 함수 &phi;(n)</strong>이라 합니다.<br>
+        여기서는 <strong>&phi;(26) = 12</strong>. 4차시에서 다시 만납니다!
+      </div>
+    </div>
+    <div class="card">
+      <h4><span class="num">3</span> D-3. 역원이란?</h4>
+      <p><strong>3 &times; ? &equiv; 1 (mod 26)</strong> 을 만족하는 수를 찾으세요.</p>
+      <table style="font-size:13px">
+        <tr><th>3&times;1</th><th>3&times;2</th><th>3&times;3</th><th>3&times;4</th><th>3&times;5</th><th>3&times;6</th><th>3&times;7</th><th>3&times;8</th><th>3&times;9</th></tr>
+        <tr><td>3</td><td>6</td><td>9</td><td>12</td><td>15</td><td>18</td><td>21</td><td>24</td><td><input class="inline-input" style="width:40px" data-save="d3a" data-answer="27" type="text" placeholder="?"></td></tr>
+      </table>
+      <p style="margin-top:12px">3 &times; 9 = 27 &equiv; <input class="inline-input" data-save="d3b" data-answer="1" type="text" placeholder="?"> (mod 26) &rarr; 3의 <strong>역원</strong>(mod 26)은 <input class="inline-input" data-save="d3c" data-answer="9" type="text" placeholder="?"></p>
+      <div class="info-box" style="margin-top:12px">
+        <strong>역원</strong>: a &times; a<sup>&minus;1</sup> &equiv; 1 (mod 26)을 만족하는 수.<br>
+        서로소인 수는 반드시 역원이 존재합니다. 이 역원이 <strong>복호화의 열쇠</strong>입니다!
+      </div>
+    </div>
+    <button class="btn btn-complete" onclick="SM.complete(5)" style="display:block">다음 섹션으로 &#x2192;</button>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 6: Affine Cipher (Card Flow - 3 Steps) -->
+<!-- ============================================================ -->
+<section id="sec-6" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-explore">E3 탐구</span>
+    <h2>섞기 암호 &mdash; 아핀 암호의 탄생</h2>
+  </div>
+  <div class="layout-cardflow">
+    <div class="cardflow-steps" id="cf6-steps">
+      <div class="cardflow-dot active" data-step="1" onclick="CF6.goTo(1)">1<span class="cardflow-dot-label">합체</span></div>
+      <div class="cardflow-dot locked" data-step="2" onclick="CF6.goTo(2)">2<span class="cardflow-dot-label">키 공간</span></div>
+      <div class="cardflow-dot locked" data-step="3" onclick="CF6.goTo(3)">3<span class="cardflow-dot-label">안전?</span></div>
+    </div>
+
+    <!-- Step 1: Affine Formula + MATH -->
+    <div class="cardflow-card active" id="cf6-card-1">
+      <div class="card">
+        <h4>&#x1F500; 더하기 + 곱하기 = 아핀 암호</h4>
+        <div class="info-box"><strong>아핀 암호</strong>: E(x) &equiv; (a &times; x + b) mod 26 &nbsp;&nbsp;(a와 26은 서로소, 0 &le; b &le; 25)</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0;text-align:center">
+          <div style="padding:12px;background:#dbeafe;border-radius:10px">
+            <div style="font-weight:700;font-size:13px">시저</div>
+            <div style="font-size:13px;color:var(--ink3)">b: 25가지</div>
+            <div style="font-size:22px;font-weight:800;color:#2563eb">25개</div>
+          </div>
+          <div style="padding:12px;background:#d1fae5;border-radius:10px">
+            <div style="font-weight:700;font-size:13px">곱하기</div>
+            <div style="font-size:13px;color:var(--ink3)">a: 12가지</div>
+            <div style="font-size:22px;font-weight:800;color:var(--ok)">12개</div>
+          </div>
+          <div style="padding:12px;background:var(--theme-light);border-radius:10px">
+            <div style="font-weight:700;font-size:13px">아핀</div>
+            <div style="font-size:13px;color:var(--ink3)">a&times;b</div>
+            <div style="font-size:22px;font-weight:800;color:var(--theme)">312개</div>
+          </div>
+        </div>
+        <p><strong>a = 5, b = 3</strong>일 때 <strong class="mono">"MATH"</strong>를 암호화하세요.</p>
+        <table>
+          <tr><th>원래</th><td>M</td><td>A</td><td>T</td><td>H</td></tr>
+          <tr><th>번호</th><td>12</td><td>0</td><td>19</td><td>7</td></tr>
+          <tr><th>5x+3 mod26</th><td><input class="inline-input" style="width:40px" data-answer="11" data-save="af_s1" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="3" data-save="af_s2" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="20" data-save="af_s3" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="12" data-save="af_s4" type="text"></td></tr>
+          <tr><th>암호</th><td><input class="inline-input" style="width:40px" data-answer="L" data-save="af_c1" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="D" data-save="af_c2" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="U" data-save="af_c3" type="text"></td><td><input class="inline-input" style="width:40px" data-answer="M" data-save="af_c4" type="text"></td></tr>
+        </table>
+        <div style="text-align:right;margin-top:8px">
+          <button class="btn btn-sm btn-primary" onclick="checkAffine()">&#x2714; 확인</button>
+        </div>
+        <div id="cf6s1-result"></div>
+      </div>
+    </div>
+
+    <!-- Step 2: Key Space + Brute Force -->
+    <div class="cardflow-card" id="cf6-card-2">
+      <div class="card">
+        <h4>&#x1F511; 키 공간 비교</h4>
+        <table>
+          <tr><th>암호</th><th>키 수</th></tr>
+          <tr><td>시저(더하기)</td><td>25개</td></tr>
+          <tr><td>곱하기</td><td>12개</td></tr>
+          <tr><td>아핀</td><td>12 &times; 26 = <input class="inline-input" data-save="keyspace" data-answer="312" type="text" placeholder="?">개</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h4>&#x1F4A8; 312개 전수조사</h4>
+        <button class="btn btn-sm btn-primary" onclick="affineBrute()">&#x25B6; 전수조사 시작</button>
+        <div class="brute-list" id="affineBruteList" style="display:none"></div>
+        <div id="affineBruteResult" style="margin-top:12px"></div>
+        <div style="text-align:center;margin-top:12px">
+          <button class="btn btn-sm btn-secondary" onclick="CF6.unlock(3)">다음: 312개도 안전할까? &#x2192;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Still Not Safe -->
+    <div class="cardflow-card" id="cf6-card-3">
+      <div class="card">
+        <h4>&#x1F631; 312개도 안전할까?</h4>
+        <p>컴퓨터가 1초에 1,000개의 키를 시도한다면:</p>
+        <p style="text-align:center;font-size:18px;margin:16px 0">312 &divide; 1000 = <input class="inline-input" data-save="time312" data-answer="0.312" type="text" placeholder="?">초</p>
+        <div class="err-box">
+          여전히 <strong>1초도 안 걸립니다!</strong><br>
+          3차시에서 더 효율적인 공격 방법(빈도 분석)을 배워봅시다.
+        </div>
+        <div class="info-box" style="margin-top:12px">
+          &#x1F914; <strong>생각해보기</strong>: 키가 몇 개쯤 되어야 컴퓨터도 힘들어할까요?<br>
+          4차시에서 만날 RSA는 키 공간이 <strong>수백 자리 숫자</strong>입니다!
+        </div>
+      </div>
+      <button class="btn-complete" id="cf6-complete-btn" onclick="SM.complete(6)">다음 섹션으로 &#x2192;</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 7: Challenge (Mission Board) -->
+<!-- ============================================================ -->
+<section id="sec-7" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-challenge">C 도전</span>
+    <h2>경계를 넘어서</h2>
+  </div>
+  <div class="layout-mission">
+    <div class="mission-header">
+      <div style="font-size:13px;color:var(--ink3)">도전 미션 XP</div>
+      <div class="mission-xp-bar"><div class="mission-xp-fill" id="m7-xp-bar" style="width:0%"></div></div>
+    </div>
+
+    <div class="mission-card">
+      <h4>&#x1F513; C-1. 암호 해독 도전 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h4>
+      <p>아핀 암호(a=5, b=3)로 만들어진 암호문을 해독하세요.</p>
+      <div class="cipher-display" style="font-size:22px;margin:16px 0">"DUUDNB DU SDJQ"</div>
+      <details><summary>&#x1F4A1; 힌트 1</summary><p style="padding:8px 0;font-size:14px;color:var(--ink2)">5의 역원(mod 26)은 21입니다. D(y) &equiv; 21 &times; (y &minus; 3) mod 26</p></details>
+      <details><summary>&#x1F4A1; 힌트 2</summary><p style="padding:8px 0;font-size:14px;color:var(--ink2)">D=3: D(3) = 21&times;(3&minus;3) mod 26 = 21&times;0 = 0 &rarr; A. U=20: D(20) = 21&times;17 mod 26 = 357 mod 26 = 19 &rarr; T</p></details>
+      <details><summary>&#x1F4A1; 힌트 3</summary><p style="padding:8px 0;font-size:14px;color:var(--ink2)">D→A, U→T, U→T, D→A, N→C, B→K ... "ATTACK AT DAWN"</p></details>
+      <textarea rows="4" placeholder="풀이 과정을 써보세요"></textarea>
+      <p style="margin-top:12px;font-weight:700">해독 원문: <input class="inline-input wide" type="text" style="width:250px" data-save="c1_answer" placeholder="영문 원문"></p>
+      <div style="text-align:right;margin-top:8px">
+        <button class="btn btn-sm btn-success" onclick="checkChallenge1()">&#x2714; 확인</button>
+      </div>
+      <div id="c1-result"></div>
+    </div>
+
+    <div class="mission-card">
+      <h4>&#x2709; C-2. 나만의 아핀 암호 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h4>
+      <p>친구에게 보낼 비밀 메시지를 아핀 암호로 만들어 보세요.</p>
+      <div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap;align-items:center">
+        <div>
+          <label style="font-weight:700;font-size:14px">a =</label>
+          <select id="myA" style="padding:6px;border:2px solid var(--border);border-radius:8px;font-weight:700" onchange="updateMyAffine()">
+            <option value="1">1</option><option value="3">3</option><option value="5" selected>5</option>
+            <option value="7">7</option><option value="9">9</option><option value="11">11</option>
+            <option value="15">15</option><option value="17">17</option><option value="19">19</option>
+            <option value="21">21</option><option value="23">23</option><option value="25">25</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-weight:700;font-size:14px">b =</label>
+          <input type="number" id="myB" value="3" min="0" max="25" style="width:50px;padding:6px;border:2px solid var(--border);border-radius:8px;text-align:center;font-weight:700" oninput="updateMyAffine()">
+        </div>
+      </div>
+      <input type="text" id="myPlain" placeholder="메시지를 입력하세요 (영문)" style="width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;font-size:16px;font-family:var(--mono)" oninput="updateMyAffine()">
+      <div id="myAffineResult" class="cipher-display" style="margin-top:12px">암호문이 여기 표시됩니다</div>
+    </div>
+
+    <div class="mission-card">
+      <h4>&#x1F517; C-3. "같은 글자는 같은 글자로" <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h4>
+      <p>C-2에서 만든 암호문(또는 C-1의 암호문)을 다시 살펴봅시다.</p>
+
+      <div class="info-box">
+        원문 "ATTACK AT DAWN"에서 T는 <strong>3번</strong> 등장합니다.<br>
+        암호문 "DUUDNB DU SDJQ"에서 대응하는 글자 U도 <strong>3번</strong> 등장합니다.
+      </div>
+
+      <p style="margin-top:12px">(a) 원문에서 A는 몇 번 등장하나요?
+        <input class="inline-input" data-save="c3-a1" data-answer="3" type="text" placeholder="?">번.
+        암호문에서 대응 글자 D도 같은 횟수인가요?
+        <input class="inline-input" data-save="c3-a2" data-answer="3" type="text" placeholder="?">번.</p>
+
+      <p style="margin-top:12px">(b) 이 패턴은 아핀 암호의 구조적 특징입니다.
+        빈칸을 채우세요:</p>
+      <div class="quote-box">
+        "아핀 암호에서 같은 원문 글자는 항상 <input class="inline-input wide" data-save="c3-b" type="text" placeholder="???"> 암호 글자로 바뀐다."
+      </div>
+
+      <p style="margin-top:12px">(c) 만약 당신이 암호를 가로챈 적군이라면, 이 패턴을 어떻게 이용할 수 있을까요?</p>
+      <textarea rows="2" placeholder="공격 아이디어:"></textarea>
+    </div>
+
+    <div class="mission-card">
+      <h4>&#x1F4CA; C-4. 글자의 지문 — 빈도 세기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h4>
+      <p>아래 영어 문장에서 각 글자가 몇 번 나오는지 세어봅시다.</p>
+
+      <div class="cipher-display" style="font-size:16px;letter-spacing:3px">
+        THE BEST THINGS IN LIFE ARE FREE
+      </div>
+
+      <p style="margin-top:12px">가장 많이 나온 글자 1위:
+        <input class="inline-input" data-save="c4-top1" data-answer="E" type="text" placeholder="?">
+        (<input class="inline-input" data-save="c4-cnt1" data-answer="6" type="text" placeholder="?">회)</p>
+      <p>2위:
+        <input class="inline-input" data-save="c4-top2" type="text" placeholder="?">
+        (<input class="inline-input" data-save="c4-cnt2" type="text" placeholder="?">회)</p>
+
+      <div class="info-box" style="margin-top:16px">
+        영어에서 E는 전체 글자의 약 <strong>13%</strong>를 차지합니다.<br>
+        "암호문에서 가장 많은 글자 = 원문의 <input class="inline-input" data-save="c4-key" data-answer="E" type="text" placeholder="?">일 가능성이 높다!"<br>
+        <strong>다음 시간에 이 원리로 암호를 깨뜨립니다.</strong> &#x1F575;
+      </div>
+    </div>
+
+    <div class="mission-card">
+      <h4>&#x1F3C6; C-5. 고급 해독 도전 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">⚪ 선택</span></h4>
+      <p>이번에는 <strong>다른 키</strong>로 만든 암호문입니다. a=7, b=10</p>
+      <div class="cipher-display" style="font-size:22px;margin:16px 0">"KNNKYC KN FKIX"</div>
+
+      <details><summary>&#x1F4A1; 힌트 1</summary>
+        <p style="padding:8px 0;font-size:14px;color:var(--ink2)">
+          7의 역원(mod 26)은 15입니다. D(y) &equiv; 15 &times; (y &minus; 10) mod 26</p>
+      </details>
+      <details><summary>&#x1F4A1; 힌트 2</summary>
+        <p style="padding:8px 0;font-size:14px;color:var(--ink2)">
+          K=10: D(10) = 15&times;(10&minus;10) mod 26 = 0 &rarr; A<br>
+          N=13: D(13) = 15&times;(13&minus;10) mod 26 = 45 mod 26 = 19 &rarr; T</p>
+      </details>
+
+      <textarea rows="4" placeholder="풀이 과정을 써보세요"></textarea>
+      <p style="margin-top:12px;font-weight:700">해독 원문:
+        <input class="inline-input wide" type="text" style="width:250px" data-save="c5_answer" placeholder="영문 원문"></p>
+      <div style="text-align:right;margin-top:8px">
+        <button class="btn btn-sm btn-success" onclick="checkChallenge5()">&#x2714; 확인</button>
+      </div>
+      <div id="c5-result"></div>
+    </div>
+
+    <button class="btn btn-complete" onclick="SM.complete(7)" style="display:block">다음 섹션으로 &#x2192;</button>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 8: Reflect (Zone) -->
+<!-- ============================================================ -->
+<section id="sec-8" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-reflect">R 성찰</span>
+    <h2>오늘의 여정을 돌아보며</h2>
+  </div>
+  <div class="layout-zone">
+    <div class="card">
+      <h4><span class="num">1</span> R-1. 여정 정리</h4>
+      <div style="background:var(--bg);border-radius:10px;padding:18px;font-family:monospace;font-size:14px;line-height:2.2">
+        시저 암호: (x + k) mod 26 &rarr; 키 <input class="inline-input" style="width:40px" data-save="r_k1" type="text">개 &rarr; 전수조사로 <input class="inline-input wide" data-save="r_w1" type="text" placeholder="쉽게/어렵게"> 뚫림<br>
+        &nbsp;&nbsp;&darr; 곱하기를 추가<br>
+        곱셈 암호: (a &times; x) mod 26 &rarr; 키 <input class="inline-input" style="width:40px" data-save="r_k2" type="text">개 &rarr; 단, a와 26이 <input class="inline-input wide" data-save="r_w2" type="text" placeholder="???">여야 함<br>
+        &nbsp;&nbsp;&darr; 합체!<br>
+        아핀 암호: (a &times; x + b) mod 26 &rarr; 키 <input class="inline-input" style="width:40px" data-save="r_k3" type="text">개
+      </div>
+    </div>
+    <div class="card">
+      <h4><span class="num">2</span> R-2. 발견 노트</h4>
+      <p>(a) 오늘 가장 놀라웠던 발견:</p>
+      <textarea rows="3" placeholder=""></textarea>
+      <p style="margin-top:12px">(b) "서로소"라는 개념이 왜 암호학에서 중요한가요?</p>
+      <textarea rows="3" placeholder=""></textarea>
+    </div>
+    <div class="card">
+      <h4><span class="num">3</span> R-3. 자기 평가</h4>
+      <table class="assess-table">
+        <tr><th>항목</th><th>어려워요</th><th>알겠어요</th><th>자신있어요</th></tr>
+        <tr><td style="text-align:left">시저 암호 암/복호화</td><td><input type="radio" name="a1" value="1"></td><td><input type="radio" name="a1" value="2"></td><td><input type="radio" name="a1" value="3"></td></tr>
+        <tr><td style="text-align:left">서로소의 뜻 이해</td><td><input type="radio" name="a2" value="1"></td><td><input type="radio" name="a2" value="2"></td><td><input type="radio" name="a2" value="3"></td></tr>
+        <tr><td style="text-align:left">아핀 암호 암호화</td><td><input type="radio" name="a3" value="1"></td><td><input type="radio" name="a3" value="2"></td><td><input type="radio" name="a3" value="3"></td></tr>
+        <tr><td style="text-align:left">키 공간의 크기 비교</td><td><input type="radio" name="a4" value="1"></td><td><input type="radio" name="a4" value="2"></td><td><input type="radio" name="a4" value="3"></td></tr>
+      </table>
+      <div class="info-box" style="margin-top:12px">
+        &#x1F52E; <strong>다음 시간 예고</strong>: "312개의 키로도 안전하지 않다면, 어떻게 암호를 깨뜨릴까?"<br>
+        3차시에서 여러분이 <strong>암호 해독가</strong>가 됩니다! &#x1F575;
+      </div>
+    </div>
+    <button class="btn btn-complete" onclick="SM.complete(8)" style="display:block">다음 섹션으로 &#x2192;</button>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 9: Buffer Activities (Mission Board) -->
+<!-- ============================================================ -->
+<section id="sec-9" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-buffer">&#x1F3AE; 버퍼</span>
+    <h2>보너스 활동</h2>
+    <p class="subtitle">시간이 남으면 자유롭게 즐겨보세요!</p>
+  </div>
+  <div class="layout-mission">
+    <div class="mission-card">
+      <h4>&#x2709; 자유 메시지 암호화 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">⚪ 선택</span></h4>
+      <div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap;align-items:center">
+        <div>
+          <label style="font-weight:700;font-size:14px">a =</label>
+          <select id="bufA" style="padding:6px;border:2px solid var(--border);border-radius:8px;font-weight:700" onchange="updateBuffer()">
+            <option value="1">1</option><option value="3">3</option><option value="5" selected>5</option>
+            <option value="7">7</option><option value="9">9</option><option value="11">11</option>
+            <option value="15">15</option><option value="17">17</option><option value="19">19</option>
+            <option value="21">21</option><option value="23">23</option><option value="25">25</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <label style="font-weight:700;font-size:14px">b =</label>
+          <button class="btn btn-sm btn-secondary" onclick="changeBufB(-1)" style="padding:4px 10px">&minus;</button>
+          <span id="bufBVal" style="font-weight:800;font-family:var(--mono);min-width:24px;text-align:center">3</span>
+          <button class="btn btn-sm btn-secondary" onclick="changeBufB(1)" style="padding:4px 10px">+</button>
+        </div>
+        <div class="choice-group">
+          <button class="choice-btn selected" id="bufEncBtn" onclick="setBufMode('encrypt',this)">&#x1F512; 암호화</button>
+          <button class="choice-btn" id="bufDecBtn" onclick="setBufMode('decrypt',this)">&#x1F513; 복호화</button>
+        </div>
+      </div>
+      <input type="text" id="bufInput" placeholder="메시지를 입력하세요 (영문)" style="width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;font-size:16px;font-family:var(--mono)" oninput="updateBuffer()">
+      <div id="bufResult" class="cipher-display" style="margin-top:12px;min-height:48px">결과가 여기 표시됩니다</div>
+    </div>
+
+    <div class="mission-card">
+      <h4>&#x1F522; 역원 찾기 게임 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">⚪ 선택</span></h4>
+      <p style="color:var(--ink2);margin-bottom:12px">a &times; ? &equiv; 1 (mod 26) &mdash; ?를 찾아라!</p>
+      <div style="text-align:center;margin:16px 0">
+        <span style="font-size:20px;font-weight:700">문제: a = <span id="invA" style="color:var(--theme)">3</span></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:12px">
+        <label style="font-weight:600">d =</label>
+        <input type="number" id="invGuess" min="1" max="25" style="width:60px;padding:8px;border:2px solid var(--border);border-radius:8px;text-align:center;font-weight:700">
+        <button class="btn btn-sm btn-primary" onclick="tryInverse()">확인</button>
+      </div>
+      <div id="invHistory" style="max-height:200px;overflow-y:auto;margin:8px 0"></div>
+      <div style="display:flex;justify-content:center;align-items:center;gap:16px;margin-top:12px">
+        <button class="btn btn-sm btn-secondary" onclick="newInverseProblem()">새 문제</button>
+        <span style="font-weight:700">점수: <span id="invScore">0</span>/<span id="invTotal">0</span></span>
+      </div>
+      <div class="info-box" style="margin-top:12px;font-size:13px">
+        &#x1F52E; <strong>4차시 복선</strong>: "이 '역원 찾기'는 4차시에서 다시 나옵니다. RSA 비밀키를 찾는 것도 바로 이 구조입니다!"
+      </div>
+    </div>
+
+    <div id="completion-area" style="display:none">
+      <div class="card" style="text-align:center;padding:32px">
+        <div style="font-size:52px">&#x1F389;</div>
+        <h3 style="font-size:22px;color:var(--theme);margin-top:12px">2차시 학습 완료!</h3>
+        <p style="color:var(--ink2);margin-top:8px">더하기 암호에서 아핀 암호까지, 멋진 여정이었습니다!</p>
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+          <a href="index.html" class="btn btn-secondary">&#x1F3E0; 메인으로</a>
+          <a href="session3_unified.html" class="btn btn-primary">3차시 시작 &#x2192;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+// ================================================================
+// CONFIG
+// ================================================================
+const SECTION_COUNT = 9;
+const SECTION_TITLES = ['대응표','워밍업','시저 암호','곱하기 암호','심화','아핀 암호','도전','성찰','버퍼'];
+const SECTION_XP = [5, 10, 25, 25, 20, 25, 50, 15, 15];
+
+// ================================================================
+// CRYPTO FUNCTIONS
+// ================================================================
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const MOD = 26;
+function charToNum(c){ return c.charCodeAt(0)-65; }
+function numToChar(n){ return String.fromCharCode(((n%MOD)+MOD)%MOD+65); }
+function gcd(a,b){ return b===0?a:gcd(b,a%b); }
+function isCoprime(a,m){ return gcd(a,m)===1; }
+function modInverse(a,m){ for(let i=1;i<m;i++){if((a*i)%m===1)return i;} return null; }
+const COPRIME_TO_26=[1,3,5,7,9,11,15,17,19,21,23,25];
+
+function caesarEncrypt(text,k){
+  return text.split('').map(c=>{
+    if(c===' ')return ' ';
+    if(c.charCodeAt(0)<65||c.charCodeAt(0)>90)return c;
+    return numToChar(charToNum(c)+k);
+  }).join('');
+}
+function caesarDecrypt(text,k){ return caesarEncrypt(text,MOD-k); }
+
+function multiplyEncrypt(text,a){
+  return text.split('').map(c=>c===' '?' ':numToChar(charToNum(c)*a)).join('');
+}
+
+function affineEncrypt(text,a,b){
+  return text.split('').map(c=>{
+    if(c===' ')return ' ';
+    if(c.charCodeAt(0)<65||c.charCodeAt(0)>90)return c;
+    return numToChar(charToNum(c)*a+b);
+  }).join('');
+}
+function affineDecrypt(text,a,b){
+  const inv=modInverse(a,MOD);
+  if(inv===null)return null;
+  return text.split('').map(c=>{
+    if(c===' ')return ' ';
+    if(c.charCodeAt(0)<65||c.charCodeAt(0)>90)return c;
+    return numToChar(inv*(charToNum(c)-b));
+  }).join('');
+}
+
+const CAESAR_CHALLENGE={ciphertext:'DWWDFN DW GDZQ',key:3,plaintext:'ATTACK AT DAWN'};
+
+// ================================================================
+// XP SYSTEM
+// ================================================================
+const XP={
+  total:0, el:null, toastEl:null,
+  init(){
+    this.el=document.getElementById('xpDisplay');
+    this.toastEl=document.getElementById('xpToast');
+    const s=localStorage.getItem('session2_xp');
+    if(s)this.total=parseInt(s)||0;
+    this.render();
+  },
+  add(n){
+    this.total+=n;
+    localStorage.setItem('session2_xp',this.total);
+    this.render();
+    this.toast('+'+n+' XP');
+  },
+  render(){ if(this.el)this.el.textContent=this.total; },
+  toast(msg){
+    if(!this.toastEl)return;
+    this.toastEl.textContent=msg;
+    this.toastEl.classList.add('show');
+    setTimeout(()=>this.toastEl.classList.remove('show'),2200);
+  }
+};
+
+// ================================================================
+// SECTION MANAGER
+// ================================================================
+const SM={
+  current:1, unlocked:[1], completed:[],
+  init(){
+    const s=localStorage.getItem('session2_sm');
+    if(s){try{const d=JSON.parse(s);this.current=d.current||1;this.unlocked=d.unlocked||[1];this.completed=d.completed||[];}catch(e){}}
+    this.buildDots();
+    this.show(this.current);
+  },
+  save(){
+    localStorage.setItem('session2_sm',JSON.stringify({current:this.current,unlocked:this.unlocked,completed:this.completed}));
+  },
+  buildDots(){
+    const c=document.getElementById('navDots');c.innerHTML='';
+    for(let i=1;i<=SECTION_COUNT;i++){
+      const d=document.createElement('div');d.className='nav-dot';d.textContent=i;
+      d.title=SECTION_TITLES[i-1];d.dataset.sec=i;
+      d.addEventListener('click',()=>this.dotClick(i));
+      c.appendChild(d);
+    }
+    this.updateDots();
+  },
+  updateDots(){
+    document.querySelectorAll('.nav-dot').forEach(d=>{
+      const i=parseInt(d.dataset.sec);d.className='nav-dot';
+      if(this.completed.includes(i))d.classList.add('done');
+      else if(i===this.current)d.classList.add('active');
+      else if(this.unlocked.includes(i))d.classList.add('unlocked');
+      else d.classList.add('locked');
+    });
+    document.getElementById('progressFill').style.width=Math.round((this.completed.length/SECTION_COUNT)*100)+'%';
+  },
+  dotClick(i){ if(this.unlocked.includes(i)||this.completed.includes(i))this.show(i); },
+  show(i){
+    document.querySelectorAll('.app-section').forEach(s=>s.classList.remove('active'));
+    const sec=document.getElementById('sec-'+i);
+    if(sec){sec.classList.add('active');this.current=i;this.updateDots();this.save();window.scrollTo({top:0,behavior:'smooth'});}
+    // Init section-specific features
+    if(i===3) initWheel();
+    if(i===4) updateArrowMap();
+    if(i===9) newInverseProblem();
+  },
+  complete(i){
+    if(!this.completed.includes(i)){this.completed.push(i);XP.add(SECTION_XP[i-1]);}
+    const next=i+1;
+    if(next<=SECTION_COUNT){if(!this.unlocked.includes(next))this.unlocked.push(next);this.show(next);}
+    else{ document.getElementById('completion-area').style.display='block'; }
+    this.save();this.updateDots();
+  }
+};
+
+// ================================================================
+// CARD FLOW CONTROLLERS
+// ================================================================
+function createCardFlow(prefix,totalSteps){
+  return{
+    current:1,maxUnlocked:1,
+    goTo(step){
+      if(step>this.maxUnlocked)return;
+      this.current=step;
+      document.querySelectorAll('#'+prefix+'-steps .cardflow-dot').forEach(d=>{
+        const s=parseInt(d.dataset.step);d.className='cardflow-dot';
+        if(s<step)d.classList.add('done');
+        else if(s===step)d.classList.add('active');
+        else if(s<=this.maxUnlocked)d.classList.add('done');
+        else d.classList.add('locked');
+      });
+      for(let s=1;s<=totalSteps;s++){
+        const card=document.getElementById(prefix+'-card-'+s);
+        if(card)card.classList.toggle('active',s===step);
+      }
+      if(this.maxUnlocked>=totalSteps){
+        const btn=document.getElementById(prefix+'-complete-btn');
+        if(btn)btn.style.display='block';
+      }
+    },
+    unlock(step){if(step>this.maxUnlocked)this.maxUnlocked=step;this.goTo(step);}
+  };
+}
+const CF3=createCardFlow('cf3',4);
+const CF6=createCardFlow('cf6',3);
+
+// ================================================================
+// AUTOSAVE
+// ================================================================
+const AutoSave={
+  key:'session2_unified_data',timer:null,
+  init(){
+    this.restore();
+    document.addEventListener('input',e=>{
+      if(e.target.matches('[data-save]')||e.target.matches('textarea')||e.target.matches('input[type=text]'))this.scheduleSave();
+    });
+    document.addEventListener('change',e=>{if(e.target.matches('input[type=radio]'))this.scheduleSave();});
+  },
+  scheduleSave(){clearTimeout(this.timer);this.timer=setTimeout(()=>this.save(),500);},
+  save(){
+    const data={};
+    document.querySelectorAll('[data-save]').forEach(el=>{data[el.dataset.save]=el.value;});
+    document.querySelectorAll('textarea:not([data-save])').forEach((el,i)=>{data['_ta_'+i]=el.value;});
+    document.querySelectorAll('input[type=radio]:checked').forEach(el=>{data['_radio_'+el.name]=el.value;});
+    localStorage.setItem(this.key,JSON.stringify(data));
+  },
+  restore(){
+    const raw=localStorage.getItem(this.key);if(!raw)return;
+    try{
+      const data=JSON.parse(raw);
+      document.querySelectorAll('[data-save]').forEach(el=>{if(data[el.dataset.save]!==undefined)el.value=data[el.dataset.save];});
+      document.querySelectorAll('textarea:not([data-save])').forEach((el,i)=>{if(data['_ta_'+i]!==undefined)el.value=data['_ta_'+i];});
+      document.querySelectorAll('input[type=radio]').forEach(el=>{if(data['_radio_'+el.name]===el.value)el.checked=true;});
+    }catch(e){}
+  }
+};
+
+// ================================================================
+// FLOATING ALPHA TABLE
+// ================================================================
+function toggleAlphaPanel(){
+  const panel=document.getElementById('alphaPanel');
+  panel.classList.toggle('visible');
+}
+(function buildFloatingAlpha(){
+  const g=document.getElementById('floatingAlphaGrid');if(!g)return;
+  let h='';
+  for(let i=0;i<13;i++)h+='<div class="letter">'+String.fromCharCode(65+i)+'</div>';
+  for(let i=0;i<13;i++)h+='<div class="number">'+i+'</div>';
+  for(let i=13;i<26;i++)h+='<div class="letter">'+String.fromCharCode(65+i)+'</div>';
+  for(let i=13;i<26;i++)h+='<div class="number">'+i+'</div>';
+  g.innerHTML=h;
+})();
+
+// ================================================================
+// VALIDATION HELPER
+// ================================================================
+const VH={
+  checkSection(secNum){
+    const sec=document.getElementById('sec-'+secNum);if(!sec)return;
+    const inputs=sec.querySelectorAll('[data-answer]');
+    let correct=0,total=0;
+    inputs.forEach(inp=>{
+      const val=inp.value.trim().toUpperCase();const ans=inp.dataset.answer;total++;
+      if(val===ans){inp.classList.remove('incorrect');inp.classList.add('correct');correct++;}
+      else if(val!==''){inp.classList.remove('correct');inp.classList.add('incorrect');}
+    });
+    const res=document.getElementById('sec'+secNum+'-result');
+    if(res){
+      if(correct===total&&total>0)res.innerHTML='<div class="success-box">&#x2705; 모두 정답!</div>';
+      else res.innerHTML='<div class="warn-box">'+correct+'/'+total+' 정답. 빨간색 칸을 다시 확인하세요.</div>';
+    }
+    return correct===total;
+  },
+  checkInputs(container){
+    const inputs=container.querySelectorAll('[data-answer]');let ok=true;
+    inputs.forEach(inp=>{
+      const val=inp.value.trim().toUpperCase();const ans=inp.dataset.answer;
+      if(val===ans){inp.classList.add('correct');inp.classList.remove('incorrect');}
+      else{inp.classList.add('incorrect');inp.classList.remove('correct');ok=false;}
+    });
+    return ok;
+  }
+};
+
+function toggleChoice(btn){
+  const g=btn.closest('.choice-group')||btn.parentElement;
+  if(g)g.querySelectorAll('.choice-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');AutoSave.scheduleSave();
+}
+
+// ================================================================
+// CAESAR WHEEL (Section 3, Step 1)
+// ================================================================
+let wheelRotation=0,isDragging=false,dragStartAngle=0,dragBaseRotation=0;
+let wheelInitialized=false;
+
+function initWheel(){
+  if(wheelInitialized)return;
+  wheelInitialized=true;
+  const svg=document.getElementById('caesarWheel');
+  const cx=200,cy=200,outerR=170,innerR=125,step=360/26;
+  let html=`<circle cx="${cx}" cy="${cy}" r="${outerR+10}" fill="#f7f7fb" stroke="#ebebf0" stroke-width="2"/>`;
+  html+=`<circle cx="${cx}" cy="${cy}" r="${innerR+25}" fill="#faf5ff" stroke="#c4b5fd" stroke-width="1.5" stroke-dasharray="4,4"/>`;
+  for(let i=0;i<26;i++){
+    const a=(i*step-90)*Math.PI/180;
+    html+=`<text x="${cx+outerR*Math.cos(a)}" y="${cy+outerR*Math.sin(a)}" text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="700" fill="#1a1a2e">${ALPHABET[i]}</text>`;
+  }
+  html+=`<g id="innerRing" style="cursor:grab;">`;
+  html+=`<circle cx="${cx}" cy="${cy}" r="${innerR}" fill="rgba(168,85,247,0.05)" stroke="#a855f7" stroke-width="2"/>`;
+  for(let i=0;i<26;i++){
+    const a=(i*step-90)*Math.PI/180;
+    html+=`<text x="${cx+innerR*Math.cos(a)}" y="${cy+innerR*Math.sin(a)}" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#a855f7">${ALPHABET[i]}</text>`;
+  }
+  html+=`<circle cx="${cx}" cy="${cy}" r="30" fill="#a855f7" opacity="0.1"/>`;
+  html+=`<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="700" fill="#a855f7" id="wheelCenterKey">k=0</text>`;
+  html+=`</g>`;
+  svg.innerHTML=html;
+
+  svg.addEventListener('pointerdown',e=>{
+    isDragging=true;
+    const rect=svg.getBoundingClientRect();
+    const sx=400/rect.width,sy=400/rect.height;
+    dragStartAngle=Math.atan2((e.clientY-rect.top)*sy-cy,(e.clientX-rect.left)*sx-cx)*180/Math.PI;
+    dragBaseRotation=wheelRotation;svg.style.cursor='grabbing';
+  });
+  document.addEventListener('pointermove',e=>{
+    if(!isDragging)return;
+    const rect=svg.getBoundingClientRect();
+    const sx=400/rect.width,sy=400/rect.height;
+    const angle=Math.atan2((e.clientY-rect.top)*sy-cy,(e.clientX-rect.left)*sx-cx)*180/Math.PI;
+    let delta=angle-dragStartAngle;
+    if(delta>180)delta-=360;if(delta<-180)delta+=360;
+    const raw=dragBaseRotation+delta;const stp=360/26;
+    const snapped=Math.round(raw/stp)*stp;
+    wheelRotation=snapped;
+    document.getElementById('innerRing').setAttribute('transform',`rotate(${snapped},${cx},${cy})`);
+    updateWheelKey(((Math.round(snapped/stp)%26)+26)%26);
+  });
+  document.addEventListener('pointerup',()=>{isDragging=false;svg.style.cursor='grab';});
+
+  document.getElementById('wheelSlider').addEventListener('input',function(){
+    const k=parseInt(this.value);const stp=360/26;
+    wheelRotation=k*stp;
+    document.getElementById('innerRing').setAttribute('transform',`rotate(${wheelRotation},${cx},${cy})`);
+    updateWheelKey(k);
+  });
+  updateWheelKey(0);
+}
+
+function updateWheelKey(k){
+  document.getElementById('wheelKeyDisplay').textContent=k;
+  document.getElementById('wheelSlider').value=k;
+  document.getElementById('wheelCenterKey').textContent='k='+k;
+  const dec=caesarDecrypt(CAESAR_CHALLENGE.ciphertext,k);
+  const el=document.getElementById('m1DecryptResult');
+  el.textContent=dec;
+  if(dec===CAESAR_CHALLENGE.plaintext){el.className='plain-display';}
+  else{el.className='cipher-display';}
+}
+
+function checkWheelAnswer(){
+  const k=parseInt(document.getElementById('wheelSlider').value);
+  if(k===CAESAR_CHALLENGE.key){XP.toast('정답! 시저의 키 k=3입니다!');setTimeout(()=>CF3.unlock(2),800);}
+  else{XP.toast('아직 아닙니다. 더 돌려보세요!');}
+}
+
+// ================================================================
+// CAESAR FORMULA CHECK (Section 3, Step 2)
+// ================================================================
+function checkCaesarFormula(){
+  const card=document.getElementById('cf3-card-2');
+  if(VH.checkInputs(card)){
+    document.getElementById('cf3s2-result').innerHTML='<div class="success-box">&#x2705; CODE → JVKL 정답!</div>';
+    XP.toast('정답!');setTimeout(()=>CF3.unlock(3),1200);
+  }else{
+    document.getElementById('cf3s2-result').innerHTML='<div class="warn-box">빨간색 칸을 다시 확인하세요.</div>';
+  }
+}
+
+// ================================================================
+// CAESAR DECRYPT CHECK (Section 3, Step 3)
+// ================================================================
+function checkDecrypt(){
+  const card=document.getElementById('cf3-card-3');
+  const inputs=card.querySelectorAll('table [data-answer]');
+  if(VH.checkInputs(card)){
+    document.getElementById('cf3s3-result').innerHTML='<div class="success-box">&#x2705; KHOOR → HELLO 정답!</div>';
+    XP.toast('정답!');
+  }else{
+    document.getElementById('cf3s3-result').innerHTML='<div class="warn-box">빨간색 칸을 다시 확인하세요.</div>';
+  }
+}
+
+let practiceMode='encrypt';
+function setPracticeMode(mode,btn){
+  practiceMode=mode;
+  const g=btn.closest('.choice-group');
+  g.querySelectorAll('.choice-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  doPractice();
+}
+function doPractice(){
+  const text=document.getElementById('practiceInput').value.toUpperCase().replace(/[^A-Z ]/g,'');
+  const k=parseInt(document.getElementById('practiceK').value)||0;
+  const result=practiceMode==='encrypt'?caesarEncrypt(text,k):caesarDecrypt(text,k);
+  document.getElementById('practiceOutput').textContent=result||'결과가 여기 표시됩니다';
+}
+
+// ================================================================
+// CAESAR BRUTE FORCE (Section 3, Step 4)
+// ================================================================
+function caesarBrute(){
+  const list=document.getElementById('caesarBruteList');
+  list.style.display='block';list.innerHTML='';
+  const ct='KHOOR';
+  let i=0;
+  const interval=setInterval(()=>{
+    if(i>=25){clearInterval(interval);document.getElementById('cf3-complete-btn').style.display='block';return;}
+    i++;
+    const dec=caesarDecrypt(ct,i);
+    const div=document.createElement('div');
+    div.className='brute-item';
+    div.innerHTML=`k=${String(i).padStart(2,' ')}: ${dec}`;
+    if(i===3){div.classList.add('found');div.innerHTML+=` ← &#x2705; HELLO!`;}
+    list.appendChild(div);
+    list.scrollTop=list.scrollHeight;
+  },120);
+}
+
+// ================================================================
+// ARROW MAPPING (Section 4, Split Left)
+// ================================================================
+function updateArrowMap(){
+  const a=parseInt(document.getElementById('multSlider').value);
+  document.getElementById('multVal').textContent=a;
+  const svg=document.getElementById('arrowSvg');
+  const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lh=18,startY=10,leftX=30,rightX=230;
+  let html='';
+  // Draw left column
+  for(let i=0;i<26;i++){
+    const y=startY+i*lh+9;
+    html+=`<text x="${leftX}" y="${y}" text-anchor="end" font-size="12" font-weight="600" fill="var(--ink2)">${letters[i]}</text>`;
+  }
+  // Draw right column
+  for(let i=0;i<26;i++){
+    const y=startY+i*lh+9;
+    html+=`<text x="${rightX}" y="${y}" text-anchor="start" font-size="12" font-weight="600" fill="var(--ink2)">${letters[i]}</text>`;
+  }
+  // Draw arrows
+  const targets=new Map();
+  let hasCollision=false;
+  for(let i=0;i<26;i++){
+    const t=(i*a)%26;
+    if(!targets.has(t))targets.set(t,[]);
+    targets.get(t).push(i);
+  }
+  for(let i=0;i<26;i++){
+    const t=(i*a)%26;
+    const y1=startY+i*lh+9;
+    const y2=startY+t*lh+9;
+    const collision=targets.get(t).length>1;
+    if(collision)hasCollision=true;
+    const color=collision?'var(--err)':'var(--theme)';
+    const opacity=collision?'0.7':'0.4';
+    html+=`<line x1="${leftX+6}" y1="${y1}" x2="${rightX-6}" y2="${y2}" stroke="${color}" stroke-width="1.5" opacity="${opacity}"/>`;
+  }
+  svg.innerHTML=html;
+  const warn=document.getElementById('collisionWarn');
+  if(hasCollision){
+    warn.textContent='&#x26A0; 충돌 발생! a='+a+'는 사용 불가';
+    warn.innerHTML='&#x26A0; 충돌 발생! a='+a+'는 사용 불가 (gcd('+a+',26)='+gcd(a,26)+')';
+  }else{
+    warn.innerHTML='&#x2705; 일대일 대응! a='+a+'는 사용 가능 (gcd('+a+',26)=1)';
+    warn.style.color='var(--ok)';
+  }
+  if(hasCollision)warn.style.color='var(--err)';
+  else warn.style.color='var(--ok)';
+}
+
+// ================================================================
+// MULTIPLY CHECK (Section 4)
+// ================================================================
+function checkMultiply(){
+  const sec=document.getElementById('sec-4');
+  const card=sec.querySelector('.card');
+  if(VH.checkInputs(card)){
+    document.getElementById('sec4-result').innerHTML='<div class="success-box">&#x2705; DOG → PSE 정답!</div>';
+    XP.toast('정답!');
+  }else{
+    document.getElementById('sec4-result').innerHTML='<div class="warn-box">빨간색 칸을 다시 확인하세요.</div>';
+  }
+}
+
+// ================================================================
+// AFFINE CHECK (Section 6, Step 1)
+// ================================================================
+function checkAffine(){
+  const card=document.getElementById('cf6-card-1');
+  if(VH.checkInputs(card)){
+    document.getElementById('cf6s1-result').innerHTML='<div class="success-box">&#x2705; MATH → LDUM 정답!</div>';
+    XP.toast('정답!');setTimeout(()=>CF6.unlock(2),1200);
+  }else{
+    document.getElementById('cf6s1-result').innerHTML='<div class="warn-box">빨간색 칸을 다시 확인하세요.</div>';
+  }
+}
+
+// ================================================================
+// AFFINE BRUTE FORCE (Section 6, Step 2)
+// ================================================================
+function affineBrute(){
+  const list=document.getElementById('affineBruteList');
+  list.style.display='block';list.innerHTML='';
+  const ct='DUUDNB DU SDJQ';
+  let idx=0;const keys=[];
+  COPRIME_TO_26.forEach(a=>{for(let b=0;b<26;b++)keys.push({a,b});});
+  const interval=setInterval(()=>{
+    if(idx>=keys.length){
+      clearInterval(interval);
+      document.getElementById('affineBruteResult').innerHTML='<div class="err-box">&#x1F631; 312개 전부 시도! 컴퓨터에겐 눈 깜짝할 사이!</div>';
+      return;
+    }
+    const batch=Math.min(8,keys.length-idx);
+    for(let b=0;b<batch;b++){
+      const k=keys[idx];
+      const dec=affineDecrypt(ct,k.a,k.b);
+      const div=document.createElement('div');div.className='brute-item';
+      div.innerHTML=`a=${k.a},b=${String(k.b).padStart(2,' ')}: ${dec}`;
+      if(k.a===5&&k.b===3){div.classList.add('found');div.innerHTML+=` ← &#x2705;`;}
+      list.appendChild(div);
+      idx++;
+    }
+    list.scrollTop=list.scrollHeight;
+  },50);
+}
+
+// ================================================================
+// CHALLENGE 1 CHECK (Section 7)
+// ================================================================
+function checkChallenge1(){
+  const inp=document.querySelector('[data-save="c1_answer"]');
+  const val=inp.value.trim().toUpperCase().replace(/\s+/g,' ');
+  if(val==='ATTACK AT DAWN'){
+    document.getElementById('c1-result').innerHTML='<div class="success-box">&#x1F389; 정답! "ATTACK AT DAWN" (새벽에 공격하라)</div>';
+    document.getElementById('m7-xp-bar').style.width='100%';
+    XP.add(20);
+  }else{
+    document.getElementById('c1-result').innerHTML='<div class="warn-box">다시 시도해보세요. 힌트를 활용하세요!</div>';
+  }
+}
+
+// ================================================================
+// CHALLENGE 5 CHECK (Section 7, C-5)
+// ================================================================
+function checkChallenge5(){
+  const inp=document.querySelector('[data-save="c5_answer"]');
+  const val=inp.value.trim().toUpperCase().replace(/\s+/g,' ');
+  if(val==='ATTACK AT DAWN'){
+    document.getElementById('c5-result').innerHTML=
+      '<div class="success-box">&#x1F3C6; 정답! 다른 키에서도 성공!</div>';
+    XP.add(15);
+  }else{
+    document.getElementById('c5-result').innerHTML=
+      '<div class="warn-box">다시 시도해보세요. 힌트를 활용하세요!</div>';
+  }
+}
+
+// ================================================================
+// MY AFFINE (Section 7, C-2)
+// ================================================================
+function updateMyAffine(){
+  const a=parseInt(document.getElementById('myA').value);
+  const b=parseInt(document.getElementById('myB').value)||0;
+  const text=document.getElementById('myPlain').value.toUpperCase().replace(/[^A-Z ]/g,'');
+  const result=affineEncrypt(text,a,b);
+  document.getElementById('myAffineResult').textContent=result||'암호문이 여기 표시됩니다';
+}
+
+// ================================================================
+// BUFFER: Free Message (Section 9)
+// ================================================================
+let bufB=3,bufMode='encrypt';
+function changeBufB(d){bufB=((bufB+d)%26+26)%26;document.getElementById('bufBVal').textContent=bufB;updateBuffer();}
+function setBufMode(mode,btn){
+  bufMode=mode;
+  document.getElementById('bufEncBtn').classList.toggle('selected',mode==='encrypt');
+  document.getElementById('bufDecBtn').classList.toggle('selected',mode==='decrypt');
+  updateBuffer();
+}
+function updateBuffer(){
+  const a=parseInt(document.getElementById('bufA').value);
+  const text=document.getElementById('bufInput').value.toUpperCase().replace(/[^A-Z ]/g,'');
+  let result;
+  if(bufMode==='encrypt')result=affineEncrypt(text,a,bufB);
+  else result=affineDecrypt(text,a,bufB);
+  document.getElementById('bufResult').textContent=result||'결과가 여기 표시됩니다';
+}
+
+// ================================================================
+// BUFFER: Inverse Game (Section 9)
+// ================================================================
+const INVERSE_PAIRS=[
+  {a:3,inv:9},{a:5,inv:21},{a:7,inv:15},{a:9,inv:3},{a:11,inv:19},
+  {a:15,inv:7},{a:17,inv:23},{a:19,inv:11},{a:21,inv:5},{a:23,inv:17},{a:25,inv:25}
+];
+let invCurrentA=3,invCurrentInv=9,invScore=0,invTotal=0;
+
+function newInverseProblem(){
+  const pair=INVERSE_PAIRS[Math.floor(Math.random()*INVERSE_PAIRS.length)];
+  invCurrentA=pair.a;invCurrentInv=pair.inv;
+  document.getElementById('invA').textContent=invCurrentA;
+  document.getElementById('invGuess').value='';
+  document.getElementById('invHistory').innerHTML='';
+}
+
+function tryInverse(){
+  const guess=parseInt(document.getElementById('invGuess').value);
+  if(isNaN(guess)||guess<1||guess>25){XP.toast('1~25 사이의 수를 입력하세요');return;}
+  invTotal++;
+  const product=(invCurrentA*guess)%26;
+  const hist=document.getElementById('invHistory');
+  const div=document.createElement('div');
+  div.style.cssText='padding:6px 10px;border-radius:6px;margin:4px 0;font-size:14px;font-family:var(--mono)';
+  if(product===1){
+    invScore++;
+    div.style.background='var(--ok-light)';div.style.color='var(--ok)';
+    div.innerHTML=`${invCurrentA} × ${guess} = ${invCurrentA*guess} ≡ ${product} (mod 26) ✓ 정답!`;
+    XP.toast('정답! +5 XP');XP.add(5);
+    setTimeout(newInverseProblem,1200);
+  }else{
+    div.style.background='var(--err-light)';div.style.color='var(--err)';
+    div.innerHTML=`${invCurrentA} × ${guess} = ${invCurrentA*guess} ≡ ${product} (mod 26) ✗`;
+  }
+  hist.prepend(div);
+  document.getElementById('invScore').textContent=invScore;
+  document.getElementById('invTotal').textContent=invTotal;
+  document.getElementById('invGuess').value='';
+}
+
+// ================================================================
+// BOOT
+// ================================================================
+document.addEventListener('DOMContentLoaded',function(){
+  XP.init();
+  AutoSave.init();
+  SM.init();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4차시: 소수의 힘</title>
+<style>
+:root {
+  --theme: #10b981;
+  --theme-light: #ecfdf5;
+  --theme-dark: #059669;
+  --color-title: #1a1a2e;
+  --color-text: #2d3748;
+  --color-text-secondary: #718096;
+  --color-surface: #ffffff;
+  --color-border: #e2e8f0;
+  --color-bg: #f8fafc;
+  --font-main: 'Pretendard', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Fira Code', 'Consolas', monospace;
+  --radius: 14px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #f0f0f3; }
+
+/* ===== Slide base ===== */
+.slide {
+  display: none;
+  width: 100vw;
+  height: 100vh;
+  padding: 52px 64px 60px;
+  background: var(--color-surface);
+  position: absolute;
+  top: 0; left: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  overflow-y: auto;
+  font-family: var(--font-main);
+}
+.slide.active { display: flex; flex-direction: column; opacity: 1; }
+
+/* ===== Typography ===== */
+.slide h1 {
+  font-size: clamp(32px, 3.2vw, 56px);
+  font-weight: 800;
+  color: var(--color-title);
+  line-height: 1.25;
+  margin-bottom: 18px;
+  letter-spacing: -0.02em;
+}
+.slide h2 {
+  font-size: clamp(24px, 2.4vw, 40px);
+  font-weight: 700;
+  color: var(--theme-dark);
+  margin-bottom: 14px;
+  letter-spacing: -0.01em;
+}
+.slide h3 {
+  font-size: clamp(18px, 1.8vw, 28px);
+  font-weight: 600;
+  color: var(--color-title);
+  margin-bottom: 10px;
+}
+.slide p, .slide li {
+  font-size: clamp(16px, 1.6vw, 26px);
+  line-height: 1.75;
+  color: var(--color-text);
+}
+.slide ul, .slide ol { padding-left: 1.6em; margin: 14px 0; }
+.slide li { margin-bottom: 10px; }
+
+/* ===== Title slide ===== */
+.title-slide {
+  background: var(--theme-light);
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.title-slide h1 {
+  color: var(--color-title);
+  font-size: clamp(42px, 4.2vw, 72px);
+  margin-bottom: 14px;
+}
+.title-slide .subtitle {
+  font-size: clamp(18px, 2vw, 32px);
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+.title-slide .icon { font-size: clamp(56px, 6vw, 96px); margin-bottom: 24px; }
+.title-slide .session-badge {
+  display: inline-block;
+  background: var(--color-surface);
+  color: var(--theme-dark);
+  border: 2px solid var(--theme);
+  padding: 8px 28px;
+  border-radius: 28px;
+  font-size: clamp(14px, 1.4vw, 22px);
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+/* ===== Section slide ===== */
+.section-slide {
+  background: var(--theme-light);
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.section-slide h1 {
+  color: var(--color-title);
+}
+.section-slide .section-num {
+  font-size: clamp(48px, 5vw, 80px);
+  font-weight: 800;
+  color: var(--theme);
+  opacity: 0.3;
+  margin-bottom: 8px;
+}
+.section-slide p {
+  color: var(--color-text-secondary);
+}
+
+/* ===== Content helpers ===== */
+.highlight-box {
+  background: var(--theme-light);
+  border-left: 4px solid var(--theme);
+  padding: 18px 24px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin: 18px 0;
+  font-size: clamp(16px, 1.5vw, 24px);
+}
+
+.key-point {
+  background: #fffbeb;
+  border: 2px solid #f59e0b;
+  border-radius: var(--radius);
+  padding: 22px 28px;
+  margin: 18px 0;
+  font-size: clamp(16px, 1.5vw, 24px);
+}
+.key-point .label { font-weight: 700; color: #d97706; }
+
+.code-block {
+  background: #1e293b;
+  color: #e2e8f0;
+  font-family: var(--font-mono);
+  font-size: clamp(14px, 1.4vw, 22px);
+  padding: 20px 24px;
+  border-radius: var(--radius);
+  margin: 14px 0;
+  line-height: 1.7;
+}
+.code-block .green { color: #4ade80; }
+.code-block .blue { color: #60a5fa; }
+.code-block .yellow { color: #fbbf24; }
+.code-block .red { color: #f87171; }
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+  flex: 1;
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .two-col { grid-template-columns: 1fr; gap: 18px; }
+  .slide { padding: 28px 22px 56px; }
+}
+
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 26px;
+  border: 1.5px solid var(--color-border);
+}
+
+.step-card {
+  background: var(--color-surface);
+  border: 2px solid var(--theme);
+  border-radius: var(--radius);
+  padding: 22px 26px;
+  margin: 14px 0;
+}
+.step-card .step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--theme); color: white;
+  font-weight: 700; font-size: 16px; margin-right: 10px;
+}
+
+.mono { font-family: var(--font-mono); }
+.center { text-align: center; }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mb-8 { margin-bottom: 8px; }
+
+/* ===== Sieve mini grid ===== */
+.sieve-mini {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+  max-width: 420px;
+  margin: 14px auto;
+}
+.sieve-mini .cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: clamp(10px, 1vw, 14px);
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+}
+.sieve-mini .cell.prime {
+  background: var(--theme-light);
+  color: var(--theme-dark);
+  border-color: var(--theme);
+  font-weight: 700;
+}
+.sieve-mini .cell.gone {
+  background: #f1f5f9;
+  color: #cbd5e1;
+  border-color: transparent;
+}
+.sieve-mini .cell.one {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+/* ===== Key card display ===== */
+.key-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin: 18px 0;
+}
+.kc {
+  padding: 26px;
+  border-radius: var(--radius);
+  text-align: center;
+}
+.kc.pub { border: 2.5px solid #2563eb; background: #eff6ff; }
+.kc.priv { border: 2.5px solid #dc2626; background: #fef2f2; }
+.kc .kc-icon { font-size: clamp(28px, 3vw, 48px); margin-bottom: 10px; }
+.kc .kc-label { font-weight: 700; font-size: clamp(14px, 1.4vw, 22px); color: var(--color-title); }
+.kc .kc-val { font-family: var(--font-mono); font-size: clamp(20px, 2.2vw, 36px); font-weight: 800; margin: 10px 0; }
+.kc .kc-desc { font-size: clamp(12px, 1.1vw, 18px); color: var(--color-text-secondary); }
+
+/* ===== RSA number box ===== */
+.rsa-num-box {
+  background: #1e293b;
+  color: #10b981;
+  font-family: var(--font-mono);
+  font-size: clamp(6px, 0.6vw, 10px);
+  line-height: 1.7;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  word-break: break-all;
+  margin: 14px 0;
+}
+
+/* ===== Timeline ===== */
+.timeline-row {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  margin: 24px 0;
+}
+.timeline-row::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 0; right: 0;
+  height: 3px;
+  background: var(--theme);
+  border-radius: 2px;
+}
+.tl-item {
+  flex: 1;
+  text-align: center;
+  position: relative;
+  padding-top: 44px;
+}
+.tl-item::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--theme);
+  border: 3px solid white;
+  box-shadow: 0 0 0 2px var(--theme);
+}
+.tl-label { font-size: clamp(13px, 1.2vw, 20px); font-weight: 700; color: var(--theme); }
+.tl-desc { font-size: clamp(11px, 1vw, 16px); color: var(--color-text-secondary); margin-top: 4px; }
+
+/* ===== Animations ===== */
+.fade-in { animation: fadeIn 0.6s ease both; }
+.fade-in-1 { animation-delay: 0.2s; }
+.fade-in-2 { animation-delay: 0.4s; }
+.fade-in-3 { animation-delay: 0.6s; }
+.fade-in-4 { animation-delay: 0.8s; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Compare boxes ===== */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 20px;
+  align-items: center;
+  margin: 18px 0;
+}
+.compare-box {
+  padding: 24px;
+  border-radius: var(--radius);
+  text-align: center;
+}
+.compare-box.easy { background: var(--theme-light); border: 2px solid var(--theme); }
+.compare-box.hard { background: #fef2f2; border: 2px solid #dc2626; }
+.compare-vs { font-size: clamp(24px, 2.5vw, 40px); font-weight: 800; color: #cbd5e1; }
+
+/* ===== Nav bar ===== */
+.nav-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 48px;
+  background: var(--color-surface);
+  border-top: 1.5px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  z-index: 100;
+  padding: 0 24px;
+}
+.nav-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #d1d5db;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+  outline: none;
+}
+.nav-dot:hover { background: var(--theme); opacity: 0.6; transform: scale(1.15); }
+.nav-dot.active { background: var(--theme); transform: scale(1.35); }
+.nav-counter {
+  position: fixed;
+  bottom: 14px; right: 24px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-family: var(--font-mono);
+  z-index: 101;
+}
+
+/* ===== End slide ===== */
+.end-slide {
+  background: var(--theme-light);
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.end-slide h1 { color: var(--color-title); }
+.end-slide p { color: var(--color-text); }
+.end-slide .next-info {
+  display: inline-block;
+  margin-top: 28px;
+  padding: 16px 36px;
+  background: var(--color-surface);
+  border: 2px solid var(--theme);
+  border-radius: var(--radius);
+  font-size: clamp(16px, 1.6vw, 26px);
+}
+
+/* ===== Table styling ===== */
+.slide table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--color-border);
+}
+.slide table th {
+  background: var(--theme);
+  color: white;
+  padding: 14px 16px;
+  font-weight: 600;
+}
+.slide table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+.slide table tr:last-child td { border-bottom: none; }
+.slide table tr:nth-child(even) td { background: #f8fafc; }
+</style>
+</head>
+<body>
+
+<!-- Slide 1: Title -->
+<div class="slide title-slide active" data-slide="1">
+  <div class="session-badge">4차시 | 소수에서 RSA 공개키 암호까지</div>
+  <div class="icon">&#x1F512;</div>
+  <h1>소수의 힘</h1>
+  <div class="subtitle">깨지지 않는 암호의 비밀</div>
+</div>
+
+<!-- Slide 2: Review -->
+<div class="slide" data-slide="2">
+  <h2>&#x1F504; 지난 시간 돌아보기</h2>
+  <div class="two-col" style="margin-top:16px;">
+    <div>
+      <div class="highlight-box fade-in">
+        <strong>3차시 핵심 발견:</strong><br>
+        시저, 치환, 아핀 암호 모두 <strong>빈도 분석</strong>에 취약했다
+      </div>
+      <div class="highlight-box fade-in fade-in-1">
+        <strong>근본 문제:</strong><br>
+        같은 글자 &rarr; 같은 암호문 = 패턴이 남는다
+      </div>
+    </div>
+    <div>
+      <div class="key-point fade-in fade-in-2">
+        <div class="label">&#x2753; 오늘의 질문</div>
+        <p style="margin-top:8px;">빈도 분석으로도 깨지지 않는 암호는 없을까?</p>
+        <p style="margin-top:8px;"><strong>&rarr; 소수가 그 답을 가지고 있습니다!</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 3: Section 1 -->
+<div class="slide section-slide" data-slide="3">
+  <div class="section-num">01</div>
+  <h1>소수 사냥</h1>
+  <p>에라토스테네스의 체로 소수를 찾아봅시다</p>
+</div>
+
+<!-- Slide 4: Sieve -->
+<div class="slide" data-slide="4">
+  <h2>&#x1F3AF; 에라토스테네스의 체</h2>
+  <p class="mb-8">2,300년 전 그리스 수학자의 방법으로 소수를 걸러냅니다.</p>
+  <div class="two-col">
+    <div>
+      <div class="sieve-mini" id="sieve-display"></div>
+    </div>
+    <div>
+      <div class="step-card fade-in">
+        <span class="step-num">1</span> <strong>2의 배수</strong> 지우기 (2는 남김)
+      </div>
+      <div class="step-card fade-in fade-in-1">
+        <span class="step-num">2</span> <strong>3의 배수</strong> 지우기 (3은 남김)
+      </div>
+      <div class="step-card fade-in fade-in-2">
+        <span class="step-num">3</span> <strong>5의 배수</strong> 지우기 (5는 남김)
+      </div>
+      <div class="step-card fade-in fade-in-3">
+        <span class="step-num">4</span> <strong>7의 배수</strong> 지우기 (7은 남김)
+      </div>
+      <div class="highlight-box fade-in fade-in-4">
+        &#x2192; 남은 수 = <strong>소수 25개!</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 5: Why skip 4? -->
+<div class="slide" data-slide="5">
+  <h2>&#x1F914; 왜 4, 6, 8의 배수는 안 해도 될까?</h2>
+  <div class="card" style="margin:16px 0;">
+    <div class="code-block">
+      <span class="yellow">4</span> = <span class="green">2</span> &times; 2 &nbsp;&rarr;&nbsp; 2의 배수를 지울 때 이미 제거!<br>
+      <span class="yellow">6</span> = <span class="green">2</span> &times; 3 &nbsp;&rarr;&nbsp; 2의 배수를 지울 때 이미 제거!<br>
+      <span class="yellow">8</span> = <span class="green">2</span> &times; 4 &nbsp;&rarr;&nbsp; 2의 배수를 지울 때 이미 제거!<br>
+      <span class="yellow">9</span> = <span class="green">3</span> &times; 3 &nbsp;&rarr;&nbsp; 3의 배수를 지울 때 이미 제거!
+    </div>
+  </div>
+  <div class="key-point">
+    <div class="label">&#x1F4A1; 핵심</div>
+    <p>모든 합성수는 &radic;N 이하의 소수로 나뉩니다.<br>
+    &radic;100 = 10이므로, <strong>2, 3, 5, 7</strong>까지만 검사하면 충분!</p>
+  </div>
+</div>
+
+<!-- Slide 6: Prime pattern -->
+<div class="slide" data-slide="6">
+  <h2>&#x1F4CA; 소수가 줄어드는 패턴</h2>
+  <div class="card">
+    <table style="font-size:clamp(14px,1.4vw,22px);">
+      <tr>
+        <th style="padding:12px;">범위</th><th style="padding:12px;">소수 개수</th><th style="padding:12px;">비율</th>
+      </tr>
+      <tr><td class="center" style="padding:10px;">1~100</td><td class="center" style="padding:10px;"><strong>25</strong>개</td><td class="center" style="padding:10px;">25%</td></tr>
+      <tr><td class="center" style="padding:10px;">1~1,000</td><td class="center" style="padding:10px;"><strong>168</strong>개</td><td class="center" style="padding:10px;">16.8%</td></tr>
+      <tr><td class="center" style="padding:10px;">1~10,000</td><td class="center" style="padding:10px;"><strong>1,229</strong>개</td><td class="center" style="padding:10px;">12.3%</td></tr>
+      <tr><td class="center" style="padding:10px;">1~1,000,000</td><td class="center" style="padding:10px;"><strong>78,498</strong>개</td><td class="center" style="padding:10px;">7.8%</td></tr>
+    </table>
+  </div>
+  <div class="highlight-box mt-16">
+    소수는 점점 드물어지지만, <strong>절대 사라지지 않습니다</strong> (유클리드 증명, 기원전 300년)
+  </div>
+</div>
+
+<!-- Slide 7: App Transition -->
+<div class="slide section-slide" data-slide="7">
+  <div style="font-size:64px">&#x1F4F1;</div>
+  <h1>활동 시간</h1>
+  <p style="font-size:20px;margin-top:16px">학습앱을 열어주세요!</p>
+  <p style="font-size:16px;color:var(--text-secondary);margin-top:8px">에라토스테네스의 체로 소수를 사냥합니다</p>
+</div>
+
+<!-- Slide 8: Section 2 -->
+<div class="slide section-slide" data-slide="8">
+  <div class="section-num">02</div>
+  <h1>곱하기 vs 분해</h1>
+  <p>일방향 함수의 비밀을 체감합시다</p>
+</div>
+
+<!-- Slide 9: Multiply easy -->
+<div class="slide" data-slide="9">
+  <h2>&#x2705; 곱하기는 쉽다!</h2>
+  <div class="card" style="margin:16px 0;">
+    <div class="code-block" style="font-size:clamp(18px,2vw,32px);">
+      <span class="green">7</span> &times; <span class="green">13</span> = <span class="yellow">91</span> &nbsp;&nbsp; &#x23F1; ~2초<br><br>
+      <span class="green">23</span> &times; <span class="green">41</span> = <span class="yellow">943</span> &nbsp;&nbsp; &#x23F1; ~5초<br><br>
+      <span class="green">61</span> &times; <span class="green">89</span> = <span class="yellow">5429</span> &nbsp;&nbsp; &#x23F1; ~10초
+    </div>
+  </div>
+  <div class="highlight-box">
+    숫자가 커져도 곱하기 시간은 <strong>비슷하게</strong> 늘어납니다.
+  </div>
+</div>
+
+<!-- Slide 10: Factor hard -->
+<div class="slide" data-slide="10">
+  <h2>&#x274C; 분해는 어렵다!</h2>
+  <div class="card" style="margin:16px 0;">
+    <div class="code-block" style="font-size:clamp(18px,2vw,32px);">
+      <span class="yellow">91</span> = <span class="red">?</span> &times; <span class="red">?</span> &nbsp;&nbsp; &#x23F1; ~10초<br><br>
+      <span class="yellow">943</span> = <span class="red">?</span> &times; <span class="red">?</span> &nbsp;&nbsp; &#x23F1; ~30초<br><br>
+      <span class="yellow">5429</span> = <span class="red">?</span> &times; <span class="red">?</span> &nbsp;&nbsp; &#x23F1; ~1분+
+    </div>
+  </div>
+  <div class="highlight-box" style="border-color:#dc2626; background:#fef2f2;">
+    숫자가 커질수록 분해 시간이 <strong>폭발적으로</strong> 증가합니다!
+  </div>
+</div>
+
+<!-- Slide 11: One-way function -->
+<div class="slide" data-slide="11">
+  <h2>&#x26A1; 일방향 함수</h2>
+  <div class="compare-grid">
+    <div class="compare-box easy">
+      <p style="font-size:clamp(16px,1.6vw,28px);"><strong>&#x2192; 곱하기</strong></p>
+      <p class="mono" style="font-size:clamp(20px,2.2vw,36px); margin-top:8px;">7 &times; 13 = 91</p>
+      <p style="color:var(--theme-dark); font-weight:600; margin-top:8px;">쉽다!</p>
+    </div>
+    <div class="compare-vs">VS</div>
+    <div class="compare-box hard">
+      <p style="font-size:clamp(16px,1.6vw,28px);"><strong>&#x2190; 분해</strong></p>
+      <p class="mono" style="font-size:clamp(20px,2.2vw,36px); margin-top:8px;">91 = ? &times; ?</p>
+      <p style="color:#dc2626; font-weight:600; margin-top:8px;">어렵다!</p>
+    </div>
+  </div>
+  <div class="key-point">
+    <div class="label">&#x1F511; 핵심 발견</div>
+    <p><strong>곱하기는 쉽지만 분해는 어렵다 = 일방향 함수</strong><br>
+    RSA 암호는 이 비대칭성 위에 세워져 있습니다.</p>
+  </div>
+</div>
+
+<!-- Slide 12: Real RSA -->
+<div class="slide" data-slide="12">
+  <h2>&#x1F310; 실제 RSA 키의 크기</h2>
+  <p>실제 인터넷에서 사용하는 RSA 키는 <strong>617자리</strong> 숫자입니다.</p>
+  <div class="rsa-num-box" style="margin:16px 0;">25195908475657893494027183240048398571429282126204032027777137836043662020707595556264018525880784406918290641249515082189298559149176184502808489120072844992687392807287776735971418347270261896375014971824691165077613379859095700097330459748808428401797429100642458691817195118746121515172654632282216869987549182422433637259085141865462043576798423387184774447920739934236584823824281198163815010674810451660377306056201619676256133844164003817297520903504172054763980684402903874024573452305308147488899719656146370070691446400018912980683640955277346256127500769912918280264949262627436558540065188542440450419063550328856628633225128362124471806958</div>
+  <div class="highlight-box" style="border-color:#dc2626; background:#fef2f2;">
+    &#x1F631; 이 숫자를 소인수분해하려면: <strong>현존 최고 슈퍼컴퓨터 &times; 수백만 년</strong>
+  </div>
+</div>
+
+<!-- Slide 13: Section 3 -->
+<div class="slide section-slide" data-slide="13">
+  <div class="section-num">03</div>
+  <h1>RSA 만들기</h1>
+  <p>작은 수로 직접 공개키 암호를 만들어 봅시다</p>
+</div>
+
+<!-- Slide 14: RSA Step 1-3 -->
+<div class="slide" data-slide="14">
+  <h2>&#x1F511; RSA 키 생성 (1~3단계)</h2>
+  <div class="step-card fade-in">
+    <span class="step-num">1</span> <strong>소수 두 개 고르기:</strong> p = 3, q = 11
+  </div>
+  <div class="step-card fade-in fade-in-1">
+    <span class="step-num">2</span> <strong>n 계산:</strong>
+    <span class="mono">n = p &times; q = 3 &times; 11 = <strong>33</strong></span>
+    <span style="color:var(--color-text-secondary); font-size:clamp(13px,1.2vw,18px);"> (공개)</span>
+  </div>
+  <div class="step-card fade-in fade-in-2">
+    <span class="step-num">3</span> <strong>&#x03C6;(n) 계산:</strong>
+    <span class="mono">&#x03C6;(33) = (3-1)(11-1) = 2&times;10 = <strong>20</strong></span>
+    <span style="color:var(--color-text-secondary); font-size:clamp(13px,1.2vw,18px);"> (비밀!)</span>
+  </div>
+  <div class="highlight-box fade-in fade-in-3">
+    &#x1F517; <strong>2차시 연결:</strong> &#x03C6;(n)은 오일러 파이 함수 &mdash; n보다 작고 n과 서로소인 수의 개수!
+  </div>
+</div>
+
+<!-- Slide 15: RSA Step 4-5 -->
+<div class="slide" data-slide="15">
+  <h2>&#x1F511; RSA 키 생성 (4~5단계)</h2>
+  <div class="step-card fade-in">
+    <span class="step-num">4</span> <strong>공개키 e 고르기:</strong>
+    <span class="mono">gcd(e, 20) = 1</span>인 수
+    <p style="margin-top:4px;">&#x1F517; <strong>2차시 서로소!</strong> &rarr; e = <strong class="mono" style="color:#2563eb;">3</strong> 선택</p>
+  </div>
+  <div class="step-card fade-in fade-in-1">
+    <span class="step-num">5</span> <strong>비밀키 d 찾기:</strong>
+    <span class="mono">e &times; d &equiv; 1 (mod &#x03C6;(n))</span>
+    <p style="margin-top:4px;">&#x1F517; <strong>2차시 역원!</strong> &rarr; 3 &times; <strong class="mono" style="color:#dc2626;">7</strong> = 21, 21 mod 20 = 1 &#x2705;</p>
+  </div>
+  <div class="key-pair fade-in fade-in-2">
+    <div class="kc pub">
+      <div class="kc-icon">&#x1F310;</div>
+      <div class="kc-label">공개키</div>
+      <div class="kc-val" style="color:#2563eb;">(e=3, n=33)</div>
+      <div class="kc-desc">누구에게나 공개</div>
+    </div>
+    <div class="kc priv">
+      <div class="kc-icon">&#x1F512;</div>
+      <div class="kc-label">비밀키</div>
+      <div class="kc-val" style="color:#dc2626;">(d=7, n=33)</div>
+      <div class="kc-desc">나만 알고 있음</div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 16: Encryption -->
+<div class="slide" data-slide="16">
+  <h2>&#x1F512; 암호화: 공개키로 잠그기</h2>
+  <p>글자 <strong>E</strong> (= 숫자 4)를 암호화합니다.</p>
+  <div class="card" style="margin:16px 0;">
+    <div class="code-block" style="font-size:clamp(16px,1.8vw,28px);">
+      C = M<sup>e</sup> mod n<br>
+      C = <span class="green">4</span><sup><span class="blue">3</span></sup> mod <span class="yellow">33</span><br><br>
+      4<sup>3</sup> = 4 &times; 4 &times; 4 = <span class="green">64</span><br>
+      64 mod 33 = <span class="red">31</span>
+    </div>
+  </div>
+  <div class="highlight-box">
+    E(=4)가 <strong>31</strong>로 변했습니다! 공개키 (3, 33)을 아는 누구나 잠글 수 있습니다.
+  </div>
+</div>
+
+<!-- Slide 17: Decryption -->
+<div class="slide" data-slide="17">
+  <h2>&#x1F513; 복호화: 비밀키로 열기</h2>
+  <p>암호문 <strong>31</strong>을 비밀키로 복호화합니다.</p>
+  <div class="card" style="margin:16px 0;">
+    <div class="code-block" style="font-size:clamp(14px,1.4vw,22px);">
+      M = C<sup>d</sup> mod n = <span class="red">31</span><sup><span class="blue">7</span></sup> mod <span class="yellow">33</span><br><br>
+      <span class="green">반복제곱법:</span><br>
+      31<sup>1</sup> mod 33 = 31<br>
+      31<sup>2</sup> mod 33 = 961 mod 33 = <span class="blue">4</span><br>
+      31<sup>4</sup> mod 33 = 4&times;4 = 16 mod 33 = <span class="blue">16</span><br><br>
+      31<sup>7</sup> = 31<sup>4</sup> &times; 31<sup>2</sup> &times; 31<sup>1</sup><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;= 16 &times; 4 &times; 31 = 1984<br>
+      1984 mod 33 = <span class="yellow">4</span> &rarr; <span class="green">E</span> &#x2705;
+    </div>
+  </div>
+  <div class="key-point">
+    <div class="label">&#x1F389; 성공!</div>
+    <p>공개키(3,33)로 잠그고 비밀키(7,33)로 열었습니다!</p>
+  </div>
+</div>
+
+<!-- Slide 18: Why secure -->
+<div class="slide" data-slide="18">
+  <h2>&#x1F6E1; 왜 안전한가?</h2>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h3>공격자가 아는 것</h3>
+        <ul>
+          <li>공개키: e = 3, n = 33</li>
+          <li>암호문: C = 31</li>
+        </ul>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <h3>복호화하려면?</h3>
+        <ol>
+          <li>n=33을 <strong>소인수분해</strong>해야 함</li>
+          <li>p=3, q=11을 알아야 &#x03C6;(n)=20 계산 가능</li>
+          <li>&#x03C6;(n)을 알아야 d=7 계산 가능</li>
+        </ol>
+      </div>
+    </div>
+    <div>
+      <div class="key-point">
+        <div class="label">&#x1F511; 안전성의 근거</div>
+        <p>n=33은 쉽게 분해되지만...<br><br>
+        n이 <strong>617자리</strong>가 되면?<br>
+        소인수분해 = <strong>사실상 불가능!</strong><br><br>
+        &rarr; RSA의 안전성 = <strong>소인수분해의 어려움</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 19: Real world -->
+<div class="slide" data-slide="19">
+  <h2>&#x1F310; 바로 이 수학이 매일 작동합니다</h2>
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin:24px 0;">
+    <div class="card center">
+      <div style="font-size:clamp(36px,4vw,60px); margin-bottom:10px;">&#x1F512;</div>
+      <h3>HTTPS 자물쇠</h3>
+      <p style="font-size:clamp(13px,1.2vw,18px); color:var(--color-text-secondary);">웹사이트 접속 시 데이터 암호화</p>
+    </div>
+    <div class="card center">
+      <div style="font-size:clamp(36px,4vw,60px); margin-bottom:10px;">&#x1F4AC;</div>
+      <h3>카카오톡 비밀채팅</h3>
+      <p style="font-size:clamp(13px,1.2vw,18px); color:var(--color-text-secondary);">메시지를 공개키로 잠그기</p>
+    </div>
+    <div class="card center">
+      <div style="font-size:clamp(36px,4vw,60px); margin-bottom:10px;">&#x1F3E6;</div>
+      <h3>인터넷 뱅킹</h3>
+      <p style="font-size:clamp(13px,1.2vw,18px); color:var(--color-text-secondary);">금융 거래 보안</p>
+    </div>
+  </div>
+  <div class="highlight-box">
+    &#x1F4A1; 여러분이 지금 이 순간에도 인터넷을 쓸 수 있는 건, <strong>소수 덕분입니다!</strong>
+  </div>
+</div>
+
+<!-- Slide 20: Summary -->
+<div class="slide" data-slide="20">
+  <h2>&#x1F4CB; 4차시 요약</h2>
+  <div class="step-card fade-in">
+    <span class="step-num">1</span> <strong>에라토스테네스의 체</strong>로 소수를 찾았다 &rarr; 소수는 커질수록 드물어진다
+  </div>
+  <div class="step-card fade-in fade-in-1">
+    <span class="step-num">2</span> <strong>곱하기 vs 분해</strong>: 일방향 함수를 체감했다
+  </div>
+  <div class="step-card fade-in fade-in-2">
+    <span class="step-num">3</span> <strong>RSA 키 생성</strong>: 소수 &rarr; n &rarr; &#x03C6;(n) &rarr; e(공개) &rarr; d(비밀)
+  </div>
+  <div class="step-card fade-in fade-in-3">
+    <span class="step-num">4</span> <strong>암호화/복호화</strong>: 공개키로 잠그고, 비밀키로만 열 수 있다
+  </div>
+  <div class="key-point fade-in fade-in-4">
+    <div class="label">&#x1F31F; 최종 발견</div>
+    <p>수학(소수, mod 연산, 서로소, 역원)이 우리의 일상을 지키는 보이지 않는 힘이다!</p>
+  </div>
+  <a href="session4_unified.html" style="display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:12px 28px;background:#10b981;color:#fff;border-radius:10px;text-decoration:none;font-size:clamp(14px,1.4vw,18px);font-weight:700;box-shadow:0 4px 16px rgba(16,185,129,.25)">&#x1F680; 학습 앱 열기</a>
+</div>
+
+<!-- Slide 21: Journey timeline -->
+<div class="slide end-slide" data-slide="21">
+  <h1 style="margin-bottom:24px;">&#x1F3C1; 4차시 여정을 마치며</h1>
+  <div style="background:var(--color-surface); border:2px solid var(--theme); border-radius:var(--radius); padding:36px; max-width:700px; width:100%;">
+    <div class="timeline-row">
+      <div class="tl-item"><div class="tl-label">1차시</div><div class="tl-desc">mod 연산<br>발견</div></div>
+      <div class="tl-item"><div class="tl-label">2차시</div><div class="tl-desc">암호 만들기<br>(서로소)</div></div>
+      <div class="tl-item"><div class="tl-label">3차시</div><div class="tl-desc">암호 깨기<br>(빈도)</div></div>
+      <div class="tl-item"><div class="tl-label">4차시</div><div class="tl-desc">깨지지 않는<br>암호 (소수)</div></div>
+    </div>
+  </div>
+  <div class="next-info" style="margin-top:32px;">
+    <p style="color:var(--color-text); font-size:clamp(18px, 2vw, 30px); font-weight:600;">
+      "수학은 단순한 계산이 아니라,<br>우리의 일상을 지키는 보이지 않는 힘입니다."
+    </p>
+  </div>
+</div>
+
+<!-- Navigation -->
+<div class="nav-bar" id="nav-bar"></div>
+<div class="nav-counter" id="nav-counter"></div>
+
+<script>
+const TOTAL_SLIDES = 21;
+let currentSlide = 1;
+
+function goToSlide(n) {
+  if (n < 1 || n > TOTAL_SLIDES) return;
+  document.querySelectorAll('.slide').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  const target = document.querySelector(`[data-slide="${n}"]`);
+  if (target) {
+    target.style.display = 'flex';
+    requestAnimationFrame(() => target.classList.add('active'));
+  }
+  currentSlide = n;
+  updateNav();
+
+  // Build sieve on slide 4
+  if (n === 4) buildSieveDisplay();
+}
+
+function updateNav() {
+  const bar = document.getElementById('nav-bar');
+  let html = '';
+  for (let i = 1; i <= TOTAL_SLIDES; i++) {
+    html += `<button class="nav-dot ${i === currentSlide ? 'active' : ''}" onclick="goToSlide(${i})"></button>`;
+  }
+  bar.innerHTML = html;
+  document.getElementById('nav-counter').textContent = `${currentSlide} / ${TOTAL_SLIDES}`;
+}
+
+function buildSieveDisplay() {
+  const grid = document.getElementById('sieve-display');
+  if (!grid || grid.children.length > 0) return;
+  const primes = new Set([2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]);
+  let html = '';
+  for (let i = 1; i <= 100; i++) {
+    const cls = i === 1 ? 'one' : primes.has(i) ? 'prime' : 'gone';
+    html += `<div class="cell ${cls}">${i}</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+    e.preventDefault(); goToSlide(currentSlide + 1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+    e.preventDefault(); goToSlide(currentSlide - 1);
+  } else if (e.key === 'Home') {
+    e.preventDefault(); goToSlide(1);
+  } else if (e.key === 'End') {
+    e.preventDefault(); goToSlide(TOTAL_SLIDES);
+  }
+});
+
+// Touch swipe
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) {
+    if (dx < 0) goToSlide(currentSlide + 1);
+    else goToSlide(currentSlide - 1);
+  }
+});
+
+// Init
+goToSlide(1);
+</script>
+</body>
+</html>

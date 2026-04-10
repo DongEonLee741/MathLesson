@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4차시: 소수의 힘</title>
+<style>
+:root {
+  --ink: #1a1a2e;
+  --ink2: #4a4a68;
+  --ink3: #8888a4;
+  --bg: #f7f7fb;
+  --card: #fff;
+  --border: #ebebf0;
+  --theme: #10b981;
+  --theme-light: #ecfdf5;
+  --error: #DC2626;
+  --warning: #d97706;
+  --warning-light: #fffbeb;
+  --blue: #3b82f6;
+  --blue-light: #eff6ff;
+  --red: #dc2626;
+  --red-light: #fef2f2;
+  --purple: #7c3aed;
+  --purple-light: #f5f3ff;
+  --font-main: 'Pretendard', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'Fira Code', 'Consolas', monospace;
+  --shadow-sm: 0 1px 3px rgba(26, 26, 46, 0.04), 0 1px 2px rgba(26, 26, 46, 0.03);
+  --shadow-md: 0 4px 12px rgba(26, 26, 46, 0.06), 0 1px 4px rgba(26, 26, 46, 0.04);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-main);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ── */
+.header {
+  background: var(--card);
+  border-top: 4px solid var(--theme);
+  text-align: center;
+  padding: 32px 20px 28px;
+  box-shadow: var(--shadow-sm);
+}
+.header h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+.header .sub {
+  font-size: 14px;
+  color: var(--ink2);
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* ── Nav ── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--card);
+  display: flex;
+  overflow-x: auto;
+  padding: 10px 16px;
+  gap: 6px;
+  box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid var(--border);
+}
+.nav a {
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink3);
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: 100px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+.nav a:hover {
+  color: var(--ink2);
+  background: var(--bg);
+}
+.nav a.active {
+  color: var(--theme);
+  background: var(--theme-light);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+/* ── Container ── */
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px 16px 100px;
+}
+
+/* ── Alpha table ── */
+.alpha-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  margin: 14px 0;
+}
+.alpha-table td {
+  text-align: center;
+  padding: 7px 2px;
+  border: 1px solid var(--border);
+}
+.alpha-table tr:first-child td,
+.alpha-table tr:nth-child(3) td {
+  background: var(--theme);
+  color: #fff;
+  font-weight: 700;
+}
+.alpha-table tr:nth-child(2) td,
+.alpha-table tr:nth-child(4) td {
+  background: var(--theme-light);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ── Section ── */
+.section {
+  margin-top: 40px;
+}
+.section-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 100px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--theme);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.section h2 {
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 14px 0 8px;
+  letter-spacing: -0.01em;
+}
+.section h3 {
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--theme);
+  margin: 24px 0 10px;
+}
+
+/* ── Card ── */
+.card {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 24px;
+  margin: 14px 0;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+/* ── Inputs ── */
+.input-inline {
+  display: inline-block;
+  width: 80px;
+  padding: 6px 10px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  text-align: center;
+  background: var(--bg);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  color: var(--ink);
+}
+.input-inline:focus {
+  outline: none;
+  border-color: var(--theme);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+.input-wide {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font-main);
+  font-size: 14px;
+  background: var(--bg);
+  resize: vertical;
+  min-height: 64px;
+  color: var(--ink);
+  line-height: 1.65;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-wide:focus {
+  outline: none;
+  border-color: var(--theme);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* ── Data Table ── */
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 14px 0;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.data-table th {
+  background: var(--theme);
+  color: #fff;
+  padding: 10px 12px;
+  font-weight: 600;
+  text-align: center;
+  font-size: 13px;
+}
+.data-table td {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--ink);
+}
+.data-table tr:nth-child(even) td {
+  background: var(--bg);
+}
+.data-table input {
+  width: 60px;
+  padding: 5px 4px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: var(--card);
+  transition: border-color 0.2s;
+  color: var(--ink);
+}
+.data-table input:focus {
+  outline: none;
+  border-color: var(--theme);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+}
+
+/* ── Highlight / Info Box ── */
+.highlight {
+  background: var(--theme-light);
+  border-left: 3px solid var(--theme);
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin: 14px 0;
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.7;
+}
+
+/* ── Callout / Warning Box ── */
+.callout {
+  background: var(--warning-light);
+  border-left: 3px solid #f59e0b;
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin: 14px 0;
+  font-size: 14px;
+  color: var(--ink);
+}
+.callout .label {
+  font-weight: 700;
+  color: var(--warning);
+  margin-bottom: 4px;
+}
+
+/* ── Link-back Box ── */
+.link-back {
+  background: var(--purple-light);
+  border-left: 3px solid var(--purple);
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin: 10px 0;
+  font-size: 13px;
+  color: var(--purple);
+}
+.link-back strong {
+  color: #6d28d9;
+}
+
+/* ── Hint ── */
+.hint-toggle {
+  font-size: 13px;
+  color: var(--theme);
+  cursor: pointer;
+  text-decoration: underline;
+  margin: 10px 0;
+  display: inline-block;
+  font-weight: 500;
+}
+.hint-content {
+  display: none;
+  background: var(--theme-light);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin: 6px 0;
+  font-size: 13px;
+  color: var(--ink2);
+}
+.hint-content.show {
+  display: block;
+}
+
+/* ── RSA Key Card ── */
+.rsa-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 18px 0;
+}
+.rsa-card .pub {
+  background: var(--blue-light);
+  border: 1.5px solid rgba(59, 130, 246, 0.3);
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+}
+.rsa-card .priv {
+  background: var(--red-light);
+  border: 1.5px solid rgba(220, 38, 38, 0.3);
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+}
+.rsa-card h4 {
+  font-size: 15px;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+.rsa-card .big {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+/* ── Step Box ── */
+.step-box {
+  background: var(--theme-light);
+  border: 1.5px solid rgba(16, 185, 129, 0.25);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin: 14px 0;
+}
+.step-box .step-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--theme);
+  margin-bottom: 10px;
+}
+.step-line {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  margin: 8px 0;
+  line-height: 2;
+  color: var(--ink);
+}
+
+/* ── Self Assessment ── */
+.assess-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 14px 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.assess-table th {
+  background: var(--theme);
+  color: #fff;
+  padding: 10px 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.assess-table td {
+  padding: 10px 8px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+.assess-table td:first-child {
+  text-align: left;
+  font-weight: 500;
+  padding-left: 14px;
+}
+.assess-table input[type=radio] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--theme);
+}
+
+/* ── Utilities ── */
+.text-primary { color: var(--theme); }
+.fw-700 { font-weight: 700; }
+.mono { font-family: var(--font-mono); }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mb-8 { margin-bottom: 8px; }
+p { margin: 8px 0; color: var(--ink); }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .rsa-card { grid-template-columns: 1fr; }
+  .header h1 { font-size: 22px; }
+  .card { padding: 18px 16px; }
+  .container { padding: 16px 12px 80px; }
+}
+
+/* ── Print ── */
+@media print {
+  body { background: #fff; font-size: 12px; line-height: 1.6; }
+  .header { border-top: 3px solid var(--theme); box-shadow: none; padding: 16px; }
+  .nav { display: none; }
+  .container { max-width: 100%; padding: 0; }
+  .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; margin: 8px 0; padding: 14px; border-radius: 8px; }
+  .section { margin-top: 20px; }
+  .step-box { break-inside: avoid; }
+  .highlight, .callout, .link-back { break-inside: avoid; }
+  .input-inline, .input-wide, .data-table input {
+    border: 1.5px solid #bbb;
+    background: #fff;
+    box-shadow: none;
+  }
+  .rsa-card { break-inside: avoid; }
+  .assess-table { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔬 소수의 힘</h1>
+  <div class="sub">4차시 | 소수에서 RSA 공개키 암호까지</div>
+</div>
+
+<nav class="nav" id="nav">
+  <a href="#sec-W" class="active">W 워밍업</a>
+  <a href="#sec-E1">E1 소수 사냥</a>
+  <a href="#sec-E2">E2 곱하기 vs 분해</a>
+  <a href="#sec-D">D RSA 만들기</a>
+  <a href="#sec-C">C 도전</a>
+  <a href="#sec-R">R 성찰</a>
+</nav>
+
+<div class="container">
+
+<!-- Alpha table -->
+<div class="card">
+  <div style="font-weight:600;margin-bottom:8px;">알파벳-숫자 대응표</div>
+  <table class="alpha-table">
+    <tr><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td><td>G</td><td>H</td><td>I</td><td>J</td><td>K</td><td>L</td><td>M</td></tr>
+    <tr><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td></tr>
+    <tr><td>N</td><td>O</td><td>P</td><td>Q</td><td>R</td><td>S</td><td>T</td><td>U</td><td>V</td><td>W</td><td>X</td><td>Y</td><td>Z</td></tr>
+    <tr><td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td><td>20</td><td>21</td><td>22</td><td>23</td><td>24</td><td>25</td></tr>
+  </table>
+</div>
+
+<!-- W Section -->
+<div class="section" id="sec-W">
+  <span class="section-badge">W 워밍업</span>
+  <h2>발상의 전환</h2>
+
+  <div class="card">
+    <h3>W-1. 3차시 되돌아보기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h3>
+    <p>3차시에서 시저 암호, 치환 암호, 아핀 암호가 <strong>모두</strong> 빈도 분석에 뚫리는 것을 확인했습니다.</p>
+    <p><strong>(a)</strong> 이 암호들의 공통 약점은 무엇이었나요?</p>
+    <textarea class="input-wide" placeholder="공통 약점..."></textarea>
+
+    <p class="mt-8"><strong>(b)</strong> 또한, 이 암호들은 암호화 키를 알면 복호화 키도 알 수 있었습니다.</p>
+    <div class="step-line">
+      시저 암호: 암호화 키 k = 3이면, 복호화 키 = 26 − 3 = <input class="input-inline" style="width:50px" placeholder="?">
+    </div>
+    <div class="step-line">
+      아핀 암호: (a, b)를 알면 역원 a⁻¹을 구해서 복호화할 수 있었죠.
+    </div>
+
+    <div class="callout mt-8">
+      <div class="label">💬 발상의 전환</div>
+      만약 <strong>암호화 키를 공개해도 복호화가 안 되는</strong> 암호가 있다면? 오늘 그 비밀을 파헤칩니다.
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>W-2. 편지함의 비유 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h3>
+    <div class="highlight">
+      "우체통에는 누구나 편지를 넣을 수 있습니다. 하지만 <strong>꺼내는 것은 열쇠를 가진 주인만</strong> 가능합니다."
+    </div>
+    <p><strong>(a)</strong> 이 비유에서 "편지를 넣는 행위"는?</p>
+    <div class="step-line">
+      편지를 넣는 것 = <input class="input-inline" style="width:60px" placeholder="?">화 &nbsp;&nbsp; 편지를 꺼내는 것 = <input class="input-inline" style="width:60px" placeholder="?">화
+    </div>
+    <p class="mt-8"><strong>(b)</strong> "누구나 넣을 수 있다"는 것은 어떤 키가 공개되어 있다는 뜻인가요?</p>
+    <div class="step-line">
+      공개되는 키: <input class="input-inline" style="width:60px" placeholder="?">화 키 &nbsp;&nbsp; 비밀로 유지하는 키: <input class="input-inline" style="width:60px" placeholder="?">화 키
+    </div>
+  </div>
+</div>
+
+<!-- E1 Section -->
+<div class="section" id="sec-E1">
+  <span class="section-badge">E 탐구 1</span>
+  <h2>"소수 사냥" — 에라토스테네스의 체</h2>
+
+  <div class="card">
+    <h3>E-1. 체로 걸러내기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h3>
+    <p>웹앱의 <strong>1~100 격자</strong>에서 소수를 걸러내 봅시다.</p>
+
+    <p><strong>(a)</strong> 2의 배수를 모두 지우세요. (2는 남기고, 4, 6, 8, ... 지움)</p>
+    <div class="step-line">지운 개수: <input class="input-inline" style="width:50px" placeholder="?">개</div>
+
+    <p class="mt-8"><strong>(b)</strong> 3의 배수를 지우세요. (3은 남기고, 이미 지워진 것은 건너뜀)</p>
+    <div class="step-line">새로 지운 개수: <input class="input-inline" style="width:50px" placeholder="?">개</div>
+
+    <p class="mt-8"><strong>(c)</strong> 5의 배수, 7의 배수도 차례로 지우세요.</p>
+    <div class="step-line">5의 배수에서 새로 지운 개수: <input class="input-inline" style="width:50px" placeholder="?">개</div>
+    <div class="step-line">7의 배수에서 새로 지운 개수: <input class="input-inline" style="width:50px" placeholder="?">개</div>
+
+    <p class="mt-8"><strong>(d)</strong> 남은 수가 바로 <strong>소수</strong>입니다. 1~100에서 소수는 모두 몇 개?</p>
+    <div class="step-line">소수의 개수: <input class="input-inline" style="width:50px" placeholder="?">개</div>
+
+    <div class="callout mt-8">
+      <div class="label">💬 역사</div>
+      이 방법을 고대 그리스 수학자 <strong>에라토스테네스</strong>가 고안했습니다. "체(sieve)로 합성수를 걸러내면 소수만 남는다!"
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>E-2. 왜 4, 6, 8의 배수는 안 해도 되나요? <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h3>
+    <p><strong>(a)</strong> 4의 배수는 모두 <input class="input-inline" style="width:40px" placeholder="?">의 배수이기도 합니다. → 이미 지워졌습니다!</p>
+    <p><strong>(b)</strong> 6의 배수는 <input class="input-inline" style="width:40px" placeholder="?">의 배수이면서 동시에 <input class="input-inline" style="width:40px" placeholder="?">의 배수입니다. → 역시 이미 지워졌습니다!</p>
+    <p><strong>(c)</strong> 일반적으로, <strong>√100 = <input class="input-inline" style="width:40px" placeholder="?"></strong> 이하의 소수 배수만 지우면 100 이하의 모든 합성수가 걸러집니다.</p>
+    <div class="highlight">📌 이것이 에라토스테네스의 체가 효율적인 이유입니다.</div>
+  </div>
+
+  <div class="card">
+    <h3>E-3. 소수는 얼마나 희귀한가? <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">&#x26AA; 선택</span></h3>
+    <p>웹앱의 &#x1F680; <strong>1000까지 체 돌려보기</strong> 버튼을 눌러, 아래 표를 채워 봅시다.</p>
+    <table class="data-table">
+      <tr><th>범위</th><th>소수 개수</th><th>비율 (소수/전체)</th></tr>
+      <tr><td>1~100</td><td><input placeholder="?"></td><td><input placeholder="?">%</td></tr>
+      <tr><td>1~200</td><td><input placeholder="?"></td><td><input placeholder="?">%</td></tr>
+      <tr><td>1~500</td><td><input placeholder="?"></td><td><input placeholder="?">%</td></tr>
+      <tr><td>1~1000</td><td><input placeholder="?"></td><td><input placeholder="?">%</td></tr>
+    </table>
+    <p><strong>(a)</strong> 범위가 넓어질수록 소수의 <strong>비율</strong>은 어떻게 변하나요?</p>
+    <textarea class="input-wide" placeholder="관찰..."></textarea>
+    <p class="mt-8"><strong>(b)</strong> 빈칸을 채우세요:</p>
+    <div class="highlight">"소수는 무한히 많지만, 숫자가 커질수록 점점 <input class="input-inline" style="width:120px" placeholder="?">."</div>
+  </div>
+</div>
+
+<!-- E2 Section -->
+<div class="section" id="sec-E2">
+  <span class="section-badge">E 탐구 2</span>
+  <h2>"곱하기는 1초, 분해는 1000년"</h2>
+
+  <div class="card">
+    <h3>E-4. 곱하기 도전 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h3>
+    <p>웹앱에서 소수 두 개의 곱을 계산합시다. (타이머 작동!)</p>
+    <table class="data-table">
+      <tr><th>문제</th><th>답</th><th>걸린 시간</th></tr>
+      <tr><td class="mono">7 × 13 =</td><td><input placeholder="?"></td><td><input placeholder="?">초</td></tr>
+      <tr><td class="mono">23 × 41 =</td><td><input placeholder="?"></td><td><input placeholder="?">초</td></tr>
+      <tr><td class="mono">61 × 89 =</td><td><input placeholder="?"></td><td><input placeholder="?">초</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>E-5. 분해 도전 — 거꾸로! <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h3>
+    <p>주어진 수를 두 소수의 곱으로 나타내세요. (타이머 작동!)</p>
+    <table class="data-table">
+      <tr><th>문제</th><th>분해</th><th>걸린 시간</th></tr>
+      <tr><td class="mono">77 =</td><td><input style="width:40px" placeholder="?"> × <input style="width:40px" placeholder="?"></td><td><input placeholder="?">초</td></tr>
+      <tr><td class="mono">899 =</td><td><input style="width:40px" placeholder="?"> × <input style="width:40px" placeholder="?"></td><td><input placeholder="?">초</td></tr>
+      <tr><td class="mono">1517 =</td><td><input style="width:40px" placeholder="?"> × <input style="width:40px" placeholder="?"></td><td><input placeholder="?">초</td></tr>
+    </table>
+    <span class="hint-toggle" onclick="this.nextElementSibling.classList.toggle('show')">💡 힌트 보기</span>
+    <div class="hint-content">웹앱의 힌트 버튼을 사용해보세요. 소수를 차례로 나누어 보는 것이 핵심입니다.</div>
+  </div>
+
+  <div class="card">
+    <h3>E-6. 비대칭성 발견 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h3>
+    <p><strong>(a)</strong> E-4(곱하기)와 E-5(분해)의 시간을 비교합시다.</p>
+    <textarea class="input-wide" placeholder="관찰..."></textarea>
+    <p class="mt-8"><strong>(b)</strong> 웹앱의 <strong>비교 그래프</strong>를 보세요. 곱하기 시간과 분해 시간은 숫자가 커질수록 어떻게 달라지나요?</p>
+    <textarea class="input-wide" placeholder="관찰..."></textarea>
+    <p class="mt-8"><strong>(c)</strong> 핵심 용어를 채워 넣으세요:</p>
+    <div class="highlight">
+      "곱하기(한쪽 방향)는 쉽지만, 분해(반대 방향)는 엄청나게 어렵다.<br>
+      이런 성질을 <strong><input class="input-inline" style="width:140px" placeholder="?"></strong>이라 부른다."
+    </div>
+    <p class="mt-8"><strong>(d)</strong> 웹앱에서 <strong>실제 인터넷 RSA 키</strong> 숫자(617자리!)를 확인합시다.</p>
+    <div class="step-line">이 숫자를 분해하려면: 현존 최고 슈퍼컴퓨터로도 <strong><input class="input-inline" style="width:120px" placeholder="?"></strong></div>
+  </div>
+</div>
+
+<!-- D Section -->
+<div class="section" id="sec-D">
+  <span class="section-badge">D 심화</span>
+  <h2>"작은 RSA 만들기" — 공개키 암호의 탄생</h2>
+
+  <div class="card">
+    <h3>D-1. RSA 키 만들기: 5단계 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h3>
+
+    <div class="step-box">
+      <div class="step-title">Step 1. 소수 두 개 고르기</div>
+      <p>미션 1에서 찾은 소수 중 두 개를 고릅니다. (추천: p=3, q=11)</p>
+      <div class="step-line">p = <input class="input-inline" style="width:50px" placeholder="?"> &nbsp;&nbsp; q = <input class="input-inline" style="width:50px" placeholder="?"></div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title">Step 2. n 계산</div>
+      <div class="step-line">n = p × q = <input class="input-inline" style="width:50px" placeholder="?"> × <input class="input-inline" style="width:50px" placeholder="?"> = <input class="input-inline" style="width:60px" placeholder="?"></div>
+      <div class="highlight mt-8">n은 <strong>공개</strong>됩니다. 하지만 n을 p와 q로 분해하는 건 어렵죠!</div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title">Step 3. φ(n) 계산</div>
+      <div class="step-line">φ(n) = (p − 1) × (q − 1) = <input class="input-inline" style="width:40px" placeholder="?"> × <input class="input-inline" style="width:40px" placeholder="?"> = <input class="input-inline" style="width:60px" placeholder="?"></div>
+      <div class="highlight mt-8">φ(n)은 <strong>비밀</strong>로 유지합니다. p와 q를 아는 사람만 이 값을 계산할 수 있습니다!</div>
+      <div class="link-back mt-8">📌 2차시에서 잠깐 등장했던 <strong>오일러 파이 함수</strong> φ(n)이 여기서 핵심 역할을 합니다.</div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title">Step 4. 공개키 e 고르기 — 서로소 조건!</div>
+      <p>조건: <strong class="mono">gcd(e, φ(n)) = 1</strong> → e와 φ(n)이 <strong>서로소</strong>여야 합니다.</p>
+      <div class="link-back">🔗 <strong>2차시에서 배운 서로소 개념</strong>이 돌아왔습니다!</div>
+      <p class="mt-8">φ(n) = 20일 때, 서로소인 수와 아닌 수를 분류합시다.</p>
+      <table class="data-table" style="font-size:13px">
+        <tr><th>후보</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>13</th><th>17</th><th>19</th></tr>
+        <tr><td>gcd(후보,20)</td><td>2</td><td><input style="width:28px"></td><td>4</td><td>5</td><td>2</td><td><input style="width:28px"></td><td>4</td><td><input style="width:28px"></td><td>10</td><td><input style="width:28px"></td><td><input style="width:28px"></td><td><input style="width:28px"></td><td><input style="width:28px"></td></tr>
+        <tr><td>서로소?</td><td>❌</td><td><input style="width:28px"></td><td>❌</td><td>❌</td><td>❌</td><td><input style="width:28px"></td><td>❌</td><td><input style="width:28px"></td><td>❌</td><td><input style="width:28px"></td><td><input style="width:28px"></td><td><input style="width:28px"></td><td><input style="width:28px"></td></tr>
+      </table>
+      <div class="step-line mt-8">e = <input class="input-inline" style="width:50px" placeholder="?"> (추천: 3)</div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title">Step 5. 비밀키 d 찾기 — 역원!</div>
+      <p>조건: <strong class="mono">e × d ≡ 1 (mod φ(n))</strong></p>
+      <div class="link-back">🔗 <strong>2차시에서 "곱해서 나머지 1이 되는 짝꿍"</strong>을 역원이라 했죠? 같은 구조입니다!</div>
+      <p class="mt-8">e = 3, φ(n) = 20일 때, d를 시행착오로 찾아봅시다.</p>
+      <table class="data-table" style="font-size:13px">
+        <tr><th>d</th><th>3 × d</th><th>(3 × d) mod 20</th><th>= 1?</th></tr>
+        <tr><td>1</td><td>3</td><td>3</td><td>❌</td></tr>
+        <tr><td>2</td><td>6</td><td>6</td><td>❌</td></tr>
+        <tr><td>3</td><td>9</td><td>9</td><td>❌</td></tr>
+        <tr><td>4</td><td>12</td><td>12</td><td>❌</td></tr>
+        <tr><td>5</td><td>15</td><td>15</td><td>❌</td></tr>
+        <tr><td>6</td><td>18</td><td>18</td><td>❌</td></tr>
+        <tr><td>7</td><td><input style="width:40px" placeholder="?"></td><td><input style="width:40px" placeholder="?"></td><td><input style="width:28px" placeholder="?"></td></tr>
+      </table>
+      <div class="step-line mt-8">→ d = <strong><input class="input-inline" style="width:50px" placeholder="?"></strong></div>
+      <div class="callout mt-8"><div class="label">🎉 비밀키를 찾았습니다!</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>D-2. 키 카드 정리 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h3>
+    <div class="rsa-card">
+      <div class="pub">
+        <h4>🌐 공개키</h4>
+        <div class="big">(e = <input class="input-inline" style="width:40px" placeholder="?">, n = <input class="input-inline" style="width:40px" placeholder="?">)</div>
+        <p class="mt-8" style="font-size:13px"><strong>누구나</strong> 알 수 있음 / 역할: <strong>암호화</strong> (잠그기)</p>
+      </div>
+      <div class="priv">
+        <h4>🔐 비밀키</h4>
+        <div class="big">(d = <input class="input-inline" style="width:40px" placeholder="?">, n = <input class="input-inline" style="width:40px" placeholder="?">)</div>
+        <p class="mt-8" style="font-size:13px"><strong>나만</strong> 알고 있음 / 역할: <strong>복호화</strong> (열기)</p>
+      </div>
+    </div>
+    <div class="highlight">📌 <strong>핵심</strong>: 공개키 (e, n)을 알아도, p와 q를 모르면 φ(n)을 구할 수 없고, d를 찾을 수 없습니다!</div>
+  </div>
+
+  <div class="card">
+    <h3>D-3. 암호화 체험 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h3>
+    <p>글자 <strong>E</strong>(= 숫자 4)를 공개키 (e=3, n=33)으로 암호화합시다.</p>
+    <div class="highlight">암호화 규칙: <strong class="mono">C ≡ M<sup>e</sup> (mod n)</strong></div>
+    <div class="step-line">M = 4 (글자 E의 번호), e = 3, n = 33</div>
+    <div class="step-box mt-8">
+      <div class="step-title">단계별 계산</div>
+      <div class="step-line">Step 1: 4³ = 4 × 4 × 4</div>
+      <div class="step-line">Step 2: 4 × 4 = <input class="input-inline" style="width:50px" placeholder="?"></div>
+      <div class="step-line">Step 3: <input class="input-inline" style="width:50px" placeholder="?"> × 4 = <input class="input-inline" style="width:50px" placeholder="?"></div>
+      <div class="step-line">Step 4: <input class="input-inline" style="width:50px" placeholder="?"> mod 33 = <input class="input-inline" style="width:50px" placeholder="?"></div>
+    </div>
+    <div class="step-line mt-8">→ 암호문 C = <strong><input class="input-inline" style="width:50px" placeholder="?"></strong></div>
+    <div class="callout mt-8"><div class="label">✨ E(=4)가 <input class="input-inline" style="width:50px" placeholder="?">로 변했습니다!</div> 공개키를 아는 누구나 이렇게 잠글 수 있습니다.</div>
+  </div>
+
+  <div class="card">
+    <h3>D-4. 복호화 체험 — 반복제곱법 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h3>
+    <p>암호문 <strong>31</strong>을 비밀키 (d=7, n=33)으로 복호화합시다.</p>
+    <div class="highlight">복호화 규칙: <strong class="mono">M ≡ C<sup>d</sup> (mod n)</strong> → 31⁷ mod 33 = ?</div>
+
+    <div class="highlight" style="margin-bottom:16px">
+      &#x1F4A1; <strong>반복제곱법의 아이디어</strong><br>
+      31⁷을 한 번에 계산하면 숫자가 너무 커집니다. 영리한 방법이 있어요!<br><br>
+      &#x2460; 지수 7을 2의 거듭제곱 합으로 나타냅니다: <strong>7 = 4 + 2 + 1</strong><br>
+      &#x2461; 31¹, 31², 31⁴을 차례로 구합니다 (매번 mod 33으로 줄여서!)<br>
+      &#x2462; 필요한 것만 곱합니다: 31⁷ = 31⁴ × 31² × 31¹
+    </div>
+    <div class="step-box">
+      <div class="step-title">① 거듭제곱 준비 (매번 mod 33)</div>
+      <table class="data-table" style="font-size:13px">
+        <tr><th>계산</th><th>과정</th><th>mod 33</th></tr>
+        <tr><td class="mono">31¹</td><td>= 31</td><td><input style="width:50px" placeholder="?"></td></tr>
+        <tr><td class="mono">31²</td><td>= 31 × 31 = <input style="width:60px" placeholder="?"></td><td><input style="width:50px" placeholder="?"></td></tr>
+        <tr><td class="mono">31⁴</td><td>= (결과)² = <input style="width:40px" placeholder="?">² = <input style="width:60px" placeholder="?"></td><td><input style="width:50px" placeholder="?"></td></tr>
+      </table>
+    </div>
+
+    <div class="step-box">
+      <div class="step-title">② 조합하기 (7 = 4 + 2 + 1)</div>
+      <div class="step-line">31⁷ = 31⁴ × 31² × 31¹</div>
+      <div class="step-line">&nbsp;&nbsp;&nbsp;&nbsp;= <input class="input-inline" style="width:40px" placeholder="?"> × <input class="input-inline" style="width:40px" placeholder="?"> × <input class="input-inline" style="width:40px" placeholder="?"></div>
+      <div class="step-line">&nbsp;&nbsp;&nbsp;&nbsp;= <input class="input-inline" style="width:60px" placeholder="?"></div>
+      <div class="step-line">&nbsp;&nbsp;&nbsp;&nbsp;<input class="input-inline" style="width:60px" placeholder="?"> mod 33 = <input class="input-inline" style="width:50px" placeholder="?"></div>
+    </div>
+
+    <div class="step-line mt-8">→ 원래 글자: <input class="input-inline" style="width:50px" placeholder="?"> (= <input class="input-inline" style="width:40px" placeholder="?">)</div>
+
+    <div class="callout mt-8">
+      <div class="label">🎉 공개키(3, 33)로 잠그고 비밀키(7, 33)로 열었습니다!</div>
+      원래 글자 E가 돌아왔습니다!
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>D-5. 왜 안전한가? <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">&#x26AA; 선택</span></h3>
+    <p><strong>(a)</strong> 공개키 (e=3, n=33)을 아는 사람이 비밀키 d를 구하려면, 먼저 φ(n)을 알아야 합니다.</p>
+    <div class="step-line">φ(n) = (p−1)(q−1)을 구하려면 <input class="input-inline" style="width:40px" placeholder="?">와 <input class="input-inline" style="width:40px" placeholder="?">를 알아야 합니다.</div>
+
+    <p class="mt-8"><strong>(b)</strong> p와 q를 구하려면 n = 33을 <strong>소인수분해</strong>해야 합니다. n = 33이면 쉽지만, n이 <strong>617자리</strong>라면?</p>
+    <textarea class="input-wide" placeholder="나의 생각..."></textarea>
+
+    <p class="mt-8"><strong>(c)</strong> 빈칸을 채우세요:</p>
+    <div class="highlight">
+      <strong>"RSA의 안전성은 <input class="input-inline" style="width:200px" placeholder="?">의 어려움에 기반한다."</strong>
+    </div>
+  </div>
+</div>
+
+<!-- C Section -->
+<div class="section" id="sec-C">
+  <span class="section-badge">C 도전</span>
+  <h2>경계를 넘어서</h2>
+
+  <div class="card">
+    <h3>C-1. 나만의 RSA로 암호화하기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h3>
+    <p>p=3, q=11 이외의 소수 조합으로 새로운 RSA를 만들어 봅시다. (추천: p=5, q=7)</p>
+
+    <p><strong>(a)</strong> 키 생성:</p>
+    <div class="step-line">n = 5 × 7 = <input class="input-inline" style="width:50px" placeholder="?"></div>
+    <div class="step-line">φ(n) = 4 × 6 = <input class="input-inline" style="width:50px" placeholder="?"></div>
+    <div class="step-line">e 후보: φ(n)과 서로소인 수 → <input class="input-inline" style="width:200px" placeholder="?"></div>
+    <div class="step-line">선택한 e = <input class="input-inline" style="width:50px" placeholder="?"></div>
+    <div class="step-line">e × d ≡ 1 (mod <input class="input-inline" style="width:40px" placeholder="?">) → d = <input class="input-inline" style="width:50px" placeholder="?"></div>
+
+    <p class="mt-8"><strong>(b)</strong> 글자 H(= 7)를 암호화:</p>
+    <div class="step-line">C ≡ 7<sup>e</sup> mod <input class="input-inline" style="width:40px" placeholder="?"> = <input class="input-inline" style="width:50px" placeholder="?"></div>
+
+    <p class="mt-8"><strong>(c)</strong> 복호화하여 원래 글자가 돌아오는지 확인:</p>
+    <div class="step-line">M ≡ C<sup>d</sup> mod <input class="input-inline" style="width:40px" placeholder="?"> = <input class="input-inline" style="width:50px" placeholder="?"> → 글자 <input class="input-inline" style="width:40px" placeholder="?"></div>
+    <div class="step-line">원래 글자와 일치하나요? <input class="input-inline" style="width:50px" placeholder="?"></div>
+  </div>
+
+  <div class="card">
+    <h3>C-2. RSA를 깨려면? <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">&#x26AA; 선택</span></h3>
+    <p><strong>(a)</strong> 만약 양자컴퓨터가 소인수분해를 순식간에 할 수 있게 된다면, RSA는 어떻게 되나요?</p>
+    <textarea class="input-wide" placeholder="나의 생각..."></textarea>
+    <p class="mt-8"><strong>(b)</strong> 수학자들이 이미 이 가능성에 대비하고 있습니다. 어떤 대안이 있을지 상상해 보세요.</p>
+    <textarea class="input-wide" placeholder="나의 아이디어..."></textarea>
+    <div class="callout mt-8">
+      <div class="label">🔮 미래의 암호</div>
+      실제로 <strong>양자내성암호(Post-Quantum Cryptography)</strong>라는 분야가 활발히 연구되고 있습니다. 수학의 여정은 계속됩니다!
+    </div>
+  </div>
+</div>
+
+<!-- R Section -->
+<div class="section" id="sec-R">
+  <span class="section-badge">R 성찰</span>
+  <h2>4차시 전체를 돌아보며</h2>
+
+  <div class="card">
+    <h3>R-1. 오늘의 여정 요약 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h3>
+    <div class="step-box" style="border-color:var(--theme)">
+      <div class="step-line">소수 사냥: 에라토스테네스의 체로 소수를 찾고, 커질수록 <input class="input-inline" style="width:100px" placeholder="?"></div>
+      <div style="text-align:center;font-size:18px;color:var(--theme)">↓</div>
+      <div class="step-line">비대칭성 발견: 곱하기는 <input class="input-inline" style="width:60px" placeholder="?">, 분해는 <input class="input-inline" style="width:60px" placeholder="?"> → <input class="input-inline" style="width:100px" placeholder="?"></div>
+      <div style="text-align:center;font-size:18px;color:var(--theme)">↓</div>
+      <div class="step-line">RSA 키 생성: p, q → n, φ(n) → e(<input class="input-inline" style="width:60px" placeholder="?">) → d(<input class="input-inline" style="width:60px" placeholder="?">)</div>
+      <div style="text-align:center;font-size:18px;color:var(--theme)">↓</div>
+      <div class="step-line">암복호화: 공개키로 <input class="input-inline" style="width:50px" placeholder="?">하고, 비밀키로 <input class="input-inline" style="width:50px" placeholder="?">하면 원문이 돌아온다</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>R-2. 4차시 전체 회고 — 큰 그림 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h3>
+    <table class="data-table" style="font-size:13px">
+      <tr><th>차시</th><th>mod 연산의 역할</th><th>핵심 발견</th></tr>
+      <tr><td>1차시</td><td>오류 검출 (체크섬)</td><td>"숫자의 오류를 잡을 수 있다"</td></tr>
+      <tr><td>2차시</td><td><input style="width:120px" placeholder="?"></td><td><input style="width:160px" placeholder="?"></td></tr>
+      <tr><td>3차시</td><td><input style="width:120px" placeholder="?"></td><td><input style="width:160px" placeholder="?"></td></tr>
+      <tr><td>4차시</td><td><input style="width:120px" placeholder="?"></td><td><input style="width:160px" placeholder="?"></td></tr>
+    </table>
+    <p style="font-size:13px;color:var(--ink3);margin-top:8px">
+      &#x1F4A1; <strong>보기</strong>:
+      암호화/복호화 (시저, 아핀) | 빈도 분석으로 해독 | RSA 키 생성·암복호화 |
+      "같은 글자가 항상 같은 암호 → 약점" | "통계로 암호를 깬다" | "곱하기는 쉽지만 분해는 어렵다"
+    </p>
+    <div class="highlight">📌 mod 연산이 1차시부터 4차시까지 <strong>매 시간</strong> 핵심 도구로 활용되었습니다.</div>
+  </div>
+
+  <div class="card">
+    <h3>R-3. 연결의 발견 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h3>
+    <p><strong>(a)</strong> 2차시에서 배운 <strong>서로소</strong>가 4차시에서 어디에 다시 등장했나요?</p>
+    <textarea class="input-wide" placeholder="서로소가 다시 등장한 곳..."></textarea>
+    <p class="mt-8"><strong>(b)</strong> 2차시에서 배운 <strong>역원</strong>이 4차시에서 어디에 다시 등장했나요?</p>
+    <textarea class="input-wide" placeholder="역원이 다시 등장한 곳..."></textarea>
+    <p class="mt-8"><strong>(c)</strong> 이처럼 수학의 개념들은 서로 어떤 관계가 있나요?</p>
+    <textarea class="input-wide" placeholder="나의 생각..."></textarea>
+  </div>
+
+  <div class="card">
+    <h3>R-4. 일상 속의 수학 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">&#x26AA; 선택</span></h3>
+    <div class="highlight">"카카오톡에서 친구에게 비밀 메시지를 보낼 때" RSA(또는 공개키 암호)가 어떻게 작동하는지 설명해 보세요.</div>
+    <textarea class="input-wide mt-8" placeholder="나의 설명..." style="min-height:80px"></textarea>
+  </div>
+
+  <div class="card">
+    <h3>R-5. 자기 평가 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">&#x26AA; 선택</span></h3>
+    <table class="assess-table">
+      <tr><th>항목</th><th>😕 아직 어려워요</th><th>🤔 대략 알겠어요</th><th>😊 자신 있어요</th></tr>
+      <tr><td>에라토스테네스의 체로 소수 찾기</td><td><input type="radio" name="a1"></td><td><input type="radio" name="a1"></td><td><input type="radio" name="a1"></td></tr>
+      <tr><td>"곱하기는 쉽지만 분해는 어렵다" 설명하기</td><td><input type="radio" name="a2"></td><td><input type="radio" name="a2"></td><td><input type="radio" name="a2"></td></tr>
+      <tr><td>RSA 키 생성 5단계 따라하기</td><td><input type="radio" name="a3"></td><td><input type="radio" name="a3"></td><td><input type="radio" name="a3"></td></tr>
+      <tr><td>공개키 암호화/비밀키 복호화 수행</td><td><input type="radio" name="a4"></td><td><input type="radio" name="a4"></td><td><input type="radio" name="a4"></td></tr>
+    </table>
+    <p class="mt-8"><strong>4차시를 마치며 한마디:</strong></p>
+    <textarea class="input-wide" placeholder="한마디..."></textarea>
+  </div>
+</div>
+
+<!-- Answer Key -->
+<section class="section" id="answer-key" style="background:#fff5f5;border:2px solid #fca5a5;border-radius:16px;padding:32px 24px;page-break-before:always">
+  <h2 style="color:#dc2626;margin-bottom:20px">&#x1F4CB; 교사용 정답키·해설</h2>
+
+  <div class="card" style="background:#fff">
+    <h3 style="font-size:16px">W 워밍업</h3>
+    <p><strong>W-1.</strong> (b) 복호화 키 = <strong>23</strong></p>
+    <p><strong>W-2.</strong> (a) 암호화 / 복호화 &nbsp; (b) 암호화 키 / 복호화 키</p>
+  </div>
+
+  <div class="card" style="background:#fff">
+    <h3 style="font-size:16px">E 탐구</h3>
+    <p><strong>E-1.</strong> (a) 49개 &nbsp; (b) 16개 &nbsp; (c) 5의 배수: 6개, 7의 배수: 3개 &nbsp; (d) 25개</p>
+    <p><strong>E-2.</strong> (a) 2 &nbsp; (b) 2와 3 &nbsp; (c) 10</p>
+    <p><strong>E-3.</strong> 1~100: 25개(25.0%), 1~200: 46개(23.0%), 1~500: 95개(19.0%), 1~1000: 168개(16.8%)<br>
+      &nbsp;&nbsp;&nbsp;(a) 비율이 점점 줄어든다 &nbsp; (b) "희귀해진다" 또는 "드물어진다"</p>
+    <p><strong>E-4.</strong> 7&times;13=91, 23&times;41=943, 61&times;89=5429</p>
+    <p><strong>E-5.</strong> 77=7&times;11, 899=29&times;31, 1517=37&times;41</p>
+    <p><strong>E-6.</strong> (c) 일방향 함수 (또는 "비대칭성")</p>
+  </div>
+
+  <div class="card" style="background:#fff">
+    <h3 style="font-size:16px">D 심화</h3>
+    <p><strong>D-1.</strong><br>
+      Step 1: p=3, q=11 (추천값)<br>
+      Step 2: n = 33<br>
+      Step 3: &phi;(n) = 20<br>
+      Step 4: gcd 표 빈칸 모두 1 &rarr; 서로소 &#x2705;&times;7, e=3 추천<br>
+      Step 5: d=7 (3&times;7=21, mod 20=1)</p>
+    <p><strong>D-2.</strong> 공개키 (3, 33), 비밀키 (7, 33)</p>
+    <p><strong>D-3.</strong> Step 2: 16, Step 3: 16&times;4=64, Step 4: 64 mod 33 = 31, C=31</p>
+    <p><strong>D-4.</strong><br>
+      31&sup1; mod 33 = 31<br>
+      31&sup2; = 961, mod 33 = 4<br>
+      31&#x2074; = 4&sup2; = 16, mod 33 = 16<br>
+      조합: 16 &times; 4 &times; 31 = 1984, mod 33 = 4<br>
+      원래 글자: 4 (= E)</p>
+    <p><strong>D-5.</strong> (a) p와 q &nbsp; (c) "큰 수의 소인수분해"</p>
+  </div>
+
+  <div class="card" style="background:#fff">
+    <h3 style="font-size:16px">C 도전</h3>
+    <p><strong>C-1.</strong> n=35, &phi;=24, e 후보: 5,7,11,13,17,19,23</p>
+  </div>
+
+  <div class="card" style="background:#fff">
+    <h3 style="font-size:16px">R 성찰</h3>
+    <p><strong>R-2.</strong><br>
+      2차시: 암호화/복호화(시저, 아핀) / "같은 글자&rarr;같은 암호는 약점"<br>
+      3차시: 빈도 분석(해독) / "통계로 암호를 깬다"<br>
+      4차시: RSA 키 생성·암복호화 / "곱하기는 쉽지만 분해는 어렵다"</p>
+  </div>
+</section>
+
+</div>
+
+<script>
+// Navigation active tracking
+const navLinks = document.querySelectorAll('.nav a');
+const sections = document.querySelectorAll('.section');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      navLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { rootMargin: '-100px 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+
+navLinks.forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const target = document.querySelector(link.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+</body>
+</html>

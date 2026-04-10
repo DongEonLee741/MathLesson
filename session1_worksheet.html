@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1차시 학습지 - 암호의 세계로</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1a1a2e;--ink2:#4a4a68;--ink3:#8888a4;
+  --bg:#f7f7fb;--card:#fff;--border:#ebebf0;
+  --accent:#6366f1;--accent-light:#eef2ff;
+  --theme:#6366f1;--theme-light:#eef2ff;
+  --warning:#f59e0b;--warning-light:#fffbeb;
+  --error:#dc2626;--error-light:#fef2f2;
+  --success:#16a34a;--success-light:#f0fdf4;
+  --highlight:#fffbeb;
+  --shadow:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.06);
+  --radius:14px;
+}
+body{font-family:'Pretendard','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--bg);color:var(--ink);font-size:15px;line-height:1.75;padding-bottom:48px}
+
+/* Header */
+.header{
+  background:var(--card);
+  border-top:4px solid var(--theme);
+  padding:36px 24px 32px;
+  text-align:center;
+}
+.header h1{font-size:clamp(24px,4vw,34px);font-weight:800;color:var(--ink);letter-spacing:-.02em}
+.header .subtitle{font-size:clamp(14px,2.5vw,17px);color:var(--ink2);margin-top:6px;font-weight:500}
+.header .meta{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:12px;font-size:12px;font-weight:600;color:var(--theme);
+  background:var(--theme-light);padding:4px 14px;border-radius:20px;
+}
+
+/* Nav */
+.nav{
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+  padding:10px 20px;
+  display:flex;gap:6px;overflow-x:auto;
+  position:sticky;top:0;z-index:100;
+}
+.nav a{
+  padding:7px 16px;border-radius:20px;font-size:13px;font-weight:600;
+  text-decoration:none;white-space:nowrap;
+  color:var(--ink3);background:transparent;
+  border:1px solid transparent;
+  transition:all .2s ease;
+}
+.nav a:hover{color:var(--ink2);background:var(--bg);border-color:var(--border)}
+.nav a.active{background:var(--theme-light);color:var(--theme);border-color:rgba(99,102,241,.15)}
+
+/* Main */
+main{max-width:800px;margin:0 auto;padding:28px 20px}
+
+/* Section */
+.section{margin-bottom:36px}
+.section-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 12px;border-radius:20px;
+  font-size:12px;font-weight:700;letter-spacing:.01em;margin-bottom:14px;
+}
+.section-badge.warmup{background:#fef9ed;color:#a16207}
+.section-badge.concept{background:var(--theme-light);color:var(--theme)}
+.section-badge.explore{background:#eef0ff;color:#4338ca}
+.section-badge.deepen{background:#f5f0ff;color:#7c3aed}
+.section-badge.challenge{background:#fef2f2;color:#b91c1c}
+.section-badge.reflect{background:var(--success-light);color:#15803d}
+.section h2{font-size:clamp(20px,3vw,25px);font-weight:800;margin-bottom:10px;line-height:1.35;color:var(--ink)}
+.section h3{font-size:clamp(16px,2.5vw,19px);font-weight:700;margin:22px 0 10px;color:var(--ink)}
+
+/* Card */
+.card{
+  background:var(--card);border-radius:var(--radius);
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  padding:24px;margin-bottom:20px;
+}
+.card h4{font-size:16px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;color:var(--ink)}
+.card .num{
+  background:var(--theme);color:#fff;width:26px;height:26px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;flex-shrink:0;
+}
+.card p{color:var(--ink);margin-bottom:2px}
+
+/* Info box */
+.info{
+  background:var(--theme-light);
+  border-left:3px solid var(--theme);
+  padding:16px 20px;border-radius:10px;
+  margin:12px 0;font-size:15px;color:var(--ink);
+}
+
+/* Quote */
+.quote{
+  background:#f8f9fa;
+  border-left:3px solid var(--ink3);
+  padding:16px 20px;border-radius:10px;
+  margin:12px 0;font-style:italic;font-size:15px;color:var(--ink2);
+}
+
+/* Hint */
+.hint-box{
+  background:#fffbeb;
+  border-left:3px solid #f59e0b;
+  border-radius:10px;
+  padding:14px 18px;margin:12px 0;font-size:14px;color:var(--ink);
+}
+
+/* Textarea */
+textarea{
+  width:100%;border:2px solid var(--border);border-radius:10px;
+  padding:12px 14px;font-family:inherit;font-size:15px;line-height:1.65;
+  resize:vertical;min-height:80px;color:var(--ink);
+  background:var(--card);transition:border-color .2s,box-shadow .2s;
+}
+textarea:focus{
+  border-color:var(--theme);outline:none;
+  box-shadow:0 0 0 3px rgba(99,102,241,.12);
+}
+
+/* Input inline */
+.inline-input{
+  display:inline-block;border:none;
+  border-bottom:2px solid var(--border);
+  width:60px;text-align:center;
+  font-family:inherit;font-size:inherit;font-weight:700;
+  color:var(--theme);background:transparent;padding:2px 4px;
+  transition:border-color .2s;
+}
+.inline-input:focus{outline:none;border-bottom-color:var(--theme)}
+.inline-input.wide{width:120px}
+
+/* Table */
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+th,td{border:1px solid var(--border);padding:10px 12px;text-align:center}
+th{background:transparent;color:var(--ink);font-weight:700;font-size:13px;border-bottom:2px solid var(--border)}
+td{background:var(--card);color:var(--ink)}
+td.highlight{background:var(--highlight);font-weight:700}
+
+/* Choice */
+.choice-group{display:flex;gap:10px;margin:8px 0;flex-wrap:wrap}
+.choice-btn{
+  padding:9px 22px;border:2px solid var(--border);border-radius:10px;
+  background:var(--card);cursor:pointer;font-size:14px;font-weight:600;
+  color:var(--ink);transition:all .2s ease;
+}
+.choice-btn:hover{border-color:var(--theme);background:var(--theme-light);color:var(--theme)}
+.choice-btn.selected{border-color:var(--theme);background:var(--theme);color:#fff}
+
+/* Self assessment */
+.assess-table{width:100%;border-collapse:collapse;margin:14px 0}
+.assess-table th,.assess-table td{
+  border:1px solid var(--border);padding:12px 10px;text-align:center;font-size:14px;
+}
+.assess-table th{background:transparent;color:var(--ink);font-weight:700;border-bottom:2px solid var(--border)}
+.assess-table td{color:var(--ink)}
+.assess-table input[type=radio]{width:18px;height:18px;cursor:pointer;accent-color:var(--theme)}
+
+/* Equation */
+.eq{font-family:'Cambria Math','Times New Roman',serif;font-size:17px;font-style:italic}
+.eq-block{text-align:center;margin:16px 0;font-size:18px;font-family:'Cambria Math','Times New Roman',serif}
+.mono{font-family:'Fira Code','Consolas',monospace}
+
+/* Emoji label */
+.emoji{font-style:normal}
+
+/* Details / Summary */
+details{margin-top:8px}
+details summary{cursor:pointer;color:var(--warning);font-weight:600;font-size:14px;padding:4px 0}
+details summary:hover{color:#d97706}
+
+/* Print */
+@media print{
+  .nav,.no-print{display:none!important}
+  body{background:#fff;font-size:12px;line-height:1.55;color:#000}
+  .header{border-top:3px solid #6366f1;background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .header h1{color:#000}
+  .header .subtitle{color:#333}
+  .header .meta{background:#eee;color:#333}
+  .card{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid}
+  .info{background:#f8f8fc!important;border-left:2px solid #6366f1}
+  .hint-box{background:#fffdf5!important;border-left:2px solid #f59e0b}
+  .quote{background:#f8f8f8!important;border-left:2px solid #aaa}
+  textarea{border:1px solid #ccc;min-height:50px}
+  table th{border-bottom:2px solid #999}
+}
+
+/* Responsive */
+@media(max-width:600px){
+  .card{padding:18px 16px}
+  main{padding:20px 14px}
+  table{font-size:12px}
+  th,td{padding:7px 5px}
+  .header{padding:28px 16px 24px}
+}
+.answer-key { background:#fff5f5; border:2px solid #fca5a5; border-radius:12px; padding:24px; margin-top:40px; }
+.answer-key h3 { color:#b91c1c; margin-top:20px; }
+.answer-key .ans { font-weight:700; color:#1d4ed8; }
+@media print {
+  .answer-key { page-break-before:always; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>암호의 세계로</h1>
+  <div class="subtitle">체크섬으로 만나는 mod 연산</div>
+  <div class="meta">1차시 학습지 | 우리들의 암호 이야기 | 중2 영재교육원</div>
+</div>
+
+<nav class="nav no-print">
+  <a href="#warmup" class="active">W 워밍업</a>
+  <a href="#concept">mod 개념</a>
+  <a href="#explore1">E1 ISBN</a>
+  <a href="#explore2">E2 Luhn</a>
+  <a href="#explore3">E3 mod11</a>
+  <a href="#deepen">D 심화</a>
+  <a href="#challenge">C 도전</a>
+  <a href="#reflect">R 성찰</a>
+</nav>
+
+<main>
+
+<!-- ===== WARMUP ===== -->
+<section class="section" id="warmup">
+  <span class="section-badge warmup">W 워밍업</span>
+  <h2>암호가 사라진 세상</h2>
+
+  <div class="card">
+    <h4><span class="num">1</span> W-1. 상상해 봅시다</h4>
+    <div class="quote">"어느 날 세상의 모든 암호와 보안 기술이 사라졌습니다."</div>
+    <p>이런 세상에서 벌어질 수 있는 일을 <strong>3가지 이상</strong> 적어 보세요.</p>
+    <div style="margin-top:12px">
+      <div style="display:flex;gap:8px;align-items:start;margin-bottom:8px">
+        <span style="font-weight:700;color:var(--theme)">①</span>
+        <textarea rows="2" placeholder="예: 은행 계좌에서 돈이 빠져나갈 수 있다..."></textarea>
+      </div>
+      <div style="display:flex;gap:8px;align-items:start;margin-bottom:8px">
+        <span style="font-weight:700;color:var(--theme)">②</span>
+        <textarea rows="2" placeholder="두 번째 상상..."></textarea>
+      </div>
+      <div style="display:flex;gap:8px;align-items:start">
+        <span style="font-weight:700;color:var(--theme)">③</span>
+        <textarea rows="2" placeholder="세 번째 상상..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">2</span> W-2. 나머지 연산 준비</h4>
+    <p>나눗셈의 <strong>나머지</strong>를 구해 봅시다. (이 연산이 오늘의 주인공입니다!)</p>
+    <table style="margin-top:12px">
+      <tr><th>문제</th><th>나머지</th></tr>
+      <tr><td style="text-align:left">(a) 17 &divide; 5 = 3 나머지</td><td><input class="inline-input" type="text" placeholder="?"></td></tr>
+      <tr><td style="text-align:left">(b) 25 &divide; 10 = 2 나머지</td><td><input class="inline-input" type="text" placeholder="?"></td></tr>
+      <tr><td style="text-align:left">(c) 30 &divide; 10 = 3 나머지</td><td><input class="inline-input" type="text" placeholder="?"></td></tr>
+      <tr><td style="text-align:left">(d) 100 &divide; 10 = 10 나머지</td><td><input class="inline-input" type="text" placeholder="?"></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ===== CONCEPT ===== -->
+<section class="section" id="concept">
+  <span class="section-badge concept">mod 연산 - 오늘의 도구</span>
+  <h2>mod 연산과 합동 기호</h2>
+
+  <div class="card">
+    <div class="info">
+      <strong>"mod"</strong>는 나눗셈의 <strong>나머지만 구하는</strong> 연산입니다.<br>
+      <span class="eq-block">17 mod 5 = 2 &nbsp;&nbsp; (17을 5로 나눈 나머지가 2)</span>
+      <span class="eq-block">25 mod 10 = 5 &nbsp;&nbsp; (25를 10으로 나눈 나머지가 5)</span>
+    </div>
+
+    <h4 style="margin-top:20px">합동 기호 &equiv;</h4>
+    <p>두 수를 같은 수로 나누었을 때 <strong>나머지가 같으면</strong>, 이 두 수는 그 수에 대해 <strong>합동</strong>이라 하고 기호 <strong>&equiv;</strong>로 씁니다.</p>
+    <div class="info" style="margin-top:12px">
+      17 &equiv; 2 (mod 5) &mdash; "17과 2는 5로 나눈 나머지가 같다"<br>
+      27 &equiv; 7 (mod 10) &mdash; "27과 7은 10으로 나눈 나머지가 같다"<br>
+      30 &equiv; 0 (mod 10) &mdash; "30은 10으로 나누어떨어진다"
+    </div>
+    <p style="margin-top:12px;color:var(--error);font-weight:600">
+      이 기호는 등호(=)와 다릅니다. 17 = 2는 거짓이지만, 17 &equiv; 2 (mod 5)는 참입니다!
+    </p>
+
+    <h4 style="margin-top:20px">확인 문제</h4>
+    <table>
+      <tr><th>문제</th><th>답</th></tr>
+      <tr><td style="text-align:left">(a) 23 &equiv; <input class="inline-input" type="text" placeholder="?"> (mod 10)</td><td></td></tr>
+      <tr><td style="text-align:left">(b) 51 &equiv; <input class="inline-input" type="text" placeholder="?"> (mod 7)</td><td></td></tr>
+      <tr><td style="text-align:left">(c) 100 &equiv; <input class="inline-input" type="text" placeholder="?"> (mod 26)</td><td></td></tr>
+      <tr><td style="text-align:left">(d) 33 mod 10 = <input class="inline-input" type="text" placeholder="?">, 53 mod 10 = <input class="inline-input" type="text" placeholder="?"><br>&rarr; 33 &equiv; 53 (mod 10)인가요?</td>
+        <td><div class="choice-group"><button class="choice-btn" onclick="this.classList.toggle('selected')">네</button><button class="choice-btn" onclick="this.classList.toggle('selected')">아니오</button></div></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ===== EXPLORE 1 ===== -->
+<section class="section" id="explore1">
+  <span class="section-badge explore">E 탐구 1</span>
+  <h2>"이 숫자, 뭔가 이상해" &mdash; ISBN의 비밀</h2>
+
+  <div class="card">
+    <h4><span class="num">1</span> E-1. ISBN 관찰 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+    <p>책 뒷면에 있는 <strong>ISBN</strong>(국제표준도서번호)은 13자리 숫자입니다. 아래 ISBN들을 관찰하고, 공통점을 찾아보세요.</p>
+    <table style="margin-top:12px">
+      <tr><th>책</th><th>ISBN</th></tr>
+      <tr><td>한국 수학책</td><td class="mono">978-89-546-7834-<strong style="color:var(--error)">6</strong></td></tr>
+      <tr><td>영문 교재</td><td class="mono">978-0-306-40615-<strong style="color:var(--error)">7</strong></td></tr>
+      <tr><td>일본 소설</td><td class="mono">978-4-16-390520-<strong style="color:var(--error)">4</strong></td></tr>
+      <tr><td>미국 과학책</td><td class="mono">978-1-56619-909-<strong style="color:var(--error)">4</strong></td></tr>
+    </table>
+    <div class="hint-box">마지막 자리(빨간 글씨)에 주목해 보세요. 이 숫자가 앞의 12자리와 어떤 관계가 있을까요?</div>
+    <textarea rows="3" placeholder="내가 발견한 것:"></textarea>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">2</span> E-2. 체크디짓 계산 &mdash; 직접 해보기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+    <p>ISBN의 마지막 자리를 <strong>체크디짓</strong>(검사 숫자)이라 합니다.</p>
+    <div class="info"><strong>규칙</strong>: 각 자리에 가중치 <strong>1, 3, 1, 3, 1, 3, ...</strong> 을 번갈아 곱하고, 합을 구합니다.</div>
+    <p style="margin-top:12px"><strong class="mono">978-0-306-40615-?</strong> 의 체크디짓을 구해 봅시다.</p>
+    <table style="margin-top:12px;font-size:13px">
+      <tr><th>자리</th><td>9</td><td>7</td><td>8</td><td>0</td><td>3</td><td>0</td><td>6</td><td>4</td><td>0</td><td>6</td><td>1</td><td>5</td></tr>
+      <tr><th>가중치</th><td>&times;1</td><td>&times;3</td><td>&times;1</td><td>&times;3</td><td>&times;1</td><td>&times;3</td><td>&times;1</td><td>&times;3</td><td>&times;1</td><td>&times;3</td><td>&times;1</td><td>&times;3</td></tr>
+      <tr><th>곱</th><td>9</td><td>21</td><td>8</td><td>0</td><td>3</td><td>0</td><td>6</td><td>12</td><td>0</td><td>18</td><td>1</td><td>15</td></tr>
+    </table>
+    <div style="margin-top:16px">
+      <p><strong>합계</strong> = 9+21+8+0+3+0+6+12+0+18+1+15 = <input class="inline-input" type="text" placeholder="?"></p>
+      <p style="margin-top:8px"><strong>나머지</strong> = <input class="inline-input" type="text" placeholder="?"> mod 10 = <input class="inline-input" type="text" placeholder="?"></p>
+      <p style="margin-top:8px"><strong>체크디짓</strong> = 10 &minus; <input class="inline-input" type="text" placeholder="?"> = <input class="inline-input" type="text" placeholder="?"></p>
+    </div>
+    <div class="info" style="margin-top:12px">이 값이 실제 ISBN의 마지막 자리(7)와 같은지 확인해 보세요!</div>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">3</span> E-3. 내 책으로 직접 검증 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">&#x26AA; 선택</span></h4>
+    <p>교실에 있는 책의 ISBN 13자리를 적고, 직접 계산해 봅시다.</p>
+    <p style="margin:12px 0">ISBN: <input class="inline-input wide" type="text" placeholder="___"> - <input class="inline-input" type="text" placeholder="__"> - <input class="inline-input wide" type="text" placeholder="___"> - <input class="inline-input wide" type="text" placeholder="___"> - <input class="inline-input" type="text" placeholder="_"></p>
+    <table style="font-size:13px">
+      <tr><th>자리</th><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td></tr>
+      <tr><th>가중치</th><td>&times;1</td><td>&times;3</td><td>&times;1</td><td>&times;3</td><td>&times;1</td><td>&times;3</td><td>&times;1</td><td>&times;3</td><td>&times;1</td><td>&times;3</td><td>&times;1</td><td>&times;3</td></tr>
+      <tr><th>곱</th><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td><td><input class="inline-input" style="width:32px" type="text"></td></tr>
+    </table>
+    <p style="margin-top:12px">합계 = <input class="inline-input" type="text" placeholder="?">&nbsp;&nbsp;나머지 = <input class="inline-input" type="text" placeholder="?"> mod 10 = <input class="inline-input" type="text" placeholder="?">&nbsp;&nbsp;체크디짓 = 10 &minus; <input class="inline-input" type="text" placeholder="?"> = <input class="inline-input" type="text" placeholder="?"></p>
+    <p style="margin-top:8px">마지막 자리와 일치하나요? &nbsp;
+      <button class="choice-btn" onclick="this.classList.toggle('selected')">&#x2B55; 일치</button>
+      <button class="choice-btn" onclick="this.classList.toggle('selected')">&#x274C; 불일치</button>
+    </p>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">4</span> E-4. 한 자리를 바꿔 보면? <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+    <p>E-2의 ISBN에서 <strong>한 자리를 일부러 틀리게</strong> 바꿔서 다시 계산해 봅시다.</p>
+    <p style="margin:12px 0">바꾼 자리: <input class="inline-input" type="text" placeholder="?">번째 자리를 <input class="inline-input" type="text" placeholder="?">에서 <input class="inline-input" type="text" placeholder="?">로 변경</p>
+    <p>새로운 합계 = <input class="inline-input" type="text" placeholder="?">&nbsp;&nbsp;새로운 나머지 = <input class="inline-input" type="text" placeholder="?"> mod 10 = <input class="inline-input" type="text" placeholder="?"></p>
+    <div class="info" style="margin-top:16px">
+      나머지가 0이 아니면 오류 발견! &equiv; 기호로 표현하면:<br>
+      <strong>정상일 때</strong>: (가중치 합) &equiv; <input class="inline-input" type="text" placeholder="?"> (mod 10)<br>
+      <strong>오류일 때</strong>: (가중치 합) &nequiv; 0 (mod 10) &mdash; "&nequiv;"는 "합동이 아니다"라는 뜻
+    </div>
+    <p style="margin-top:16px"><strong>mod 연산이 오류를 잡아내는 원리를 한 문장으로 설명해 보세요.</strong></p>
+    <textarea rows="3" placeholder="원리:"></textarea>
+  </div>
+</section>
+
+<!-- ===== EXPLORE 2 ===== -->
+<section class="section" id="explore2">
+  <span class="section-badge explore">E 탐구 2</span>
+  <h2>"카드의 비밀" &mdash; Luhn 알고리즘</h2>
+
+  <div class="card">
+    <h4><span class="num">5</span> E-5. ISBN 방식이 통할까? <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">&#x26AA; 선택</span></h4>
+    <p>신용카드 번호도 체크디짓이 숨어 있습니다. 그런데 <strong>ISBN 방식(가중치 1, 3)을 적용하면 작동하지 않습니다</strong>.</p>
+    <div class="hint-box">같은 mod 10인데 왜 안 될까요? <strong>다른 규칙</strong>이 쓰이고 있기 때문입니다!</div>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">6</span> E-6. Luhn 규칙 발견 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">&#x26AA; 선택</span></h4>
+    <p>신용카드의 체크 방법을 <strong>Luhn 알고리즘</strong>이라 합니다.</p>
+    <div class="info">
+      <strong>① </strong> 오른쪽에서 두 번째 자리부터, 하나 건너 하나씩 <strong>2배</strong>합니다.<br>
+      <strong>② </strong> 2배 한 결과가 <strong>9보다 크면 9를 뺍니다</strong>.<br>
+      <strong>③ </strong> 전부 더합니다.<br>
+      <strong>④ </strong> 합계 &equiv; 0 (mod 10)이면 유효!
+    </div>
+    <p style="margin-top:16px">카드번호 <strong class="mono">4539 1488 0343 6467</strong>로 연습합시다.</p>
+    <table style="margin-top:12px;font-size:12px">
+      <tr><th>원래</th><td>4</td><td>5</td><td>3</td><td>9</td><td>1</td><td>4</td><td>8</td><td>8</td><td>0</td><td>3</td><td>4</td><td>3</td><td>6</td><td>4</td><td>6</td><td>7</td></tr>
+      <tr><th>&times;2?</th><td class="highlight">O</td><td></td><td class="highlight">O</td><td></td><td class="highlight">O</td><td></td><td class="highlight">O</td><td></td><td class="highlight">O</td><td></td><td class="highlight">O</td><td></td><td class="highlight">O</td><td></td><td class="highlight">O</td><td></td></tr>
+      <tr><th>&times;2 값</th><td>8</td><td>5</td><td>6</td><td>9</td><td>2</td><td>4</td><td>16</td><td>8</td><td>0</td><td>3</td><td>8</td><td>3</td><td>12</td><td>4</td><td>12</td><td>7</td></tr>
+      <tr><th>&gt;9 시 &minus;9</th><td>8</td><td>5</td><td>6</td><td>9</td><td>2</td><td>4</td><td style="color:var(--error);font-weight:700"><input class="inline-input" style="width:32px" type="text" placeholder="?"></td><td>8</td><td>0</td><td>3</td><td>8</td><td>3</td><td style="color:var(--error);font-weight:700"><input class="inline-input" style="width:32px" type="text" placeholder="?"></td><td>4</td><td style="color:var(--error);font-weight:700"><input class="inline-input" style="width:32px" type="text" placeholder="?"></td><td>7</td></tr>
+    </table>
+    <p style="margin-top:16px">16 &minus; 9 = <input class="inline-input" type="text" placeholder="?">&nbsp;&nbsp;12 &minus; 9 = <input class="inline-input" type="text" placeholder="?"></p>
+    <p style="margin-top:8px">합계 = 8+5+6+9+2+4+<input class="inline-input" style="width:28px" type="text">+8+0+3+8+3+<input class="inline-input" style="width:28px" type="text">+4+<input class="inline-input" style="width:28px" type="text">+7 = <input class="inline-input" type="text" placeholder="?"></p>
+    <p style="margin-top:8px"><input class="inline-input" type="text" placeholder="?"> mod 10 = <input class="inline-input" type="text" placeholder="?"> &rarr; 유효한 카드인가요?
+      <button class="choice-btn" onclick="this.classList.toggle('selected')">&#x2B55; 유효</button>
+      <button class="choice-btn" onclick="this.classList.toggle('selected')">&#x274C; 무효</button>
+    </p>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">7</span> E-7. ISBN vs Luhn 비교 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">&#x26AA; 선택</span></h4>
+    <p>두 체크 방식의 공통점과 차이점을 정리해 봅시다.</p>
+    <table>
+      <tr><th></th><th>ISBN-13</th><th>Luhn (신용카드)</th></tr>
+      <tr><td style="font-weight:700;text-align:left">나누는 수</td><td>mod <input class="inline-input" type="text" placeholder="?"></td><td>mod <input class="inline-input" type="text" placeholder="?"></td></tr>
+      <tr><td style="font-weight:700;text-align:left">가중치 방식</td><td><textarea rows="2" style="min-height:40px" placeholder="가중치 1, 3 교대..."></textarea></td><td><textarea rows="2" style="min-height:40px" placeholder="하나 건너 &times;2..."></textarea></td></tr>
+      <tr><td style="font-weight:700;text-align:left">유효 조건</td><td>체크디짓이 맞으면</td><td>합계 &equiv; <input class="inline-input" type="text" placeholder="?"> (mod <input class="inline-input" type="text" placeholder="?">)</td></tr>
+      <tr><td style="font-weight:700;text-align:left">공통점</td><td colspan="2"><textarea rows="2" style="min-height:40px" placeholder="둘 다..."></textarea></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ===== EXPLORE 3 ===== -->
+<section class="section" id="explore3">
+  <span class="section-badge explore">E 탐구 3</span>
+  <h2>"왜 11인가?" &mdash; 소수의 복선</h2>
+
+  <div class="card">
+    <h4><span class="num">8</span> E-8. "ISBN을 속여라" &mdash; 파괴 실험 2 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+    <p>E-4에서 한 자리 변경은 거의 항상 잡힌다는 걸 확인했습니다. 그럼 <strong>"인접한 두 자리를 서로 바꾸면"</strong> 어떨까요?</p>
+
+    <div class="info" style="margin-top:12px"><strong>[활동 1] 교환 실험 &mdash; 직접 계산</strong><br>
+      아래 ISBN은 유효합니다: <strong class="mono">978-0-306-40615-7</strong> (합계=100, mod 10=0 &#x2705;)</div>
+
+    <p style="margin-top:16px">인접한 두 자리를 교환하고, 가중치 합을 다시 계산해 보세요.</p>
+
+    <p style="margin-top:12px"><strong>(a)</strong> 4번-5번 자리 교환: 0&harr;3 &rarr; <strong class="mono">978-3-006-40615-?</strong></p>
+    <p style="margin-left:24px">새 합계 = <input class="inline-input" type="text" placeholder="?">, &nbsp;mod 10 = <input class="inline-input" type="text" placeholder="?"> &nbsp;&rarr; 오류를 잡아내나요?
+      <button class="choice-btn" onclick="this.classList.toggle('selected')">&#x2705; 잡음</button><button class="choice-btn" onclick="this.classList.toggle('selected')">&#x274C; 못잡음</button></p>
+
+    <p style="margin-top:12px"><strong>(b)</strong> 6번-7번 자리 교환: 0&harr;6 &rarr; <strong class="mono">978-0-360-40615-?</strong></p>
+    <p style="margin-left:24px">새 합계 = <input class="inline-input" type="text" placeholder="?">, &nbsp;mod 10 = <input class="inline-input" type="text" placeholder="?"> &nbsp;&rarr; 오류를 잡아내나요?
+      <button class="choice-btn" onclick="this.classList.toggle('selected')">&#x2705; 잡음</button><button class="choice-btn" onclick="this.classList.toggle('selected')">&#x274C; 못잡음</button></p>
+
+    <p style="margin-top:12px"><strong>(c)</strong> 10번-11번 자리 교환: 6&harr;1 &rarr; <strong class="mono">978-0-306-40165-?</strong></p>
+    <p style="margin-left:24px">새 합계 = <input class="inline-input" type="text" placeholder="?">, &nbsp;mod 10 = <input class="inline-input" type="text" placeholder="?"> &nbsp;&rarr; 오류를 잡아내나요?
+      <button class="choice-btn" onclick="this.classList.toggle('selected')">&#x2705; 잡음</button><button class="choice-btn" onclick="this.classList.toggle('selected')">&#x274C; 못잡음</button></p>
+
+    <div class="info" style="margin-top:20px"><strong>[활동 2] 패턴 발견</strong></div>
+    <p style="margin-top:8px"><strong>(a)</strong> 위 실험에서 검출에 실패한 교환이 있나요? 어떤 교환이었나요?</p>
+    <textarea rows="2" placeholder=""></textarea>
+    <p style="margin-top:8px"><strong>(b)</strong> 교환한 두 숫자의 차이(|a&minus;b|)를 각각 구해 보세요.</p>
+    <p style="margin-left:24px">(a) |0&minus;3| = 3 &nbsp;&nbsp; (b) |0&minus;6| = 6 &nbsp;&nbsp; (c) |6&minus;1| = <input class="inline-input" type="text" placeholder="?"></p>
+    <p style="margin-top:8px"><strong>(c)</strong> 검출 실패한 교환의 |a&minus;b|에 어떤 특징이 있나요?</p>
+    <textarea rows="2" placeholder=""></textarea>
+
+    <div class="info" style="margin-top:20px"><strong>[활동 3] 추가 검증 (웹앱 시뮬레이션)</strong><br>
+      예측: |a&minus;b| = 5인 교환은 항상 검출에 실패할까요? 학습 앱에서 시뮬레이션으로 확인해 보세요.</div>
+    <p style="margin-top:8px">|a&minus;b|=5인 교환 검출률: <input class="inline-input" type="text" placeholder="?">%</p>
+    <p>|a&minus;b|&ne;5인 교환 검출률: <input class="inline-input" type="text" placeholder="?">%</p>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">9</span> E-9. "소수를 쓰면?" &mdash; mod 11 실험 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+
+    <div class="info"><strong>[활동 4] 같은 교환, 다른 나누는 수</strong><br>
+      E-8(c)에서 실패한 교환(6&harr;1)을 mod 11로 다시 검사합니다.</div>
+    <p style="margin-top:12px">가중치를 10, 9, 8, 7, ..., 1로 바꾸고 합계를 mod 11로 계산하면:</p>
+    <p style="margin-left:24px">원래 합 mod 11 = <input class="inline-input" type="text" placeholder="?"> &nbsp;&nbsp; 교환 후 합 mod 11 = <input class="inline-input" type="text" placeholder="?"></p>
+    <p style="margin-left:24px">&rarr; 오류를 잡아내나요?
+      <button class="choice-btn" onclick="this.classList.toggle('selected')">&#x2705; 잡음</button><button class="choice-btn" onclick="this.classList.toggle('selected')">&#x274C; 못잡음</button></p>
+
+    <div class="info" style="margin-top:20px"><strong>[활동 5] 왜 11은 성공할까?</strong></div>
+    <p style="margin-top:8px">mod 10에서 실패한 이유: 2 &times; 5 = <input class="inline-input" type="text" placeholder="?"> &equiv; 0 (mod 10)</p>
+    <p>mod 11에서는: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2 &times; 5 = <input class="inline-input" type="text" placeholder="?"> &equiv; <input class="inline-input" type="text" placeholder="?"> (mod 11) &rarr; 0이 아님!</p>
+    <p style="margin-top:12px">10 = 2 &times; 5 &nbsp;(합성수)</p>
+    <p>11 = <input class="inline-input wide" type="text" placeholder="???"> &nbsp;(<input class="inline-input wide" type="text" placeholder="???">)</p>
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px;margin-top:16px">
+      <p style="font-weight:700">핵심 발견을 한 문장으로:</p>
+      <p style="margin-top:8px">"나누는 수가 <input class="inline-input wide" type="text" placeholder="???">이면, 가중치 차이의 배수가 0이 되는 경우가 없어서 인접 교환 오류를 <input class="inline-input wide" type="text" placeholder="???"> 잡아낼 수 있다."</p>
+    </div>
+    <div class="hint-box" style="margin-top:12px">이 "소수"의 비밀은 4차시에서 밝혀집니다!</div>
+  </div>
+</section>
+
+<!-- ===== DEEPEN ===== -->
+<section class="section" id="deepen">
+  <span class="section-badge deepen">D 심화</span>
+  <h2>mod 연산을 더 깊이</h2>
+
+  <div class="card">
+    <h4><span class="num">1</span> D-1. mod 연산의 성질</h4>
+    <p><strong>(a)</strong> 아래 빈칸을 채우세요.</p>
+    <table style="margin-top:8px">
+      <tr><th>계산</th><th>결과</th></tr>
+      <tr><td>7 mod 10</td><td><input class="inline-input" type="text" placeholder="?"></td></tr>
+      <tr><td>17 mod 10</td><td><input class="inline-input" type="text" placeholder="?"></td></tr>
+      <tr><td>27 mod 10</td><td><input class="inline-input" type="text" placeholder="?"></td></tr>
+      <tr><td>37 mod 10</td><td><input class="inline-input" type="text" placeholder="?"></td></tr>
+    </table>
+    <p style="margin-top:12px">이 네 결과의 공통점: <input class="inline-input wide" type="text" style="width:200px" placeholder=""></p>
+    <p style="margin-top:8px">&rarr; 합동 기호로 표현하면: 7 &equiv; 17 &equiv; 27 &equiv; 37 &equiv; <input class="inline-input" type="text" placeholder="?"> (mod <input class="inline-input" type="text" placeholder="?">)</p>
+    <p style="margin-top:16px"><strong>(b)</strong> 이런 그룹은 mod 10에서 총 <input class="inline-input" type="text" placeholder="?">개 있습니다.</p>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">2</span> D-2. mod 연산과 덧셈</h4>
+    <p><strong>(a)</strong> 직접 계산해 봅시다.</p>
+    <table>
+      <tr><th></th><th>일반 계산</th><th>mod 10 결과</th></tr>
+      <tr><td style="text-align:left">7 + 8</td><td>15</td><td>15 mod 10 = <input class="inline-input" type="text" placeholder="?"></td></tr>
+      <tr><td style="text-align:left">(7 mod 10)+(8 mod 10)</td><td>7+8=15</td><td>15 mod 10 = <input class="inline-input" type="text" placeholder="?"></td></tr>
+    </table>
+    <p style="margin-top:8px">두 결과가 같나요? <button class="choice-btn" onclick="this.classList.toggle('selected')">네</button><button class="choice-btn" onclick="this.classList.toggle('selected')">아니오</button></p>
+
+    <p style="margin-top:20px"><strong>(b)</strong> 한 번 더 확인합시다.</p>
+    <table>
+      <tr><th></th><th>일반 계산</th><th>mod 10 결과</th></tr>
+      <tr><td style="text-align:left">23 + 49</td><td>72</td><td>72 mod 10 = <input class="inline-input" type="text" placeholder="?"></td></tr>
+      <tr><td style="text-align:left">(23 mod 10)+(49 mod 10)</td><td>3+9=12</td><td>12 mod 10 = <input class="inline-input" type="text" placeholder="?"></td></tr>
+    </table>
+    <p style="margin-top:8px">두 결과가 같나요? <button class="choice-btn" onclick="this.classList.toggle('selected')">네</button><button class="choice-btn" onclick="this.classList.toggle('selected')">아니오</button></p>
+
+    <p style="margin-top:20px"><strong>(c)</strong> 발견한 성질:</p>
+    <div class="info">
+      a &equiv; a' (mod n)이고 b &equiv; b' (mod n)이면, <strong>a + b &equiv; a' + b' (mod n)</strong><br>
+      <em>mod 연산에서 먼저 나머지를 구한 뒤 더해도, 나중에 나머지를 구해도 결과가 같습니다.</em>
+    </div>
+    <p style="margin-top:12px">이 성질이 왜 유용할까요? (힌트: 큰 수의 나머지를 구할 때...)</p>
+    <textarea rows="3" placeholder="나의 생각:"></textarea>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">3</span> D-3. 체크섬의 한계</h4>
+    <p><strong>(a)</strong> 체크디짓 <strong>하나</strong>로 잡을 수 있는 오류의 수는 한정되어 있습니다. 왜 그럴까요?</p>
+    <textarea rows="3" placeholder="나의 생각:"></textarea>
+    <p style="margin-top:16px"><strong>(b)</strong> 그렇다면 왜 체크디짓을 2개, 3개로 늘리지 않을까요?</p>
+    <div class="hint-box">실용성과 안전성 사이의 균형을 생각해 보세요.</div>
+    <textarea rows="3" placeholder="나의 생각:"></textarea>
+  </div>
+</section>
+
+<!-- ===== CHALLENGE ===== -->
+<section class="section" id="challenge">
+  <span class="section-badge challenge">C 도전</span>
+  <h2>경계를 넘어서</h2>
+
+  <div class="card">
+    <h4><span class="num">1</span> C-1. 체크디짓 역추적</h4>
+    <p>다음 ISBN의 4번째 자리가 지워졌습니다.</p>
+    <p style="font-size:20px;font-weight:800;text-align:center;margin:16px 0" class="mono">978-<span style="color:var(--error);font-size:28px">?</span>-306-40615-7</p>
+    <p>체크디짓(7)은 올바르다는 것을 알고 있을 때, 지워진 자리의 숫자를 찾으세요.</p>
+    <details style="margin-top:12px">
+      <summary style="cursor:pointer;color:var(--warning);font-weight:600">힌트 1 (방향)</summary>
+      <p style="padding:8px 0;font-size:14px">체크디짓이 맞으려면 13자리 전체의 가중치 합이 어떤 조건을 만족해야 하나요?</p>
+    </details>
+    <details>
+      <summary style="cursor:pointer;color:var(--warning);font-weight:600">힌트 2 (전략)</summary>
+      <p style="padding:8px 0;font-size:14px">지워진 4번째 자리의 가중치는 &times;3입니다. 나머지 자리의 가중치 합을 먼저 구해 보세요.</p>
+    </details>
+    <details>
+      <summary style="cursor:pointer;color:var(--warning);font-weight:600">힌트 3 (절차)</summary>
+      <p style="padding:8px 0;font-size:14px">나머지 12자리(체크디짓 포함)의 가중치 합이 100입니다. 100 + 3&times;? &equiv; 0 (mod 10)을 풀어 보세요.</p>
+    </details>
+    <p style="margin-top:16px"><strong>풀이 과정:</strong></p>
+    <textarea rows="5" placeholder="풀이 과정을 작성하세요..."></textarea>
+    <p style="margin-top:12px;font-size:18px;font-weight:800">지워진 숫자: <input class="inline-input" style="font-size:24px;width:60px" type="text" placeholder="?"></p>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">2</span> C-2. 나만의 체크섬 규칙 만들기</h4>
+    <p>가상의 6자리 학생증 번호에 대한 <strong>나만의 체크섬 규칙</strong>을 설계해 보세요.</p>
+    <p style="margin-top:12px"><strong>(a)</strong> 나누는 수 (mod ?): <input class="inline-input" type="text" placeholder="?"></p>
+    <p style="margin-top:8px"><strong>(b)</strong> 가중치 패턴:
+      <input class="inline-input" style="width:36px" type="text">,
+      <input class="inline-input" style="width:36px" type="text">,
+      <input class="inline-input" style="width:36px" type="text">,
+      <input class="inline-input" style="width:36px" type="text">,
+      <input class="inline-input" style="width:36px" type="text">,
+      <input class="inline-input" style="width:36px" type="text">
+    </p>
+    <p style="margin-top:12px"><strong>(c)</strong> 예시: 학생증 번호 <strong>2 4 1 3 5 2</strong>에 나의 규칙을 적용하면:</p>
+    <table style="margin-top:8px">
+      <tr><th>자리</th><td>2</td><td>4</td><td>1</td><td>3</td><td>5</td><td>2</td></tr>
+      <tr><th>가중치</th><td><input class="inline-input" style="width:36px" type="text"></td><td><input class="inline-input" style="width:36px" type="text"></td><td><input class="inline-input" style="width:36px" type="text"></td><td><input class="inline-input" style="width:36px" type="text"></td><td><input class="inline-input" style="width:36px" type="text"></td><td><input class="inline-input" style="width:36px" type="text"></td></tr>
+      <tr><th>곱</th><td><input class="inline-input" style="width:36px" type="text"></td><td><input class="inline-input" style="width:36px" type="text"></td><td><input class="inline-input" style="width:36px" type="text"></td><td><input class="inline-input" style="width:36px" type="text"></td><td><input class="inline-input" style="width:36px" type="text"></td><td><input class="inline-input" style="width:36px" type="text"></td></tr>
+    </table>
+    <p style="margin-top:12px">합계 = <input class="inline-input" type="text" placeholder="?">&nbsp;&nbsp;체크디짓 = <input class="inline-input" type="text" placeholder="?"></p>
+    <p style="margin-top:12px"><strong>(d)</strong> 이 규칙의 장점은 무엇인가요?</p>
+    <textarea rows="3" placeholder="어떤 종류의 오류를 잘 잡을 수 있나요?"></textarea>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">3</span> C-3. mod 연산으로 글자를 바꿀 수 있다면?</h4>
+    <p>오늘 mod 연산으로 "숫자의 오류"를 잡아냈습니다. 그런데 mod 연산의 능력은 이것뿐일까요?</p>
+    <p style="margin-top:12px"><strong>(a)</strong> 알파벳을 숫자로 바꿔 봅시다.</p>
+    <div class="info">A=0, B=1, C=2, ..., Z=25 (총 26글자 &rarr; mod 26)</div>
+    <p style="margin-top:12px"><strong>(b)</strong> "H"를 숫자로 바꾸면? &rarr; <input class="inline-input" type="text" placeholder="?"></p>
+    <p style="margin-top:4px">&nbsp;&nbsp;&nbsp;&nbsp;여기에 3을 더하고 mod 26을 하면? &rarr; (<input class="inline-input" type="text" placeholder="?">+3) mod 26 = <input class="inline-input" type="text" placeholder="?"></p>
+    <p style="margin-top:4px">&nbsp;&nbsp;&nbsp;&nbsp;이 숫자를 다시 글자로 바꾸면? &rarr; <input class="inline-input" type="text" placeholder="?"></p>
+    <p style="margin-top:12px"><strong>(c)</strong> 같은 방법(+3, mod 26)으로 "H I"를 변환해 보세요.</p>
+    <p style="margin-left:24px">H &rarr; <input class="inline-input" type="text" placeholder="?"> &nbsp;&nbsp; I &rarr; <input class="inline-input" type="text" placeholder="?"></p>
+    <p style="margin-top:12px"><strong>(d)</strong> 이 변환을 거꾸로 되돌리려면 어떻게 해야 할까요?</p>
+    <textarea rows="2" placeholder="나의 생각:"></textarea>
+    <div class="hint-box" style="margin-top:12px">&#x1F4AC; 이것이 바로 2,000년 전 시저 장군이 쓴 암호입니다. 다음 시간에 본격적으로 파헤칩니다!</div>
+  </div>
+</section>
+
+<!-- ===== REFLECT ===== -->
+<section class="section" id="reflect">
+  <span class="section-badge reflect">R 성찰</span>
+  <h2>오늘의 탐험을 돌아보며</h2>
+
+  <div class="card">
+    <h4><span class="num">1</span> R-1. 오늘의 발견 지도</h4>
+    <p>빈칸을 채워 오늘의 발견을 정리하세요.</p>
+    <div style="background:#f8f9fa;border-radius:10px;padding:16px;margin-top:12px;font-family:'Fira Code','Consolas',monospace;font-size:14px;line-height:2">
+      ISBN: 가중치 1, 3 교대 &rarr; 합계 mod <input class="inline-input" type="text" placeholder="?" style="width:40px"> 으로 검사<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&darr; 같은 원리, 다른 방식<br>
+      Luhn (신용카드): &times;2 후 9 초과 시 <input class="inline-input" type="text" placeholder="?" style="width:40px"> &rarr; 합계 mod <input class="inline-input" type="text" placeholder="?" style="width:40px"> 으로 검사<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&darr; mod 수를 바꾸면?<br>
+      mod 11: 소수를 쓰면 <input class="inline-input wide" type="text" placeholder="???"> 오류도 더 잘 잡는다
+    </div>
+    <p style="margin-top:16px"><strong>공통 원리 한마디:</strong></p>
+    <textarea rows="2" placeholder=""></textarea>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">2</span> R-2. 발견 노트</h4>
+    <p><strong>(a)</strong> 오늘 수업에서 <strong>가장 놀라웠던</strong> 발견은 무엇인가요?</p>
+    <textarea rows="3" placeholder=""></textarea>
+    <p style="margin-top:12px"><strong>(b)</strong> 왜 그것이 놀라웠나요?</p>
+    <textarea rows="3" placeholder=""></textarea>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">3</span> R-3. 연결 질문</h4>
+    <p><strong>(a)</strong> ISBN, 신용카드, 주민등록번호를 관통하는 <strong>하나의 수학 원리</strong>는 무엇인가요?</p>
+    <textarea rows="2" placeholder=""></textarea>
+    <p style="margin-top:12px"><strong>(b)</strong> 이 원리가 실생활에서 우리를 어떻게 보호하고 있나요?</p>
+    <textarea rows="2" placeholder=""></textarea>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">4</span> R-4. 예고편 &mdash; 다음 시간을 위한 질문</h4>
+    <div class="quote">"이 mod 연산으로 비밀 메시지를 만들 수 있다면?"</div>
+    <p>이 질문에 대한 자신의 아이디어를 적어 보세요. (정답이 아니어도 괜찮습니다!)</p>
+    <textarea rows="3" placeholder=""></textarea>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">5</span> R-5. 자기 평가</h4>
+    <table class="assess-table">
+      <tr><th>항목</th><th>아직 어려워요</th><th>대략 알겠어요</th><th>자신 있어요</th></tr>
+      <tr><td style="text-align:left">mod 연산 계산하기</td>
+        <td><input type="radio" name="a1" value="1"></td><td><input type="radio" name="a1" value="2"></td><td><input type="radio" name="a1" value="3"></td></tr>
+      <tr><td style="text-align:left">합동 기호 &equiv; 의 뜻 이해하기</td>
+        <td><input type="radio" name="a2" value="1"></td><td><input type="radio" name="a2" value="2"></td><td><input type="radio" name="a2" value="3"></td></tr>
+      <tr><td style="text-align:left">ISBN 체크디짓 직접 계산하기</td>
+        <td><input type="radio" name="a3" value="1"></td><td><input type="radio" name="a3" value="2"></td><td><input type="radio" name="a3" value="3"></td></tr>
+      <tr><td style="text-align:left">ISBN과 Luhn의 공통점/차이점 설명하기</td>
+        <td><input type="radio" name="a4" value="1"></td><td><input type="radio" name="a4" value="2"></td><td><input type="radio" name="a4" value="3"></td></tr>
+    </table>
+    <p style="margin-top:12px"><strong>가장 더 궁금한 것:</strong> <input class="inline-input wide" type="text" style="width:100%;max-width:400px" placeholder=""></p>
+  </div>
+</section>
+
+<section class="section answer-key" id="answer-key" style="page-break-before:always">
+  <h2 style="text-align:center;color:#b91c1c;border-bottom:3px double #b91c1c;padding-bottom:12px">
+    📋 교사용 정답키·해설
+  </h2>
+
+  <h3>W-2. 나머지 연산 준비</h3>
+  <p><span class="ans">(a) 2 &nbsp; (b) 5 &nbsp; (c) 0 &nbsp; (d) 0</span></p>
+  <p><strong>mod 연산 연습:</strong></p>
+  <p><span class="ans">(a) 23≡3 (mod 10) &nbsp; (b) 51≡2 (mod 7) &nbsp; (c) 100≡22 (mod 26)</span></p>
+  <p><span class="ans">(d) 33 mod 10 = 3, 53 mod 10 = 3 → 네, 합동</span></p>
+
+  <h3>E-1. ISBN 관찰</h3>
+  <p><span class="ans">가중치 1, 3 교대 패턴 발견. 13번째 숫자(체크디짓)는 나머지에서 도출.</span></p>
+
+  <h3>E-2. 체크디짓 계산 (ISBN 978-0-306-40615-7)</h3>
+  <p><span class="ans">곱: 9, 21, 8, 0, 3, 0, 6, 12, 0, 18, 1, 15</span></p>
+  <p><span class="ans">합계 = 93, 나머지 = 93 mod 10 = 3, 체크디짓 = 10 − 3 = 7</span></p>
+
+  <h3>E-4. 한 자리를 바꿔 보면?</h3>
+  <p><span class="ans">한 자리가 바뀌면 가중치 합이 바뀌어 mod 10 ≠ 0이 됨</span></p>
+  <p><span class="ans">정상일 때: (가중치 합) ≡ 0 (mod 10)</span></p>
+
+  <h3>E-6. Luhn 규칙 발견 [선택]</h3>
+  <p><span class="ans">16−9=7, 12−9=3 (빨간 칸 값: 7, 3, 9)</span></p>
+  <p><span class="ans">합계 확인 후 mod 10 = 0이면 유효</span></p>
+
+  <h3>E-7. ISBN vs Luhn 비교 [선택]</h3>
+  <p><span class="ans">나누는 수: mod 10 / mod 10, 유효 조건: 합계 ≡ 0 (mod 10)</span></p>
+
+  <h3>E-8. ISBN을 속여라 — 파괴 실험 2</h3>
+  <p><span class="ans">(a) 위치 0↔1 교환 → 새 합계 104, mod 10=4 → 잡힘</span></p>
+  <p><span class="ans">(b) 위치 5↔6 교환 → 새 합계 112, mod 10=2 → 잡힘</span></p>
+  <p><span class="ans">(c) 위치 9↔10 교환 → 새 합계 90, mod 10=0 → 놓침!</span></p>
+  <p><span class="ans">|6−1| = 5, |a−b|=5인 교환 검출률: 0%, |a−b|≠5인 교환 검출률: 100%</span></p>
+
+  <h3>E-9. mod 11 실험</h3>
+  <p><span class="ans">원래 합 mod 11 = 1, 교환 후 합 mod 11 = 2 → 다르다! → 잡힘</span></p>
+  <p><span class="ans">2 × 5 = 10 ≡ 0 (mod 10), 2 × 5 = 10 ≡ 10 (mod 11) → 0이 아님!</span></p>
+  <p><span class="ans">11 = 소수 (prime number)</span></p>
+  <p><span class="ans">"나누는 수가 소수이면, 가중치 차이의 배수가 0이 되는 경우가 없어서 인접 교환 오류를 100% 잡아낼 수 있다."</span></p>
+
+  <h3>D-1. mod 연산의 성질</h3>
+  <p><span class="ans">(a) 7, 7, 7, 7 → 공통점: 모두 7 → 7≡17≡27≡37≡7 (mod 10)</span></p>
+  <p><span class="ans">(b) 그룹은 10개</span></p>
+
+  <h3>D-2. mod 연산과 덧셈</h3>
+  <p><span class="ans">(a) 5, 5 → 같다: 네 &nbsp; (b) 2, 2 → 같다: 네</span></p>
+
+  <h3>D-3. 체크섬의 한계</h3>
+  <p><span class="ans">(a) 체크디짓 하나(0~9)로는 10가지 상태만 구분. 2자리 이상 동시 오류는 확률적으로만 검출.</span></p>
+  <p><span class="ans">(b) 자릿수가 늘어나면 번호가 길어져 실용성이 떨어짐. 비용 대비 효과의 균형.</span></p>
+
+  <h3>C-1. 체크디짓 역추적</h3>
+  <p><span class="ans">100 + 3×? ≡ 0 (mod 10) → 3×? ≡ 0 (mod 10) → ? = 0</span></p>
+  <p><span class="ans">지워진 숫자: 0</span></p>
+
+  <h3>C-3. mod 연산으로 글자를 바꿀 수 있다면?</h3>
+  <p><span class="ans">(b) H=7, (7+3) mod 26 = 10 → K</span></p>
+  <p><span class="ans">(c) H→K, I→L</span></p>
+  <p><span class="ans">(d) 3을 빼면 (또는 +23 mod 26) 원래 글자로 돌아간다</span></p>
+
+  <h3>R-1. 오늘의 발견 지도</h3>
+  <p><span class="ans">ISBN: mod 10 / Luhn: −9 / mod 10 / mod 11: 인접 교환</span></p>
+</section>
+
+</main>
+
+<script>
+// Smooth scroll for nav
+document.querySelectorAll('.nav a').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+    document.querySelectorAll('.nav a').forEach(x=>x.classList.remove('active'));
+    a.classList.add('active');
+  });
+});
+// Highlight nav on scroll
+const sections=document.querySelectorAll('.section');
+const navLinks=document.querySelectorAll('.nav a');
+window.addEventListener('scroll',()=>{
+  let current='';
+  sections.forEach(s=>{
+    if(window.scrollY>=s.offsetTop-100) current=s.getAttribute('id');
+  });
+  navLinks.forEach(a=>{
+    a.classList.remove('active');
+    if(a.getAttribute('href')==='#'+current) a.classList.add('active');
+  });
+});
+// Choice exclusive toggle (within same parent)
+document.querySelectorAll('.choice-group').forEach(g=>{
+  g.querySelectorAll('.choice-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      g.querySelectorAll('.choice-btn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+});
+</script>
+</body>
+</html>

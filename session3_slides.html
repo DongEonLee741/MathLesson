@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3차시: 암호를 깨뜨려라</title>
+<style>
+:root {
+  --theme: #f43f5e;
+  --theme-light: #fff1f2;
+  --theme-dark: #e11d48;
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-text: #1a1a2e;
+  --color-text-secondary: #6b7280;
+  --color-border: #e5e7eb;
+  --font-main: 'Pretendard', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Fira Code', 'Consolas', monospace;
+  --radius: 14px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #f9fafb; font-family: var(--font-main); }
+
+.slide {
+  display: none;
+  width: 100vw;
+  height: 100vh;
+  padding: 56px 64px 72px;
+  background: var(--color-bg);
+  position: absolute;
+  top: 0; left: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  overflow-y: auto;
+}
+.slide.active { display: flex; flex-direction: column; opacity: 1; }
+
+/* ── Typography ── */
+.slide h1 {
+  font-size: clamp(32px, 3.2vw, 56px);
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1.25;
+  margin-bottom: 20px;
+  letter-spacing: -0.02em;
+}
+.slide h2 {
+  font-size: clamp(24px, 2.4vw, 40px);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 16px;
+  letter-spacing: -0.01em;
+}
+.slide h3 {
+  font-size: clamp(18px, 1.8vw, 28px);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 10px;
+}
+.slide p, .slide li {
+  font-size: clamp(16px, 1.6vw, 26px);
+  line-height: 1.75;
+  color: #374151;
+}
+.slide ul, .slide ol {
+  padding-left: 1.5em;
+  margin: 14px 0;
+}
+.slide li { margin-bottom: 10px; }
+
+/* ── Title slide ── */
+.title-slide {
+  background: #fefefe;
+  color: var(--color-text);
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+.title-slide::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--theme), var(--theme-dark), var(--theme));
+}
+.title-slide h1 {
+  color: var(--color-text);
+  font-size: clamp(40px, 4vw, 72px);
+  margin-bottom: 16px;
+}
+.title-slide .subtitle {
+  font-size: clamp(18px, 2vw, 32px);
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  line-height: 1.6;
+}
+.title-slide .icon {
+  font-size: clamp(56px, 6vw, 96px);
+  margin-bottom: 24px;
+}
+.title-slide .session-badge {
+  display: inline-block;
+  background: var(--theme-light);
+  color: var(--theme-dark);
+  padding: 8px 28px;
+  border-radius: 100px;
+  font-size: clamp(14px, 1.4vw, 22px);
+  font-weight: 700;
+  margin-bottom: 24px;
+  border: 1.5px solid var(--theme);
+}
+
+/* ── Section slide ── */
+.section-slide {
+  background: #fefefe;
+  color: var(--color-text);
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+.section-slide::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--theme);
+}
+.section-slide h1 {
+  color: var(--color-text);
+}
+.section-slide .section-num {
+  font-size: clamp(48px, 5vw, 80px);
+  font-weight: 800;
+  color: var(--theme);
+  opacity: 0.2;
+  margin-bottom: 8px;
+}
+.section-slide p {
+  color: var(--color-text-secondary);
+  font-size: clamp(18px, 1.8vw, 28px);
+}
+
+/* ── Content helpers ── */
+.highlight-box {
+  background: var(--theme-light);
+  border-left: 4px solid var(--theme);
+  padding: 18px 24px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin: 18px 0;
+  font-size: clamp(16px, 1.5vw, 24px);
+  color: #374151;
+}
+.key-point {
+  background: #fffbeb;
+  border: 1.5px solid #fbbf24;
+  border-radius: var(--radius);
+  padding: 22px 28px;
+  margin: 18px 0;
+  font-size: clamp(16px, 1.5vw, 24px);
+  color: #374151;
+}
+.key-point .label { font-weight: 700; color: #d97706; }
+
+.code-block {
+  background: #1e293b;
+  color: #e2e8f0;
+  font-family: var(--font-mono);
+  font-size: clamp(14px, 1.4vw, 22px);
+  padding: 20px 24px;
+  border-radius: var(--radius);
+  margin: 14px 0;
+  line-height: 1.7;
+}
+.code-block .red { color: #fb7185; }
+.code-block .green { color: #4ade80; }
+.code-block .blue { color: #60a5fa; }
+.code-block .yellow { color: #fbbf24; }
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+  flex: 1;
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .two-col { grid-template-columns: 1fr; gap: 18px; }
+}
+
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 28px;
+  border: 1.5px solid var(--color-border);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+/* ── Bar chart visual ── */
+.freq-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.freq-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 30px;
+}
+.freq-bar-label {
+  width: 26px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: clamp(13px, 1.2vw, 18px);
+  text-align: center;
+  color: var(--color-text);
+}
+.freq-bar-track {
+  flex: 1;
+  height: 22px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.freq-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 1s ease-out;
+}
+.freq-bar-fill.red { background: var(--theme); }
+.freq-bar-fill.blue { background: #3b82f6; }
+.freq-bar-pct {
+  width: 50px;
+  font-size: clamp(11px, 1vw, 16px);
+  text-align: right;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+}
+
+/* ── Table ── */
+.alpha-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(12px, 1.1vw, 18px);
+  margin: 14px 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1.5px solid var(--color-border);
+}
+.alpha-table td {
+  text-align: center;
+  padding: 8px 6px;
+  border: 1px solid var(--color-border);
+}
+.alpha-table tr:first-child td {
+  background: var(--theme);
+  color: white;
+  font-weight: 700;
+  border-color: var(--theme-dark);
+}
+.alpha-table tr:nth-child(2) td {
+  background: var(--theme-light);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ── Comparison ── */
+.compare-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  margin: 24px 0;
+  flex-wrap: wrap;
+}
+.compare-item {
+  text-align: center;
+}
+.compare-num {
+  font-size: clamp(36px, 4vw, 64px);
+  font-weight: 800;
+  color: var(--theme);
+}
+.compare-label {
+  font-size: clamp(14px, 1.2vw, 20px);
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+.compare-vs {
+  font-size: clamp(24px, 2.5vw, 40px);
+  font-weight: 800;
+  color: #d1d5db;
+}
+
+/* ── Arrow flow ── */
+.arrow-flow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 18px 0;
+  font-size: clamp(16px, 1.6vw, 26px);
+}
+.arrow-flow .step {
+  background: var(--theme-light);
+  color: var(--color-text);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  border: 1.5px solid rgba(244, 63, 94, 0.15);
+}
+.arrow-flow .arrow { color: var(--theme); font-weight: 800; }
+
+/* ── Nav bar ── */
+.nav-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  background: #ffffff;
+  border-top: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 100;
+}
+.nav-dots {
+  display: flex;
+  gap: 7px;
+}
+.nav-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+}
+.nav-dot:hover { background: #d1d5db; transform: scale(1.15); }
+.nav-dot.active { background: var(--theme); transform: scale(1.3); box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2); }
+.nav-dot.visited { background: #9ca3af; }
+.nav-info {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+.nav-btn {
+  background: none;
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 6px 14px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-btn:hover { background: var(--theme-light); border-color: var(--theme); color: var(--theme-dark); }
+.nav-btn:disabled { opacity: 0.25; cursor: default; background: none; border-color: var(--color-border); color: var(--color-text); }
+
+/* ── Animations ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-in { animation: fadeInUp 0.5s ease forwards; }
+.delay-1 { animation-delay: 0.2s; opacity: 0; }
+.delay-2 { animation-delay: 0.4s; opacity: 0; }
+.delay-3 { animation-delay: 0.6s; opacity: 0; }
+.delay-4 { animation-delay: 0.8s; opacity: 0; }
+
+/* ── Utility classes ── */
+.emoji-big { font-size: clamp(40px, 4vw, 64px); }
+.text-center { text-align: center; }
+.text-red { color: var(--theme); }
+.text-blue { color: #3b82f6; }
+.fw-800 { font-weight: 800; }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+.flex-1 { flex: 1; }
+</style>
+</head>
+<body>
+
+<!-- Slide 1: Title -->
+<div class="slide title-slide" data-slide="1">
+  <div class="session-badge">3차시</div>
+  <div class="icon">🕵️</div>
+  <h1>암호를 깨뜨려라</h1>
+  <div class="subtitle">빈도 분석으로 고전 암호 공격하기</div>
+</div>
+
+<!-- Slide 2: Review -->
+<div class="slide" data-slide="2">
+  <h2>📋 지난 시간 복습</h2>
+  <div class="two-col flex-1">
+    <div>
+      <h3 class="animate-in">2차시에서 배운 것</h3>
+      <ul class="animate-in delay-1">
+        <li><strong>시저 암호</strong>: E(x) = (x + k) mod 26</li>
+        <li><strong>곱셈 암호</strong>: E(x) = (a × x) mod 26</li>
+        <li><strong>아핀 암호</strong>: E(x) = (ax + b) mod 26</li>
+      </ul>
+      <div class="highlight-box animate-in delay-2">
+        아핀 암호의 키 공간: <strong class="text-red">312개</strong>
+      </div>
+    </div>
+    <div>
+      <h3 class="animate-in delay-2">오늘의 질문</h3>
+      <div class="key-point animate-in delay-3">
+        <div class="label">🤔 핵심 질문</div>
+        312개의 키를 가진 아핀 암호...<br>
+        과연 <strong>안전</strong>할까요?
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 3: Section - Frequency -->
+<div class="slide section-slide" data-slide="3">
+  <div class="section-num">01</div>
+  <h1>글자에도 습관이 있다</h1>
+  <p>영어의 '지문' 발견하기</p>
+</div>
+
+<!-- Slide 4: English letter frequency -->
+<div class="slide" data-slide="4">
+  <h2>📊 영어 글자 빈도</h2>
+  <p class="mb-16">수백 권의 영어 책을 분석하면...</p>
+  <div class="two-col flex-1">
+    <div>
+      <div class="freq-bars" id="stdFreqBars"></div>
+    </div>
+    <div>
+      <div class="key-point animate-in delay-1">
+        <div class="label">💡 발견</div>
+        어떤 영어 글이든<br>
+        <strong class="text-red" style="font-size:clamp(20px,2vw,32px)">E, T, A, O, I, N</strong><br>
+        순서로 글자가 많다!
+      </div>
+      <div class="highlight-box animate-in delay-2">
+        E는 전체의 약 <strong>12.7%</strong><br>
+        Z는 전체의 약 <strong>0.07%</strong><br>
+        → <strong>181배</strong> 차이!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 5: Frequency = fingerprint -->
+<div class="slide" data-slide="5">
+  <h2>🔬 빈도 = 언어의 지문</h2>
+  <div class="two-col flex-1">
+    <div>
+      <div class="card animate-in">
+        <h3>이상한 나라의 앨리스</h3>
+        <div class="freq-bars" id="aliceBars"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card animate-in delay-1">
+        <h3>셜록 홈즈</h3>
+        <div class="freq-bars" id="holmesBars"></div>
+      </div>
+    </div>
+  </div>
+  <div class="key-point animate-in delay-2 mt-16">
+    <div class="label">핵심!</div>
+    <strong>어떤 영어 텍스트든</strong> 빈도 순서는 거의 동일합니다.<br>
+    이것이 암호를 깨는 <strong class="text-red">열쇠</strong>가 됩니다!
+  </div>
+</div>
+
+<!-- Slide 6: App Transition -->
+<div class="slide section-slide" data-slide="6">
+  <div style="font-size:64px">📱</div>
+  <h1>활동 시간</h1>
+  <p style="font-size:20px;margin-top:16px">학습앱을 열어주세요!</p>
+  <p style="font-size:16px;color:var(--text-secondary);margin-top:8px">영어 글자 빈도를 직접 분석합니다</p>
+</div>
+
+<!-- Slide 7: Section - Caesar attack -->
+<div class="slide section-slide" data-slide="7">
+  <div class="section-num">02</div>
+  <h1>시저 암호를 깨뜨려라</h1>
+  <p>그래프 슬라이딩 공격</p>
+</div>
+
+<!-- Slide 8: Caesar weakness -->
+<div class="slide" data-slide="8">
+  <h2>⚡ 시저 암호의 약점</h2>
+  <div class="animate-in">
+    <p class="mb-16">시저 암호는 모든 글자를 <strong>같은 수만큼</strong> 밀기:</p>
+  </div>
+
+  <div class="code-block animate-in delay-1">
+    <span class="yellow">원문</span>: S Q U I R E T R E L A W N E Y<br>
+    <span class="red">+3</span>:  ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓<br>
+    <span class="green">암호</span>: V T X L U H W U H O D Z Q H B
+  </div>
+
+  <div class="highlight-box animate-in delay-2">
+    원문에서 E가 가장 많았다면 → 암호문에서도 <strong>E+k</strong>가 가장 많다!
+  </div>
+
+  <div class="key-point animate-in delay-3">
+    <div class="label">공격 아이디어 💡</div>
+    암호문의 빈도 그래프를 표준 빈도와 <strong>겹쳐서 밀어보면</strong><br>
+    → 일치하는 지점 = 키!
+  </div>
+</div>
+
+<!-- Slide 9: Graph sliding demo -->
+<div class="slide" data-slide="9">
+  <h2>📈 그래프 슬라이딩 공격</h2>
+  <div class="two-col flex-1">
+    <div>
+      <h3 class="animate-in">방법</h3>
+      <ol class="animate-in delay-1">
+        <li>암호문의 글자 빈도를 구한다</li>
+        <li>표준 영어 빈도와 나란히 놓는다</li>
+        <li>암호문 그래프를 좌우로 민다</li>
+        <li>가장 잘 겹치는 위치 = <strong class="text-red">키</strong></li>
+      </ol>
+    </div>
+    <div>
+      <div class="card animate-in delay-2">
+        <h3 class="text-center">예시: 보물섬, 키 = 3</h3>
+        <div class="arrow-flow mt-8">
+          <div class="step">암호문 빈도</div>
+          <div class="arrow">→</div>
+          <div class="step">3칸 밀기</div>
+          <div class="arrow">→</div>
+          <div class="step">표준 빈도와 일치!</div>
+        </div>
+        <div class="code-block mt-8">
+          <span class="red">암호문 최다</span>: H (= E+3)<br>
+          <span class="blue">표준 최다</span>:&nbsp; E<br>
+          <span class="green">→ 키 = 3</span> 확정!
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 10: Caesar result -->
+<div class="slide" data-slide="10">
+  <h2>💥 시저 암호의 최후</h2>
+  <div class="compare-box animate-in">
+    <div class="compare-item">
+      <div class="compare-num">25</div>
+      <div class="compare-label">가능한 키</div>
+    </div>
+    <div class="compare-vs">→</div>
+    <div class="compare-item">
+      <div class="compare-num text-blue">1초</div>
+      <div class="compare-label">빈도 분석</div>
+    </div>
+  </div>
+
+  <div class="highlight-box animate-in delay-1">
+    전수조사(0.02초)보다도 빠른, <strong>수학적 공격</strong>!<br>
+    빈도 그래프를 한 번 밀어보면 끝.
+  </div>
+
+  <div class="key-point animate-in delay-2">
+    <div class="label">🎯 핵심</div>
+    시저 암호는 모든 글자를 <strong>같은 양</strong>만큼 밀기 때문에<br>
+    빈도 그래프의 <strong>모양이 보존</strong>됩니다.<br>
+    mod 26이니까, Z 다음은 A로 돌아갑니다!<br>
+    → 밀어 맞추기만 하면 키를 찾을 수 있다!
+  </div>
+</div>
+
+<!-- Slide 11: Section - Substitution -->
+<div class="slide section-slide" data-slide="11">
+  <div class="section-num">03</div>
+  <h1>치환 암호도 깨진다</h1>
+  <p>빈도 분석의 위력</p>
+</div>
+
+<!-- Slide 12: Substitution cipher -->
+<div class="slide" data-slide="12">
+  <h2>🔀 치환 암호란?</h2>
+  <div class="animate-in">
+    <p class="mb-16">알파벳을 <strong>완전히 뒤섞어</strong> 대응시키는 암호:</p>
+  </div>
+
+  <table class="alpha-table animate-in delay-1" style="max-width:700px">
+    <tr><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td><td>G</td><td>H</td><td>I</td><td>J</td><td>K</td><td>L</td><td>M</td></tr>
+    <tr><td>F</td><td>Q</td><td>W</td><td>N</td><td>X</td><td>K</td><td>V</td><td>J</td><td>Z</td><td>G</td><td>P</td><td>A</td><td>R</td></tr>
+  </table>
+
+  <div class="compare-box animate-in delay-2 mt-16">
+    <div class="compare-item">
+      <div class="compare-num">26!</div>
+      <div class="compare-label">가능한 키 수</div>
+    </div>
+    <div class="compare-vs">=</div>
+    <div class="compare-item">
+      <div class="compare-num" style="font-size:clamp(20px,2.5vw,36px)">4 × 10²⁶</div>
+      <div class="compare-label">약 4000억 × 10¹⁷</div>
+    </div>
+  </div>
+
+  <div class="highlight-box animate-in delay-3">
+    전수조사가 <strong>불가능</strong>한 수준! 그런데... 정말 안전할까?
+  </div>
+</div>
+
+<!-- Slide 13: Substitution weakness -->
+<div class="slide" data-slide="13">
+  <h2>🔍 치환 암호의 약점</h2>
+  <div class="two-col flex-1">
+    <div>
+      <h3 class="animate-in">핵심 관찰</h3>
+      <div class="code-block animate-in delay-1">
+        <span class="yellow">원문에서 E가 12.7%</span><br><br>
+        E → X 로 바뀐다면<br><br>
+        <span class="red">암호문에서 X가 12.7%!</span>
+      </div>
+      <p class="animate-in delay-2 mt-8">
+        한 글자가 <strong>항상 같은 글자</strong>로 바뀌므로<br>
+        빈도 정보가 <strong>그대로 남습니다</strong>.
+      </p>
+    </div>
+    <div>
+      <h3 class="animate-in delay-2">해독 전략</h3>
+      <ol class="animate-in delay-3">
+        <li>암호문 글자 빈도를 구한다</li>
+        <li>최다 글자 → <strong>E</strong>로 추정</li>
+        <li>한 글자 단어 → <strong>I</strong> 또는 <strong>A</strong></li>
+        <li>흔한 패턴(THE, AND) 찾기</li>
+        <li>퍼즐처럼 하나씩 채워가기!</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 14: Detective work -->
+<div class="slide" data-slide="14">
+  <h2>🕵️ 탐정의 추리</h2>
+
+  <div class="arrow-flow animate-in">
+    <div class="step">빈도 분석</div>
+    <div class="arrow">→</div>
+    <div class="step">패턴 매칭</div>
+    <div class="arrow">→</div>
+    <div class="step">추정 & 검증</div>
+    <div class="arrow">→</div>
+    <div class="step">해독 완료!</div>
+  </div>
+
+  <div class="two-col flex-1 mt-16">
+    <div class="card animate-in delay-1">
+      <h3>단서 1: 빈도</h3>
+      <p>X가 가장 많다 → X = E?</p>
+      <p>M이 두 번째 → M = T?</p>
+    </div>
+    <div class="card animate-in delay-2">
+      <h3>단서 2: 패턴</h3>
+      <p>MJX가 자주 반복 → THE?</p>
+      <p>한 글자 F → A?</p>
+    </div>
+  </div>
+
+  <div class="key-point animate-in delay-3 mt-16">
+    <div class="label">앱에서 직접 해보세요! 🔍</div>
+    치환 암호 탐정 대시보드에서 하나씩 대응을 채워보세요.
+  </div>
+</div>
+
+<!-- Slide 15: Section - Affine -->
+<div class="slide section-slide" data-slide="15">
+  <div class="section-num">04</div>
+  <h1>아핀 암호도 무너진다</h1>
+  <p>연립방정식으로 키 찾기</p>
+</div>
+
+<!-- Slide 16: Affine attack -->
+<div class="slide" data-slide="16">
+  <h2>🧮 아핀 암호 빈도 분석</h2>
+  <p class="mb-16 animate-in">E(x) = (ax + b) mod 26 → 빈도 상위 2글자만 있으면 풀린다!</p>
+
+  <div class="two-col flex-1">
+    <div>
+      <h3 class="animate-in delay-1">Step 1-3: 연립방정식</h3>
+      <div class="code-block animate-in delay-1">
+        <span class="yellow">빈도 1위</span> → E(=4) 가정<br>
+        <span class="yellow">빈도 2위</span> → T(=19) 가정<br><br>
+        <span class="blue">4a + b ≡ c₁ (mod 26)</span><br>
+        <span class="blue">19a + b ≡ c₂ (mod 26)</span>
+      </div>
+    </div>
+    <div>
+      <h3 class="animate-in delay-2">Step 4-7: 풀기</h3>
+      <div class="code-block animate-in delay-2">
+        두 식 빼기:<br>
+        <span class="red">15a ≡ (c₂-c₁) (mod 26)</span><br><br>
+        역원 곱하기 → <span class="green">a 확정</span><br>
+        대입 → <span class="green">b 확정</span><br>
+        전체 복호화!
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight-box animate-in delay-3 mt-8">
+    <strong>312개</strong> 키를 가진 아핀 암호가 빈도 <strong class="text-red">2글자</strong>로 풀렸습니다!
+  </div>
+</div>
+
+<!-- Slide 17: The fundamental weakness -->
+<div class="slide" data-slide="17">
+  <h2 class="text-center">💀 고전 암호의 근본적 약점</h2>
+
+  <div class="text-center mt-24 animate-in">
+    <div class="emoji-big">🔑</div>
+  </div>
+
+  <div class="key-point animate-in delay-1 mt-16" style="max-width:700px;margin-left:auto;margin-right:auto;text-align:center">
+    <div style="font-size:clamp(18px,2vw,30px);font-weight:700;line-height:1.6">
+      "한 글자가 항상 <span class="text-red">같은 글자</span>로 바뀌는 한,<br>
+      빈도라는 <span class="text-red">지문</span>은 지울 수 없다."
+    </div>
+  </div>
+
+  <div class="compare-box animate-in delay-2 mt-16">
+    <div class="compare-item">
+      <div class="compare-label">시저 (25개)</div>
+      <div style="font-size:clamp(24px,2.5vw,40px)">❌</div>
+    </div>
+    <div class="compare-item">
+      <div class="compare-label">치환 (4×10²⁶개)</div>
+      <div style="font-size:clamp(24px,2.5vw,40px)">❌</div>
+    </div>
+    <div class="compare-item">
+      <div class="compare-label">아핀 (312개)</div>
+      <div style="font-size:clamp(24px,2.5vw,40px)">❌</div>
+    </div>
+  </div>
+
+  <p class="animate-in delay-3 text-center mt-16" style="font-size:clamp(16px,1.6vw,26px)">
+    모두 <strong>빈도 분석</strong>에 무너집니다
+  </p>
+</div>
+
+<!-- Slide 18: Summary -->
+<div class="slide" data-slide="18">
+  <h2>📝 오늘의 정리</h2>
+  <div class="two-col flex-1">
+    <div>
+      <h3>배운 것</h3>
+      <ul>
+        <li class="animate-in">영어 글자 빈도: <strong>E, T, A, O, I, N</strong></li>
+        <li class="animate-in delay-1">시저 → 그래프 밀기로 <strong>즉시</strong> 해독</li>
+        <li class="animate-in delay-2">치환 → 빈도+패턴으로 해독</li>
+        <li class="animate-in delay-3">아핀 → 연립방정식 2개로 해독</li>
+      </ul>
+    </div>
+    <div>
+      <div class="key-point animate-in delay-2">
+        <div class="label">핵심 원리</div>
+        고전 암호는 한 글자 → 한 글자 대응이라<br>
+        <strong>빈도 패턴이 보존</strong>됩니다.<br>
+        키가 아무리 많아도 빈도 앞에 무력!
+      </div>
+      <a href="session3_unified.html" style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:12px 28px;background:#f43f5e;color:#fff;border-radius:10px;text-decoration:none;font-size:clamp(14px,1.4vw,18px);font-weight:700;box-shadow:0 4px 16px rgba(244,63,94,.25)">&#x1F680; 학습 앱 열기</a>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 19: Next preview -->
+<div class="slide title-slide" data-slide="19" style="background: #fefefe;">
+  <div class="session-badge" style="background:#ecfdf5;color:#059669;border-color:#34d399;">4차시 예고</div>
+  <div class="icon">🔐</div>
+  <h1>소수의 힘</h1>
+  <div class="subtitle">
+    고전 암호가 모두 뚫린다면,<br>
+    현대 인터넷은 뭘로 지켜지나?<br><br>
+    답은 <strong>'소수'</strong>입니다.
+  </div>
+</div>
+
+<!-- Navigation Bar -->
+<nav class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevSlide()">◀</button>
+  <div class="nav-dots" id="navDots"></div>
+  <div class="nav-info" id="navInfo">1 / 19</div>
+  <button class="nav-btn" id="nextBtn" onclick="nextSlide()">▶</button>
+</nav>
+
+<script>
+const TOTAL_SLIDES = 19;
+let currentSlide = 1;
+
+// Standard freq data for bar charts
+const STD_FREQ = [
+  ['E',12.7],['T',9.06],['A',8.17],['O',7.51],['I',6.97],
+  ['N',6.75],['S',6.33],['H',6.09],['R',5.99],['D',4.25]
+];
+
+function buildFreqBars(containerId, data, colorClass) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  const max = data[0][1];
+  data.forEach(([letter, pct]) => {
+    const row = document.createElement('div');
+    row.className = 'freq-bar-row';
+    row.innerHTML = `
+      <span class="freq-bar-label">${letter}</span>
+      <div class="freq-bar-track"><div class="freq-bar-fill ${colorClass}" style="width:${(pct/max*100)}%"></div></div>
+      <span class="freq-bar-pct">${pct.toFixed(1)}%</span>
+    `;
+    el.appendChild(row);
+  });
+}
+
+function countFreq(text) {
+  const c = {};
+  let t = 0;
+  for (const ch of text) { if (ch >= 'A' && ch <= 'Z') { c[ch]=(c[ch]||0)+1; t++; } }
+  return Object.entries(c).map(([l,n]) => [l, (n/t)*100]).sort((a,b) => b[1]-a[1]).slice(0,10);
+}
+
+const ALICE = 'ALICE WAS BEGINNING TO GET VERY TIRED OF SITTING BY HER SISTER ON THE BANK AND OF HAVING NOTHING TO DO ONCE OR TWICE SHE HAD PEEPED INTO THE BOOK HER SISTER WAS READING BUT IT HAD NO PICTURES OR CONVERSATIONS IN IT AND WHAT IS THE USE OF A BOOK THOUGHT ALICE WITHOUT PICTURES OR CONVERSATIONS';
+const HOLMES = 'TO SHERLOCK HOLMES SHE IS ALWAYS THE WOMAN I HAVE SELDOM HEARD HIM MENTION HER UNDER ANY OTHER NAME IN HIS EYES SHE ECLIPSES AND PREDOMINATES THE WHOLE OF HER SEX IT WAS NOT THAT HE FELT ANY EMOTION AKIN TO LOVE FOR IRENE ADLER ALL EMOTIONS AND THAT ONE PARTICULARLY WERE ABHORRENT TO HIS COLD PRECISE BUT ADMIRABLY BALANCED MIND';
+
+function initCharts() {
+  buildFreqBars('stdFreqBars', STD_FREQ, 'red');
+  buildFreqBars('aliceBars', countFreq(ALICE), 'red');
+  buildFreqBars('holmesBars', countFreq(HOLMES), 'blue');
+}
+
+// Navigation
+function goToSlide(n) {
+  if (n < 1 || n > TOTAL_SLIDES) return;
+  const prev = document.querySelector('.slide.active');
+  if (prev) { prev.classList.remove('active'); prev.style.opacity = '0'; }
+  currentSlide = n;
+  const next = document.querySelector(`.slide[data-slide="${n}"]`);
+  if (next) {
+    next.classList.add('active');
+    setTimeout(() => { next.style.opacity = '1'; }, 10);
+  }
+  updateNav();
+
+  // Build charts on relevant slides
+  if (n === 4 || n === 5) initCharts();
+}
+
+function nextSlide() { goToSlide(currentSlide + 1); }
+function prevSlide() { goToSlide(currentSlide - 1); }
+
+function updateNav() {
+  document.getElementById('navInfo').textContent = `${currentSlide} / ${TOTAL_SLIDES}`;
+  document.getElementById('prevBtn').disabled = currentSlide <= 1;
+  document.getElementById('nextBtn').disabled = currentSlide >= TOTAL_SLIDES;
+
+  const dots = document.getElementById('navDots');
+  dots.innerHTML = '';
+  for (let i = 1; i <= TOTAL_SLIDES; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'nav-dot' + (i === currentSlide ? ' active' : (i < currentSlide ? ' visited' : ''));
+    dot.onclick = () => goToSlide(i);
+    dots.appendChild(dot);
+  }
+}
+
+// Keyboard
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); nextSlide(); }
+  else if (e.key === 'ArrowLeft' || e.key === 'Backspace') { e.preventDefault(); prevSlide(); }
+  else if (e.key === 'Home') { e.preventDefault(); goToSlide(1); }
+  else if (e.key === 'End') { e.preventDefault(); goToSlide(TOTAL_SLIDES); }
+});
+
+// Touch
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', (e) => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) { dx < 0 ? nextSlide() : prevSlide(); }
+});
+
+// Init
+goToSlide(1);
+</script>
+</body>
+</html>

@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2차시 학습지 - 비밀을 지켜라</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1a1a2e;
+  --ink2:#4a4a68;
+  --ink3:#8888a4;
+  --bg:#f7f7fb;
+  --card:#fff;
+  --border:#ebebf0;
+  --theme:#a855f7;
+  --theme-light:#faf5ff;
+  --theme-mid:#e9d5ff;
+  --success:#16a34a;
+  --success-light:#f0fdf4;
+  --error:#dc2626;
+  --error-light:#fef2f2;
+  --warning:#f59e0b;
+  --warning-light:#fffbeb;
+  --shadow:0 1px 3px rgba(26,26,46,.06), 0 1px 2px rgba(26,26,46,.04);
+  --shadow-md:0 2px 8px rgba(26,26,46,.07), 0 1px 3px rgba(26,26,46,.04);
+  --radius:14px;
+}
+body{
+  font-family:'Pretendard','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:15px;
+  line-height:1.75;
+  padding-bottom:60px;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── Header ── */
+.header{
+  background:var(--card);
+  border-top:4px solid var(--theme);
+  padding:36px 24px 32px;
+  text-align:center;
+}
+.header .chip{
+  display:inline-block;
+  background:var(--theme-light);
+  color:var(--theme);
+  font-size:12px;
+  font-weight:700;
+  padding:3px 12px;
+  border-radius:100px;
+  margin-bottom:12px;
+  letter-spacing:.02em;
+}
+.header h1{
+  font-size:clamp(24px,4vw,34px);
+  font-weight:800;
+  color:var(--ink);
+  letter-spacing:-.02em;
+}
+.header .subtitle{
+  font-size:clamp(14px,2.5vw,17px);
+  color:var(--ink2);
+  margin-top:6px;
+  font-weight:500;
+}
+.header .meta{
+  font-size:13px;
+  color:var(--ink3);
+  margin-top:8px;
+}
+
+/* ── Nav ── */
+.nav{
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+  padding:10px 20px;
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  position:sticky;
+  top:0;
+  z-index:100;
+  -webkit-overflow-scrolling:touch;
+}
+.nav::-webkit-scrollbar{display:none}
+.nav a{
+  padding:7px 16px;
+  border-radius:100px;
+  font-size:13px;
+  font-weight:600;
+  text-decoration:none;
+  white-space:nowrap;
+  color:var(--ink3);
+  background:transparent;
+  border:none;
+  transition:all .2s ease;
+}
+.nav a:hover{
+  color:var(--ink2);
+  background:var(--bg);
+}
+.nav a.active{
+  background:var(--theme);
+  color:#fff;
+}
+
+/* ── Main ── */
+main{
+  max-width:800px;
+  margin:0 auto;
+  padding:28px 20px;
+}
+
+/* ── Sections ── */
+.section{
+  margin-bottom:36px;
+}
+.section-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:4px 14px;
+  border-radius:100px;
+  font-size:12px;
+  font-weight:700;
+  margin-bottom:14px;
+  letter-spacing:.01em;
+}
+.section-badge.warmup{background:#fffbeb;color:#b45309}
+.section-badge.explore{background:var(--theme-light);color:#7c3aed}
+.section-badge.deepen{background:#f3e8ff;color:#7c3aed}
+.section-badge.challenge{background:#fef2f2;color:#b91c1c}
+.section-badge.reflect{background:#f0fdf4;color:#166534}
+.section h2{
+  font-size:clamp(20px,3vw,26px);
+  font-weight:800;
+  color:var(--ink);
+  margin-bottom:10px;
+  letter-spacing:-.01em;
+}
+.section h3{
+  font-size:clamp(16px,2.5vw,20px);
+  font-weight:700;
+  color:var(--ink);
+  margin:22px 0 10px;
+}
+
+/* ── Cards ── */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:24px;
+  margin-bottom:18px;
+}
+.card h4{
+  font-size:16px;
+  font-weight:700;
+  color:var(--ink);
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.card .num{
+  background:var(--theme);
+  color:#fff;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+  font-weight:700;
+  flex-shrink:0;
+}
+.card p{
+  color:var(--ink);
+}
+
+/* ── Callout boxes ── */
+.quote{
+  background:#fffbeb;
+  border-left:3px solid var(--warning);
+  padding:16px 20px;
+  border-radius:0 10px 10px 0;
+  margin:14px 0;
+  font-style:italic;
+  color:var(--ink2);
+}
+.info{
+  background:var(--theme-light);
+  border-left:3px solid var(--theme);
+  padding:16px 20px;
+  border-radius:0 10px 10px 0;
+  margin:14px 0;
+  color:var(--ink);
+}
+.hint-box{
+  background:var(--warning-light);
+  border:1px solid #fde68a;
+  border-radius:10px;
+  padding:14px 18px;
+  margin:14px 0;
+  font-size:14px;
+  color:var(--ink2);
+}
+
+/* ── Form elements ── */
+textarea{
+  width:100%;
+  border:2px solid var(--border);
+  border-radius:10px;
+  padding:14px 16px;
+  font-family:inherit;
+  font-size:15px;
+  line-height:1.65;
+  color:var(--ink);
+  resize:vertical;
+  min-height:80px;
+  transition:border-color .2s ease, box-shadow .2s ease;
+  background:var(--card);
+}
+textarea:focus{
+  border-color:var(--theme);
+  outline:none;
+  box-shadow:0 0 0 3px rgba(168,85,247,.12);
+}
+textarea::placeholder{
+  color:var(--ink3);
+}
+.inline-input{
+  display:inline-block;
+  border:none;
+  border-bottom:2px solid var(--theme-mid);
+  width:60px;
+  text-align:center;
+  font-family:inherit;
+  font-size:inherit;
+  font-weight:700;
+  color:var(--theme);
+  background:transparent;
+  padding:2px 4px;
+  transition:border-color .2s ease;
+}
+.inline-input:focus{
+  outline:none;
+  border-bottom-color:var(--theme);
+}
+.inline-input::placeholder{
+  color:var(--ink3);
+  font-weight:500;
+}
+.inline-input.wide{width:120px}
+
+/* ── Tables ── */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:14px 0;
+  font-size:14px;
+}
+th,td{
+  border:none;
+  border-bottom:1px solid var(--border);
+  padding:10px 12px;
+  text-align:center;
+  color:var(--ink);
+}
+th{
+  font-weight:700;
+  font-size:13px;
+  color:var(--ink2);
+  border-bottom:2px solid var(--border);
+  background:transparent;
+}
+
+/* ── Alpha table ── */
+.alpha-table{font-size:12px;margin:16px 0}
+.alpha-table th{
+  font-size:14px;
+  padding:8px;
+  color:var(--theme);
+  font-weight:800;
+  border-bottom:2px solid var(--theme-mid);
+  background:transparent;
+}
+.alpha-table td{
+  padding:6px 8px;
+  font-family:'Fira Code','Consolas',monospace;
+  font-weight:600;
+  color:var(--ink2);
+  border-bottom:1px solid var(--border);
+}
+
+/* ── Choice buttons ── */
+.choice-btn{
+  padding:8px 22px;
+  border:2px solid var(--border);
+  border-radius:10px;
+  background:var(--card);
+  cursor:pointer;
+  font-size:14px;
+  font-weight:600;
+  color:var(--ink2);
+  transition:all .2s ease;
+}
+.choice-btn:hover{
+  border-color:var(--theme);
+  color:var(--theme);
+  background:var(--theme-light);
+}
+.choice-btn.selected{
+  border-color:var(--theme);
+  background:var(--theme);
+  color:#fff;
+}
+
+/* ── Assess table ── */
+.assess-table{width:100%;border-collapse:collapse;margin:14px 0}
+.assess-table th,.assess-table td{
+  border:none;
+  border-bottom:1px solid var(--border);
+  padding:12px 10px;
+  text-align:center;
+  font-size:14px;
+  color:var(--ink);
+}
+.assess-table th{
+  color:var(--ink2);
+  font-weight:700;
+  border-bottom:2px solid var(--border);
+  background:transparent;
+}
+.assess-table input[type=radio]{
+  width:18px;
+  height:18px;
+  cursor:pointer;
+  accent-color:var(--theme);
+}
+
+/* ── Utility ── */
+.mono{font-family:'Fira Code','Consolas',monospace}
+
+details summary{
+  cursor:pointer;
+  color:var(--warning);
+  font-weight:600;
+  padding:4px 0;
+}
+details summary:hover{
+  color:#d97706;
+}
+details p{
+  padding:8px 0;
+  font-size:14px;
+  color:var(--ink2);
+}
+
+/* ── Print ── */
+@media print{
+  .nav,.no-print{display:none!important}
+  body{background:#fff;font-size:12px;padding:0}
+  .header{border-top:3px solid var(--theme);padding:20px 16px}
+  .header .chip{border:1px solid var(--theme)}
+  .card{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid;padding:16px}
+  .info,.quote,.hint-box{page-break-inside:avoid}
+  textarea{min-height:60px;border:1px solid #ccc}
+}
+
+/* ── Responsive ── */
+@media(max-width:600px){
+  .card{padding:18px 16px}
+  main{padding:20px 14px}
+  table{font-size:12px}
+  th,td{padding:8px 6px}
+  .header{padding:28px 16px 24px}
+}
+.answer-key { background:#fff5f5; border:2px solid #fca5a5; border-radius:12px; padding:24px; margin-top:40px; }
+.answer-key h3 { color:#b91c1c; margin-top:20px; }
+.answer-key .ans { font-weight:700; color:#1d4ed8; }
+@media print {
+  .answer-key { page-break-before:always; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <span class="chip">2차시</span>
+  <h1>비밀을 지켜라</h1>
+  <div class="subtitle">더하기 암호에서 아핀 암호까지</div>
+  <div class="meta">우리들의 암호 이야기 | 중2 영재교육원</div>
+</div>
+<nav class="nav no-print">
+  <a href="#alpha" class="active">대응표</a>
+  <a href="#warmup">W 워밍업</a>
+  <a href="#explore1">E1 시저</a>
+  <a href="#explore2">E2 곱셈</a>
+  <a href="#deepen">D 심화</a>
+  <a href="#explore3">E3 아핀</a>
+  <a href="#challenge">C 도전</a>
+  <a href="#reflect">R 성찰</a>
+</nav>
+<main>
+
+<!-- Alphabet table -->
+<section class="section" id="alpha">
+  <div class="card">
+    <h4>알파벳-숫자 대응표 (이 수업 내내 사용합니다)</h4>
+    <table class="alpha-table">
+      <tr><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th><th>K</th><th>L</th><th>M</th></tr>
+      <tr><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td></tr>
+    </table>
+    <table class="alpha-table">
+      <tr><th>N</th><th>O</th><th>P</th><th>Q</th><th>R</th><th>S</th><th>T</th><th>U</th><th>V</th><th>W</th><th>X</th><th>Y</th><th>Z</th></tr>
+      <tr><td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td><td>20</td><td>21</td><td>22</td><td>23</td><td>24</td><td>25</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- WARMUP -->
+<section class="section" id="warmup">
+  <span class="section-badge warmup">W 워밍업</span>
+  <h2>지난 시간을 떠올리며</h2>
+  <div class="card">
+    <h4><span class="num">1</span> W-1. mod 연산 복습</h4>
+    <table>
+      <tr><th>문제</th><th>답</th></tr>
+      <tr><td style="text-align:left">(a) 17 mod 5</td><td><input class="inline-input" type="text" placeholder="?"></td></tr>
+      <tr><td style="text-align:left">(b) 30 mod 26</td><td><input class="inline-input" type="text" placeholder="?"></td></tr>
+      <tr><td style="text-align:left">(c) 52 mod 26</td><td><input class="inline-input" type="text" placeholder="?"></td></tr>
+      <tr><td style="text-align:left">(d) (7 + 21) mod 26</td><td><input class="inline-input" type="text" placeholder="?"></td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4><span class="num">2</span> W-2. 연결 질문</h4>
+    <div class="quote">"mod 연산이 오류를 잡을 수 있다면, <strong>비밀 메시지를 만드는 데</strong>도 쓸 수 있을까?"</div>
+    <textarea rows="3" placeholder="나의 아이디어:"></textarea>
+  </div>
+</section>
+
+<!-- EXPLORE 1: Caesar -->
+<section class="section" id="explore1">
+  <span class="section-badge explore">E 탐구 1</span>
+  <h2>더하기 암호 (시저 암호)</h2>
+  <div class="card">
+    <h4><span class="num">1</span> E-1. 시저의 비밀 편지</h4>
+    <div class="info"><strong>암호화 규칙</strong>: 암호 번호 = (원래 번호 + k) mod 26 &nbsp;&nbsp;(k는 비밀 키)</div>
+    <p style="margin-top:12px"><strong>k = 3</strong>일 때, "MATH" 암호화 예시:</p>
+    <table>
+      <tr><th>원래</th><td>M</td><td>A</td><td>T</td><td>H</td></tr>
+      <tr><th>번호</th><td>12</td><td>0</td><td>19</td><td>7</td></tr>
+      <tr><th>+3</th><td>15</td><td>3</td><td>22</td><td>10</td></tr>
+      <tr><th>암호</th><td>P</td><td>D</td><td>W</td><td>K</td></tr>
+    </table>
+    <p style="margin-top:16px"><strong>k = 7</strong>일 때 <strong>"CODE"</strong>를 암호화하세요.</p>
+    <table>
+      <tr><th>원래</th><td>C</td><td>O</td><td>D</td><td>E</td></tr>
+      <tr><th>번호</th><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td></tr>
+      <tr><th>+7 mod26</th><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td></tr>
+      <tr><th>암호</th><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4><span class="num">2</span> E-2. 복호화 &mdash; 거꾸로 되돌리기</h4>
+    <div class="info"><strong>복호화 규칙</strong>: 원래 번호 = (암호 번호 &minus; k + 26) mod 26</div>
+    <p style="margin-top:12px">암호문 <strong class="mono">"KHOOR"</strong>을 k = 3으로 복호화하세요.</p>
+    <table>
+      <tr><th>암호</th><td>K</td><td>H</td><td>O</td><td>O</td><td>R</td></tr>
+      <tr><th>번호</th><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td></tr>
+      <tr><th>&minus;3+26 mod26</th><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td></tr>
+      <tr><th>원문</th><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4><span class="num">3</span> E-3. 시저 암호의 약점</h4>
+    <p>(a) 가능한 키의 수: <input class="inline-input" type="text" placeholder="?">개</p>
+    <p style="margin-top:8px">(b) 전부 시도하면 원문을 찾을 수 있나요? <button class="choice-btn" onclick="this.classList.toggle('selected')">네</button> <button class="choice-btn" onclick="this.classList.toggle('selected')">아니오</button></p>
+    <p style="margin-top:12px">(c) 시저 암호가 <strong>전수조사(brute force)</strong>에 약한 이유:</p>
+    <textarea rows="2" placeholder="이유:"></textarea>
+  </div>
+</section>
+
+<!-- EXPLORE 2: Multiplicative -->
+<section class="section" id="explore2">
+  <span class="section-badge explore">E 탐구 2</span>
+  <h2>곱하기 암호 &mdash; "되는 수"와 "안 되는 수"</h2>
+  <div class="card">
+    <h4><span class="num">4</span> E-4. 곱하기로 암호 만들기</h4>
+    <div class="info"><strong>암호화 규칙</strong>: 암호 번호 = (원래 번호 &times; a) mod 26</div>
+    <p style="margin-top:12px"><strong>a = 5</strong>일 때 <strong>"DOG"</strong>를 암호화하세요.</p>
+    <table>
+      <tr><th>원래</th><td>D</td><td>O</td><td>G</td></tr>
+      <tr><th>번호</th><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td></tr>
+      <tr><th>&times;5 mod26</th><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td></tr>
+      <tr><th>암호</th><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4><span class="num">5</span> E-5. 문제 발생!</h4>
+    <p><strong>a = 2</strong>일 때 N(13번)을 계산해 보세요:</p>
+    <p class="mono" style="margin:12px 0">13 &times; 2 = 26, &nbsp; 26 &equiv; <input class="inline-input" type="text" placeholder="?"> (mod 26) &nbsp;&rarr; 암호 글자: <input class="inline-input" type="text" placeholder="?"></p>
+    <div class="info" style="border-color:var(--error);background:var(--error-light)">A(0번)도 0, N(13번)도 0! 서로 다른 글자가 같은 암호문이 되었습니다!</div>
+    <p style="margin-top:12px">복호화할 때 어떤 문제가 생길까요?</p>
+    <textarea rows="2" placeholder="문제:"></textarea>
+  </div>
+  <div class="card">
+    <h4><span class="num">6</span> E-6. 패턴 찾기 &mdash; "되는 수 vs 안 되는 수"</h4>
+    <p>웹앱에서 a = 1~25를 실험하고 표를 채우세요.</p>
+    <table style="font-size:12px">
+      <tr><th>a</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td><td>13</td></tr>
+      <tr><th>되나?</th><td style="color:var(--success);font-weight:700">O</td><td style="color:var(--error);font-weight:700">X</td><td><input class="inline-input" style="width:28px;font-size:12px" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" type="text"></td><td><input class="inline-input" style="width:28px;font-size:12px" type="text"></td></tr>
+    </table>
+    <p style="margin-top:12px">(a) O인 수들을 모두 나열: <input class="inline-input wide" type="text" style="width:200px"></p>
+    <p style="margin-top:8px">(b) X인 수들의 공통점:</p>
+    <textarea rows="2" placeholder="공통점:"></textarea>
+    <div class="info" style="margin-top:12px">
+      두 수의 공약수가 1뿐일 때, 이 두 수를 <strong>서로소</strong>라고 합니다.<br>
+      "곱하기 암호에서 키 a가 사용 가능하려면, a와 26이 <input class="inline-input wide" type="text" placeholder="???">이어야 한다."
+    </div>
+  </div>
+</section>
+
+<!-- DEEPEN -->
+<section class="section" id="deepen">
+  <span class="section-badge deepen">D 심화</span>
+  <h2>왜 서로소여야 하는가?</h2>
+  <div class="card">
+    <h4><span class="num">1</span> D-1. 겹침의 원인 추적</h4>
+    <table>
+      <tr><th>a와 26의 관계</th><th>글자 대응의 성질</th><th>복호화?</th></tr>
+      <tr><td>서로소</td><td>일대일 대응 (겹침 없음)</td><td style="color:var(--success);font-weight:700">가능</td></tr>
+      <tr><td>서로소 아님</td><td><input class="inline-input wide" type="text" style="width:200px" placeholder="???"></td><td style="color:var(--error);font-weight:700">불가능</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4><span class="num">2</span> D-2. 서로소인 수 세기</h4>
+    <p>26 = 2 &times; 13이므로 1~25 사이에서:</p>
+    <p style="margin:8px 0">2의 배수: <input class="inline-input" type="text" placeholder="?">개 &nbsp;|&nbsp; 13의 배수: <input class="inline-input" type="text" placeholder="?">개</p>
+    <p>26과 서로소인 수의 개수 = 25 &minus; <input class="inline-input" type="text" placeholder="?"> &minus; <input class="inline-input" type="text" placeholder="?"> = <input class="inline-input" type="text" placeholder="?">개</p>
+    <div class="info" style="margin-top:12px">이렇게 "n 이하에서 n과 서로소인 수의 개수"를 <strong>오일러 파이 함수 &phi;(n)</strong>이라 합니다. 여기서는 &phi;(26) = 12. 4차시에서 다시 만나게 됩니다!</div>
+  </div>
+  <div class="card">
+    <h4><span class="num">3</span> D-3. 역원이란?</h4>
+    <p><strong>3 &times; ? &equiv; 1 (mod 26)</strong> 을 만족하는 수를 찾으세요.</p>
+    <table style="font-size:13px">
+      <tr><th>3&times;1</th><th>3&times;2</th><th>3&times;3</th><th>3&times;4</th><th>3&times;5</th><th>3&times;6</th><th>3&times;7</th><th>3&times;8</th><th>3&times;9</th></tr>
+      <tr><td>3</td><td>6</td><td>9</td><td>12</td><td>15</td><td>18</td><td>21</td><td>24</td><td><input class="inline-input" style="width:40px" type="text" placeholder="?"></td></tr>
+    </table>
+    <p style="margin-top:12px">3 &times; 9 = 27 &equiv; <input class="inline-input" type="text" placeholder="?"> (mod 26) &rarr; 3의 <strong>역원</strong>(mod 26)은 <input class="inline-input" type="text" placeholder="?"></p>
+  </div>
+</section>
+
+<!-- EXPLORE 3: Affine -->
+<section class="section" id="explore3">
+  <span class="section-badge explore">E 탐구 3</span>
+  <h2>섞기 암호 &mdash; 아핀 암호의 탄생</h2>
+  <div class="card">
+    <h4><span class="num">7</span> E-7. 더하기 + 곱하기 = 아핀 암호</h4>
+    <div class="info"><strong>아핀 암호</strong>: E(x) = (a &times; x + b) mod 26 &nbsp;&nbsp; (a와 26은 서로소, 0 &le; b &le; 25)</div>
+    <table style="margin-top:12px">
+      <tr><th>방법</th><th>쓸 수 있는 키 수</th></tr>
+      <tr><td>더하기(시저)</td><td>25개</td></tr>
+      <tr><td>곱하기</td><td>12개</td></tr>
+      <tr><td>아핀(곱하기+더하기)</td><td>12 &times; 26 = <input class="inline-input" type="text" placeholder="?">개</td></tr>
+    </table>
+    <p style="margin-top:12px"><strong>a = 5, b = 3</strong>일 때 "MATH"를 암호화하세요.</p>
+    <table>
+      <tr><th>원래</th><td>M</td><td>A</td><td>T</td><td>H</td></tr>
+      <tr><th>번호</th><td>12</td><td>0</td><td>19</td><td>7</td></tr>
+      <tr><th>5x+3 mod26</th><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td></tr>
+      <tr><th>암호</th><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td><td><input class="inline-input" style="width:40px" type="text"></td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4><span class="num">8</span> E-8. 312개도 안전할까?</h4>
+    <p>시저 암호(25개 키)는 전수조사로 쉽게 뚫렸습니다. <strong>312개</strong>의 키는 어떨까요?</p>
+    <p style="margin-top:12px">컴퓨터가 1초에 1000개의 키를 시도한다면, 312개 전체를 시도하는 데 걸리는 시간:</p>
+    <p style="text-align:center;font-size:18px;margin:12px 0">312 &divide; 1000 = <input class="inline-input" type="text" placeholder="?">초</p>
+    <div class="info" style="border-color:var(--error);background:var(--error-light)">
+      여전히 <strong>1초도 안 걸립니다!</strong> 3차시에서 더 효율적인 공격 방법을 배워봅시다.
+    </div>
+  </div>
+</section>
+
+<!-- CHALLENGE -->
+<section class="section" id="challenge">
+  <span class="section-badge challenge">C 도전</span>
+  <h2>경계를 넘어서</h2>
+  <div class="card">
+    <h4><span class="num">1</span> C-1. 암호 해독 도전 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h4>
+    <p>아핀 암호(a=5, b=3)로 만들어진 암호문을 해독하세요.</p>
+    <p style="text-align:center;font-size:20px;font-weight:800;margin:16px 0" class="mono">"DUUDNB DU SDJQ"</p>
+    <details><summary>힌트 1</summary><p>5의 역원(mod 26)은 21입니다. D(y) &equiv; 21 &times; (y &minus; 3) mod 26</p></details>
+    <details><summary>힌트 2</summary><p>D=3: D(3) = 21&times;(3&minus;3) mod 26 = 21&times;0 = 0 &rarr; A. U=20: D(20) = 21&times;(20&minus;3) mod 26 = 21&times;17 mod 26 = 357 mod 26 = 19 &rarr; T</p></details>
+    <details><summary>힌트 3</summary><p>D&rarr;A, U&rarr;T, U&rarr;T, D&rarr;A, N&rarr;C, B&rarr;K ... "ATTACK AT DAWN"</p></details>
+    <textarea rows="4" placeholder="풀이 과정:"></textarea>
+    <p style="margin-top:12px;font-weight:700">해독된 원문: <input class="inline-input wide" type="text" style="width:250px" placeholder="영문 원문"></p>
+  </div>
+  <div class="card">
+    <h4><span class="num">2</span> C-2. 나만의 아핀 암호 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h4>
+    <p>친구에게 보낼 비밀 메시지를 아핀 암호로 만들어 보세요.</p>
+    <p style="margin:8px 0">나의 키: a = <input class="inline-input" style="width:40px" type="text">, b = <input class="inline-input" style="width:40px" type="text"></p>
+    <p>원문: <input class="inline-input wide" type="text" style="width:250px" placeholder="보내고 싶은 메시지"></p>
+    <p>암호문: <input class="inline-input wide" type="text" style="width:250px" placeholder="암호화된 메시지"></p>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">3</span> C-3. "같은 글자는 같은 글자로" <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h4>
+    <p>C-1의 암호문을 다시 살펴봅시다.</p>
+    <p>원문 "ATTACK AT DAWN"에서 T는 <strong>3번</strong>, 암호문에서 대응 글자 U도 <strong>3번</strong>.</p>
+    <p style="margin-top:8px">(a) 원문에서 A는 ( &nbsp; &nbsp; )번. 암호문에서 대응 글자 D도 ( &nbsp; &nbsp; )번.</p>
+    <p style="margin-top:8px">(b) "아핀 암호에서 같은 원문 글자는 항상 ( &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ) 암호 글자로 바뀐다."</p>
+    <p style="margin-top:8px">(c) 적군이라면, 이 패턴을 어떻게 이용할 수 있을까요?</p>
+    <textarea rows="2" placeholder=""></textarea>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">4</span> C-4. 글자의 지문 — 빈도 세기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h4>
+    <p>아래 문장에서 각 글자가 몇 번 나오는지 세어봅시다.</p>
+    <p style="text-align:center;font-size:18px;font-weight:700;margin:12px 0" class="mono">
+      THE BEST THINGS IN LIFE ARE FREE</p>
+    <p>가장 많이 나온 글자 1위: ( &nbsp; &nbsp; ) — ( &nbsp; &nbsp; )회</p>
+    <p>2위: ( &nbsp; &nbsp; ) — ( &nbsp; &nbsp; )회</p>
+    <p style="margin-top:12px">영어에서 E는 전체의 약 13%입니다.
+      "암호문에서 가장 많은 글자 = 원문의 ( &nbsp; &nbsp; )일 가능성이 높다!"</p>
+    <p><strong>&rarr; 다음 시간에 이 원리로 암호를 깨뜨립니다!</strong></p>
+  </div>
+
+  <div class="card">
+    <h4><span class="num">5</span> C-5. 고급 해독 도전 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">⚪ 선택</span></h4>
+    <p>다른 키로 만든 암호문입니다. a=7, b=10</p>
+    <p style="text-align:center;font-size:20px;font-weight:800;margin:16px 0" class="mono">"KNNKYC KN FKIX"</p>
+    <details><summary>힌트 1</summary><p>7의 역원(mod 26)은 15입니다. D(y) = 15 &times; (y &minus; 10) mod 26</p></details>
+    <details><summary>힌트 2</summary><p>K=10: D(10) = 15&times;0 = 0 &rarr; A. N=13: D(13) = 15&times;3 = 45 mod 26 = 19 &rarr; T</p></details>
+    <textarea rows="4" placeholder="풀이 과정:"></textarea>
+    <p style="margin-top:12px;font-weight:700">해독된 원문: <input class="inline-input wide" type="text" style="width:250px" placeholder="ATTACK AT DAWN?"></p>
+  </div>
+</section>
+
+<!-- REFLECT -->
+<section class="section" id="reflect">
+  <span class="section-badge reflect">R 성찰</span>
+  <h2>오늘의 여정을 돌아보며</h2>
+  <div class="card">
+    <h4><span class="num">1</span> R-1. 여정 정리</h4>
+    <div style="background:var(--bg);border-radius:10px;padding:18px;font-family:monospace;font-size:14px;line-height:2">
+      시저 암호: (x + k) mod 26 &rarr; 키 <input class="inline-input" style="width:40px" type="text">개 &rarr; 전수조사로 <input class="inline-input wide" type="text" placeholder="쉽게/어렵게"> 뚫림<br>
+      &nbsp;&nbsp;&darr; 곱하기를 추가<br>
+      곱셈 암호: (a &times; x) mod 26 &rarr; 키 <input class="inline-input" style="width:40px" type="text">개 &rarr; 단, a와 26이 <input class="inline-input wide" type="text" placeholder="???">여야 함<br>
+      &nbsp;&nbsp;&darr; 합체!<br>
+      아핀 암호: (a &times; x + b) mod 26 &rarr; 키 <input class="inline-input" style="width:40px" type="text">개
+    </div>
+  </div>
+  <div class="card">
+    <h4><span class="num">2</span> R-2. 발견 노트</h4>
+    <p>(a) 오늘 가장 놀라웠던 발견:</p>
+    <textarea rows="3" placeholder=""></textarea>
+    <p style="margin-top:12px">(b) "서로소"라는 개념이 왜 암호학에서 중요한가요?</p>
+    <textarea rows="3" placeholder=""></textarea>
+  </div>
+  <div class="card">
+    <h4><span class="num">3</span> R-3. 자기 평가</h4>
+    <table class="assess-table">
+      <tr><th>항목</th><th>어려워요</th><th>알겠어요</th><th>자신있어요</th></tr>
+      <tr><td style="text-align:left">시저 암호 암/복호화</td><td><input type="radio" name="a1" value="1"></td><td><input type="radio" name="a1" value="2"></td><td><input type="radio" name="a1" value="3"></td></tr>
+      <tr><td style="text-align:left">서로소의 뜻 이해</td><td><input type="radio" name="a2" value="1"></td><td><input type="radio" name="a2" value="2"></td><td><input type="radio" name="a2" value="3"></td></tr>
+      <tr><td style="text-align:left">아핀 암호 암호화</td><td><input type="radio" name="a3" value="1"></td><td><input type="radio" name="a3" value="2"></td><td><input type="radio" name="a3" value="3"></td></tr>
+      <tr><td style="text-align:left">키 공간의 크기 비교</td><td><input type="radio" name="a4" value="1"></td><td><input type="radio" name="a4" value="2"></td><td><input type="radio" name="a4" value="3"></td></tr>
+    </table>
+    <p style="margin-top:12px"><strong>다음 시간 예고</strong>: "312개의 키로도 안전하지 않다면, 어떻게 암호를 깨뜨릴까?"</p>
+  </div>
+</section>
+
+<section class="section answer-key" id="answer-key" style="page-break-before:always">
+  <h2 style="text-align:center;color:#b91c1c;border-bottom:3px double #b91c1c;padding-bottom:12px">
+    📋 교사용 정답키·해설
+  </h2>
+
+  <h3>W-1. mod 연산 복습</h3>
+  <p><span class="ans">(a) 2 &nbsp; (b) 4 &nbsp; (c) 0 &nbsp; (d) 2</span></p>
+
+  <h3>E-1. 시저의 비밀 편지 (MATH, k=7)</h3>
+  <p><span class="ans">번호: 12, 0, 19, 7</span></p>
+  <p><span class="ans">+7 mod26: 19, 7, 0, 14</span></p>
+  <p><span class="ans">암호: T, H, A, O → THAO</span></p>
+
+  <h3>E-2. 복호화 (KHOOR, k=3)</h3>
+  <p><span class="ans">번호: 10, 7, 14, 14, 17</span></p>
+  <p><span class="ans">−3+26 mod26: 7, 4, 11, 11, 14</span></p>
+  <p><span class="ans">원문: H, E, L, L, O → HELLO</span></p>
+
+  <h3>E-3. 시저 암호의 약점</h3>
+  <p><span class="ans">키의 수: 25개 (또는 26개, k=0 포함 시)</span></p>
+  <p><span class="ans">(b) 전수조사로 쉽게 뚫림</span></p>
+
+  <h3>E-4. 곱하기로 암호 만들기 (CAT, a=5)</h3>
+  <p><span class="ans">C=2: 10 mod 26=10→K, A=0: 0→A, T=19: 95 mod 26=17→R</span></p>
+  <p><span class="ans">암호: KAR</span></p>
+
+  <h3>E-5. 문제 발생!</h3>
+  <p><span class="ans">13×2=26, 26≡0 (mod 26) → 암호 글자: A</span></p>
+  <p><span class="ans">N(13)과 A(0)가 모두 A로 바뀜 → 서로 다른 글자가 같은 암호가 됨</span></p>
+
+  <h3>E-6. 패턴 찾기</h3>
+  <p><span class="ans">O인 수: 1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25 (12개)</span></p>
+  <p><span class="ans">공통점: 26과 서로소 (gcd(a,26)=1)</span></p>
+
+  <h3>D-1. 겹침의 원인 추적</h3>
+  <p><span class="ans">서로소 아님인 수: 2, 4, 6, 8, 10, 12, 13, 14, 16, 18, 20, 22, 24</span></p>
+
+  <h3>D-2. 서로소인 수 세기</h3>
+  <p><span class="ans">2의 배수: 12개, 13의 배수: 1개</span></p>
+  <p><span class="ans">25 − 12 − 1 = 12개</span></p>
+
+  <h3>D-3. 역원이란?</h3>
+  <p><span class="ans">3의 배수표: 3,6,9,12,15,18,21,24,27→27 mod 26=1</span></p>
+  <p><span class="ans">3×9=27≡1 (mod 26) → 3의 역원은 9</span></p>
+
+  <h3>E-7. 아핀 암호</h3>
+  <p><span class="ans">키 공간: 12×26=312개</span></p>
+  <p><span class="ans">MATH → a=5, b=3:</span></p>
+  <p><span class="ans">M(12): 5×12+3=63 mod 26=11→L, A(0): 3→D, T(19): 98 mod 26=20→U, H(7): 38 mod 26=12→M</span></p>
+  <p><span class="ans">암호: LDUM</span></p>
+
+  <h3>C-1. 암호 해독 도전 (a=5, b=3)</h3>
+  <p><span class="ans">DUUDNB DU SDJQ → ATTACK AT DAWN</span></p>
+  <p><span class="ans">D(y)=21×(y−3) mod 26</span></p>
+
+  <h3>C-3. 같은 글자→같은 글자</h3>
+  <p><span class="ans">(a) A: 3번, D: 3번</span></p>
+  <p><span class="ans">(b) "같은"</span></p>
+  <p><span class="ans">(c) 가장 많이 나오는 암호 글자 = 원문에서 가장 흔한 글자(E)일 가능성</span></p>
+
+  <h3>C-4. 빈도 세기</h3>
+  <p><span class="ans">THE BEST THINGS IN LIFE ARE FREE (공백 제외 27글자)</span></p>
+  <p><span class="ans">1위: E (6회), 2위: T 또는 I (3회 동률)</span></p>
+  <p><span class="ans">빈칸: E</span></p>
+
+  <h3>C-5. 고급 해독 도전 [선택]</h3>
+  <p><span class="ans">KNNKYC KN FKIX → ATTACK AT DAWN (a=7, b=10)</span></p>
+
+  <h3>R-1. 여정 정리</h3>
+  <p><span class="ans">시저: 키 26개, 쉽게 뚫림 / 곱셈: 키 12개, 서로소 / 아핀: 312개</span></p>
+</section>
+
+</main>
+<script>
+document.querySelectorAll('.nav a').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector(a.getAttribute('href'));if(t)t.scrollIntoView({behavior:'smooth',block:'start'});document.querySelectorAll('.nav a').forEach(x=>x.classList.remove('active'));a.classList.add('active')})});
+const sections=document.querySelectorAll('.section');const navLinks=document.querySelectorAll('.nav a');
+window.addEventListener('scroll',()=>{let current='';sections.forEach(s=>{if(window.scrollY>=s.offsetTop-100)current=s.getAttribute('id')});navLinks.forEach(a=>{a.classList.remove('active');if(a.getAttribute('href')==='#'+current)a.classList.add('active')})});
+</script>
+</body>
+</html>

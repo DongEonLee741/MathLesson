@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3차시 학습지: 암호를 깨뜨려라</title>
+<style>
+:root {
+  --ink: #1a1a2e;
+  --ink2: #4a4a68;
+  --ink3: #8888a4;
+  --bg: #f7f7fb;
+  --card: #fff;
+  --border: #ebebf0;
+  --theme: #f43f5e;
+  --theme-light: #fff1f2;
+  --theme-dark: #be123c;
+  --success: #16a34a;
+  --success-bg: #f0fdf4;
+  --info: #2563eb;
+  --info-bg: #eff6ff;
+  --warning: #d97706;
+  --warning-bg: #fffbeb;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --font: 'Pretendard','Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --mono: 'Fira Code','Consolas',monospace;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.75;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header */
+.header {
+  background: var(--card);
+  border-top: 4px solid var(--theme);
+  padding: 36px 24px 32px;
+  text-align: center;
+}
+.header h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+.header .subtitle {
+  font-size: 14px;
+  color: var(--ink2);
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* Nav */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  box-shadow: 0 1px 4px rgba(26,26,46,0.04);
+}
+nav a {
+  padding: 7px 16px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--ink3);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+nav a:hover {
+  color: var(--ink2);
+  background: var(--bg);
+  border-color: var(--border);
+}
+nav a.active {
+  background: var(--theme);
+  color: #fff;
+  border-color: var(--theme);
+}
+
+/* Main */
+.main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 28px 20px 48px;
+}
+
+/* Section */
+.section {
+  margin-bottom: 40px;
+}
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 12px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  margin-bottom: 10px;
+}
+.badge-w { background: #e0e7ff; color: #3730a3; }
+.badge-e { background: #fef3c7; color: #92400e; }
+.badge-d { background: #f3e8ff; color: #7c3aed; }
+.badge-c { background: var(--theme-light); color: var(--theme); }
+.badge-r { background: #f0fdf4; color: #16a34a; }
+
+.section h2 {
+  font-size: 21px;
+  font-weight: 750;
+  margin-bottom: 16px;
+  color: var(--ink);
+  letter-spacing: -0.2px;
+}
+.section h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 20px 0 10px;
+  color: var(--ink);
+}
+
+/* Card */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 6px rgba(26,26,46,0.03);
+}
+
+/* Alphabet Table */
+.alpha-table {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 2px;
+  margin: 14px 0;
+  font-size: 12px;
+  text-align: center;
+}
+.alpha-table .letter {
+  background: var(--theme);
+  color: #fff;
+  font-weight: 700;
+  padding: 5px 2px;
+  border-radius: 5px 5px 0 0;
+}
+.alpha-table .number {
+  background: var(--theme-light);
+  color: var(--theme-dark);
+  font-weight: 600;
+  padding: 5px 2px;
+  border-radius: 0 0 5px 5px;
+}
+
+/* Inputs */
+.inline-input {
+  display: inline-block;
+  width: 64px;
+  border: none;
+  border-bottom: 2px solid var(--theme);
+  background: transparent;
+  text-align: center;
+  font-size: 15px;
+  font-family: var(--mono);
+  padding: 4px 6px;
+  color: var(--theme-dark);
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.2s;
+  border-radius: 0;
+}
+.inline-input:focus {
+  border-color: var(--ink);
+}
+.inline-input.wide { width: 128px; }
+.inline-input.x-wide { width: 200px; }
+
+textarea.answer {
+  width: 100%;
+  min-height: 76px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.7;
+  resize: vertical;
+  transition: border-color 0.2s, background 0.2s;
+  background: var(--bg);
+  color: var(--ink);
+}
+textarea.answer:focus {
+  border-color: var(--theme);
+  outline: none;
+  background: #fff;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 14px;
+}
+th, td {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+th {
+  background: var(--ink);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+}
+td {
+  background: var(--card);
+  color: var(--ink);
+}
+td input {
+  width: 100%;
+  border: none;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 14px;
+  background: transparent;
+  outline: none;
+  color: var(--theme-dark);
+  font-weight: 600;
+}
+
+/* Frequency Table */
+.freq-table { font-size: 13px; }
+.freq-table th {
+  background: var(--info);
+  padding: 8px 10px;
+  font-size: 12px;
+}
+.freq-table td { padding: 8px 10px; }
+
+/* Cipher Display */
+.cipher-display {
+  background: #1e1b4b;
+  color: #fb7185;
+  font-family: var(--mono);
+  font-size: 15px;
+  padding: 16px 22px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 2px;
+  word-break: break-all;
+  line-height: 1.8;
+  margin: 10px 0;
+}
+
+/* Callout */
+.callout {
+  padding: 14px 20px;
+  border-radius: var(--radius-sm);
+  margin: 14px 0;
+  font-size: 14px;
+  line-height: 1.75;
+}
+.callout-info {
+  background: var(--info-bg);
+  border-left: 3px solid var(--info);
+  color: #1e40af;
+}
+.callout-warning {
+  background: var(--warning-bg);
+  border-left: 3px solid var(--warning);
+  color: #92400e;
+}
+.callout-tip {
+  background: #f0fdf4;
+  border-left: 3px solid var(--success);
+  color: #166534;
+}
+.callout-danger {
+  background: var(--theme-light);
+  border-left: 3px solid var(--theme);
+  color: var(--theme-dark);
+}
+
+/* Hint */
+details {
+  margin: 10px 0;
+}
+details summary {
+  cursor: pointer;
+  padding: 10px 16px;
+  background: var(--warning-bg);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--warning);
+  list-style: none;
+  transition: background 0.15s;
+}
+details summary:hover {
+  background: #fef3c7;
+}
+details summary::-webkit-details-marker { display: none; }
+details summary::before { content: '\1F4A1 '; }
+details .hint-content {
+  padding: 12px 16px;
+  font-size: 14px;
+  background: #fffef5;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  border: 1px solid #fde68a;
+  border-top: none;
+  color: var(--ink2);
+  line-height: 1.75;
+}
+
+/* Fill-in blank */
+.fill-blank {
+  background: var(--theme-light);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-size: 15px;
+  line-height: 2;
+  color: var(--ink);
+}
+
+/* Self-assess */
+.assess-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 14px;
+}
+.assess-table th {
+  background: var(--bg);
+  color: var(--ink2);
+  font-weight: 600;
+  padding: 10px;
+  border: 1px solid var(--border);
+}
+.assess-table td {
+  padding: 10px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+.assess-table input[type="radio"] {
+  transform: scale(1.3);
+  cursor: pointer;
+  accent-color: var(--theme);
+}
+
+/* Utility */
+p { margin-top: 6px; }
+ul { color: var(--ink); }
+strong { color: var(--ink); }
+
+/* Print */
+@media print {
+  nav, .header { display: none; }
+  body { background: #fff; font-size: 13px; }
+  .main { padding: 0; max-width: 100%; }
+  .card {
+    box-shadow: none;
+    border: 1px solid #d0d0d0;
+    break-inside: avoid;
+    padding: 16px 20px;
+  }
+  .cipher-display { background: #eee; color: #333; }
+  textarea.answer { min-height: 50px; border: 1px solid #ccc; background: #fff; }
+}
+@media (max-width: 600px) {
+  .main { padding: 16px 12px 40px; }
+  .card { padding: 18px 18px; }
+  .alpha-table { font-size: 10px; }
+  .header { padding: 28px 16px 24px; }
+  .header h1 { font-size: 22px; }
+}
+.answer-key { background:#fff5f5; border:2px solid #fca5a5; border-radius:12px; padding:24px; margin-top:40px; }
+.answer-key h3 { color:#b91c1c; margin-top:20px; }
+.answer-key .ans { font-weight:700; color:#1d4ed8; }
+@media print {
+  .answer-key { page-break-before:always; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>&#x1F575;&#xFE0F; 암호를 깨뜨려라</h1>
+  <div class="subtitle">3차시 | 빈도 분석으로 고전 암호 공격하기</div>
+</div>
+
+<nav id="nav">
+  <a href="#warmup" class="active">W 워밍업</a>
+  <a href="#explore1">E1 빈도 발견</a>
+  <a href="#explore2">E2 시저 공격</a>
+  <a href="#explore3">E3 치환 해독</a>
+  <a href="#deepen">D 심화</a>
+  <a href="#challenge">C 도전</a>
+  <a href="#reflect">R 성찰</a>
+</nav>
+
+<div class="main">
+
+<!-- Alphabet Table -->
+<div class="card" style="margin-bottom:24px;">
+  <strong style="font-size:14px; color:var(--ink2);">알파벳-숫자 대응표</strong>
+  <div class="alpha-table" id="alphaTable"></div>
+</div>
+
+<!-- ===== [W] WARMUP ===== -->
+<div class="section" id="warmup">
+  <span class="section-badge badge-w">W 워밍업</span>
+  <h2>2차시를 이어서</h2>
+
+  <div class="card">
+    <h3>W-1. 복습 질문 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p>2차시에서 아핀 암호의 키 공간은 <strong>312가지</strong>였습니다. 전수조사로 풀 수 있다는 것도 확인했죠.</p>
+    <div class="callout callout-info">
+      &#x1F4AC; 만약 키가 312개가 아니라 <strong>수억 개</strong>라면? 전수조사로도 힘들다면, 다른 방법이 있을까요?
+    </div>
+    <textarea class="answer" placeholder="나의 생각..."></textarea>
+  </div>
+
+  <div class="card">
+    <h3>W-2. 글자의 습관? <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p>아래 문장을 보고, <strong>가장 많이 나오는 알파벳</strong>이 무엇일지 예측해 보세요.</p>
+    <div class="cipher-display" style="background:var(--info-bg);color:var(--info);font-size:14px;letter-spacing:1px;">THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG</div>
+    <p style="margin-top:8px;">예측: <input class="inline-input" placeholder="?"></p>
+    <div class="callout callout-info">&#x1F4AC; 영어에서 어떤 글자가 유독 자주 나올까요? 평소 느낌으로 예측해 봅시다.</div>
+  </div>
+</div>
+
+<!-- ===== [E1] EXPLORE 1 ===== -->
+<div class="section" id="explore1">
+  <span class="section-badge badge-e">E 탐구 1</span>
+  <h2>"글자에도 습관이 있다" — 빈도 발견</h2>
+
+  <div class="card">
+    <h3>E-1. 글자 세기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p>웹앱에서 영어 텍스트를 선택한 뒤, <strong>글자 빈도</strong>를 자동으로 세어 봅시다.</p>
+    <p style="margin-top:8px;"><strong>(a)</strong> 가장 많이 나온 글자 1~3위:</p>
+    <div style="display:flex;gap:16px;margin:8px 0;">
+      <span>1위: <input class="inline-input" placeholder="?"></span>
+      <span>2위: <input class="inline-input" placeholder="?"></span>
+      <span>3위: <input class="inline-input" placeholder="?"></span>
+    </div>
+    <p style="margin-top:12px;"><strong>(b)</strong> 다른 텍스트도 2~3개 확인해 보세요. 텍스트마다 1위 글자가 같나요, 다른가요?</p>
+    <textarea class="answer" placeholder="관찰 결과..."></textarea>
+  </div>
+
+  <div class="card">
+    <h3>E-2. 표준 영어 빈도 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p>수학자들이 방대한 영어 텍스트를 분석해 놓은 <strong>표준 빈도표</strong>입니다.</p>
+    <table class="freq-table">
+      <tr><th>순위</th><th>글자</th><th>빈도(%)</th><th>순위</th><th>글자</th><th>빈도(%)</th></tr>
+      <tr><td>1</td><td style="color:var(--theme);font-weight:700;">E</td><td>12.7%</td><td>6</td><td>N</td><td>6.8%</td></tr>
+      <tr><td>2</td><td>T</td><td>9.1%</td><td>7</td><td>S</td><td>6.3%</td></tr>
+      <tr><td>3</td><td>A</td><td>8.2%</td><td>8</td><td>H</td><td>6.1%</td></tr>
+      <tr><td>4</td><td>O</td><td>7.5%</td><td>9</td><td>R</td><td>6.0%</td></tr>
+      <tr><td>5</td><td>I</td><td>7.0%</td><td>10</td><td>D</td><td>4.3%</td></tr>
+    </table>
+    <div class="callout callout-danger"><strong>E</strong>가 압도적 1위! 약 8글자 중 1글자가 E입니다.</div>
+    <p><strong>(a)</strong> E-1의 관찰과 이 표준 빈도표를 비교하면?</p>
+    <textarea class="answer" placeholder="비교 결과..."></textarea>
+    <p style="margin-top:8px;"><strong>(b)</strong> 이 사실이 암호를 깨는 데 어떻게 쓰일 수 있을지 예측해 보세요.</p>
+    <textarea class="answer" placeholder="나의 예측..."></textarea>
+  </div>
+
+  <div class="card">
+    <h3>E-3. 핵심 발견 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <div class="fill-blank">
+      "어떤 영어 텍스트를 분석하든, 글자의 빈도 순서는 거의 <input class="inline-input wide" placeholder="?">. 이것은 마치 언어의 <strong><input class="inline-input wide" placeholder="?"></strong>과 같다."
+    </div>
+  </div>
+</div>
+
+<!-- ===== [E2] EXPLORE 2 ===== -->
+<div class="section" id="explore2">
+  <span class="section-badge badge-e">E 탐구 2</span>
+  <h2>"시저를 1분 만에 깨기" — 그래프 슬라이딩</h2>
+
+  <div class="card">
+    <h3>E-4. 패턴으로 키 추정하기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p>다음은 시저 암호(k = ?)로 만들어진 암호문입니다.</p>
+    <div class="cipher-display" style="font-size:11px;letter-spacing:.5px;word-break:break-all">VTXLUH WUHODZQHB GU OLYHVHB DQG WKH UHVW RI WKHVH JHQWOHPHQ KDYLQJ DVNHG PH WR ZULWH GRZQ WKH ZKROH SDUWLFXODUV DERXW WUHDVXUH LVODQG</div>
+
+    <p><strong>(a)</strong> 반복되는 세 글자 단어가 있나요?</p>
+    <p style="margin-left:16px;">반복되는 단어: <input class="inline-input wide" placeholder="?"></p>
+
+    <p style="margin-top:12px;"><strong>(b)</strong> 영어에서 가장 흔한 세 글자 단어는 <strong>THE</strong>입니다. "WKH" = "THE"라면?</p>
+    <div style="margin-left:16px; font-family:var(--mono); font-size:14px; line-height:2.2;">
+      W(22) &rarr; T(19): 키 = 22 &minus; 19 = <input class="inline-input" placeholder="?"><br>
+      K(10) &rarr; H(7): 키 = 10 &minus; 7 = <input class="inline-input" placeholder="?"><br>
+      H(7) &rarr; E(4): 키 = 7 &minus; 4 = <input class="inline-input" placeholder="?">
+    </div>
+    <p style="margin-top:8px;">세 계산이 모두 같은 키? &rarr; k = <strong><input class="inline-input" placeholder="?"></strong></p>
+
+    <p style="margin-top:12px;"><strong>(c)</strong> "VTXLUH"의 첫 글자를 복호화:</p>
+    <p style="margin-left:16px; font-family:var(--mono);">V(21) &minus; <input class="inline-input" placeholder="k"> = <input class="inline-input" placeholder="?"> &rarr; <input class="inline-input" placeholder="?"></p>
+    <div class="callout callout-info">&#x1F4AC; 짧은 문장에서는 <strong>반복 패턴</strong>이 강력한 단서가 됩니다!</div>
+  </div>
+
+  <div class="card">
+    <h3>E-5. 그래프로 보면 더 확실하다 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p>웹앱의 <strong>그래프 슬라이딩</strong> 기능을 사용합시다.</p>
+    <ul style="margin:8px 0 8px 20px; font-size:14px;">
+      <li><strong>위쪽 그래프</strong>: 암호문의 빈도 (좌우로 드래그)</li>
+      <li><strong>아래쪽 그래프</strong>: 표준 영어 빈도 (고정)</li>
+    </ul>
+    <p><strong>(a)</strong> 두 그래프의 <strong>모양</strong>을 비교하면?</p>
+    <textarea class="answer" placeholder="관찰..."></textarea>
+    <p style="margin-top:8px;"><strong>(b)</strong> 가장 잘 겹치는 위치를 찾으세요.</p>
+    <p style="margin-left:16px;">밀어야 하는 칸 수 = <strong><input class="inline-input" placeholder="?">칸</strong> &rarr; 이것이 바로 <strong>키</strong>!</p>
+    <p style="margin-top:8px;"><strong>(c)</strong> 원문: <input class="inline-input x-wide" style="width:100%;" placeholder="복호화 결과"></p>
+  </div>
+
+  <div class="card">
+    <h3>E-6. 왜 이게 되는 걸까? <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p>시저 암호는 모든 글자를 <strong>같은 수만큼</strong> 밉니다.</p>
+    <div class="callout callout-tip">원문에서 E가 가장 많았다면, 암호문에서도 <strong>E가 밀려간 글자</strong>가 가장 많습니다.</div>
+    <div class="fill-blank">
+      "시저 암호는 빈도 그래프를 <input class="inline-input wide" placeholder="?">할 뿐이므로, 그래프를 다시 <input class="inline-input wide" placeholder="?">하면 키를 찾을 수 있다."
+    </div>
+  </div>
+</div>
+
+<!-- ===== [E3] EXPLORE 3 ===== -->
+<div class="section" id="explore3">
+  <span class="section-badge badge-e">E 탐구 3</span>
+  <h2>"진짜 탐정 체험" — 치환 암호 해독</h2>
+
+  <div class="card">
+    <h3>E-7. 그래프 밀기가 안 통한다! <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p>알파벳을 <strong>무작위로 뒤섞어서</strong>(단순 치환 암호) 만든 암호문입니다.</p>
+    <div class="cipher-display" style="font-size:13px;">MJX YLZWP QHTOE KTC GLRDI TBXH MJX AFUS NTV ...</div>
+    <p>시저처럼 일정하게 밀지 않았으므로 그래프 슬라이딩이 통하지 않습니다. 하지만 <strong>빈도와 패턴</strong>이라는 단서는 남아 있습니다!</p>
+
+    <p style="margin-top:12px;"><strong>(a)</strong> 반복되는 세 글자 단어:</p>
+    <p style="margin-left:16px;">반복되는 단어: <input class="inline-input wide" placeholder="?"> &rarr; THE라고 가정하면 M&rarr;T, J&rarr;H, X&rarr;E</p>
+
+    <p style="margin-top:12px;"><strong>(b)</strong> 웹앱에서 한 글자짜리 단어를 찾으세요.</p>
+    <p style="margin-left:16px;">한 글자짜리 단어: <input class="inline-input" placeholder="?"> &rarr; 영어에서 <strong>A</strong> 또는 <strong>I</strong></p>
+
+    <p style="margin-top:12px;"><strong>(c)</strong> 웹앱에서 대응을 입력하고 복호화 미리보기를 확인하세요!</p>
+  </div>
+
+  <div class="card">
+    <h3>E-8. 한 글자씩 밝혀 가기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">⚪ 선택</span></h3>
+    <p>E-7의 대응을 계속 확장하며 원문을 완성해 봅시다. 웹앱의 <strong>탐정 대시보드</strong>에서 작업하세요.</p>
+
+    <details>
+      <summary>힌트 1 (방향)</summary>
+      <div class="hint-content">"부분적으로 드러난 단어를 살펴보세요. TBXH에서 X&rarr;E를 알고 있으니 ●●E●. 네 글자이고 E가 세 번째인 흔한 영어 단어는?"</div>
+    </details>
+    <details>
+      <summary>힌트 2 (전략)</summary>
+      <div class="hint-content">"TBXH &rarr; OVER라면 T&rarr;O, B&rarr;V, H&rarr;R. 두 글자 단어 TK에서 T&rarr;O이므로 O● &rarr; OF. K&rarr;F!"</div>
+    </details>
+    <details>
+      <summary>힌트 3 (절차)</summary>
+      <div class="hint-content">"빈도 차트를 활용하세요. 암호문에서 자주 나오는 글자일수록 E, T, A, O, I, N에 대응될 가능성이 높습니다."</div>
+    </details>
+
+    <p style="margin-top:16px;"><strong>(a)</strong> 밝혀낸 원문의 첫 문장:</p>
+    <textarea class="answer" placeholder="원문..."></textarea>
+
+    <p style="margin-top:8px;"><strong>(b)</strong> 가장 도움이 됐던 단서는?</p>
+    <textarea class="answer" placeholder="가장 도움이 됐던 단서..."></textarea>
+  </div>
+</div>
+
+<!-- ===== [D] DEEPEN ===== -->
+<div class="section" id="deepen">
+  <span class="section-badge badge-d">D 심화</span>
+  <h2>아핀 암호도 빈도 분석 앞에 무너진다</h2>
+
+  <div class="card">
+    <h3>D-1. 아핀 암호의 빈도 분석 (교사 시연 정리) <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p><strong>(a)</strong> 아핀 암호문 분석 결과:</p>
+    <ul style="margin:8px 0 8px 20px; font-size:14px;">
+      <li>가장 많이 나온 글자: <strong>C</strong>와 <strong>I</strong> (각 11회 동률)</li>
+      <li><strong>"ZRC"</strong>가 반복 &rarr; 원문의 <strong>THE</strong>로 추정</li>
+      <li>ZRC의 C가 E일 가능성 높음!</li>
+    </ul>
+    <p>두 가지 사실:</p>
+    <table>
+      <tr><th>원문 글자</th><th>원문 번호</th><th>암호 글자</th><th>암호 번호</th></tr>
+      <tr><td>E</td><td>4</td><td>C</td><td>2</td></tr>
+      <tr><td>T</td><td>19</td><td>Z</td><td>25</td></tr>
+    </table>
+
+    <p style="margin-top:12px;"><strong>(b)</strong> 아핀 암호 규칙에 대입하면 두 개의 합동식:</p>
+    <div style="font-family:var(--mono); font-size:15px; margin:8px 0; line-height:2;">
+      E &rarr; C: 4a + b &equiv; 2 (mod 26) &hellip; &#x2460;<br>
+      T &rarr; Z: 19a + b &equiv; 25 (mod 26) &hellip; &#x2461;
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>D-2. 연립합동식 풀기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p><strong>(a)</strong> &#x2461;에서 &#x2460;을 빼면 b가 사라집니다.</p>
+    <div style="font-family:var(--mono); font-size:14px; margin:8px 0 8px 16px;">
+      (19a + b) &minus; (4a + b) &equiv; 25 &minus; 2 (mod 26)<br>
+      15a &equiv; <input class="inline-input" placeholder="?"> (mod 26)
+    </div>
+
+    <p style="margin-top:12px;"><strong>(b)</strong> a = 1, 2, 3, ... 을 넣어서 풀어 봅시다.</p>
+    <table>
+      <tr><th>a</th><th>15 &times; a</th><th>mod 26</th><th>= 23?</th></tr>
+      <tr><td>1</td><td>15</td><td>15</td><td>&#x274C;</td></tr>
+      <tr><td>2</td><td>30</td><td>4</td><td>&#x274C;</td></tr>
+      <tr><td>3</td><td>45</td><td>19</td><td>&#x274C;</td></tr>
+      <tr><td>4</td><td>60</td><td>8</td><td>&#x274C;</td></tr>
+      <tr><td>5</td><td>75</td><td><input class="inline-input" placeholder="?"></td><td><input class="inline-input" placeholder="?"></td></tr>
+    </table>
+    <p>&rarr; a = <strong><input class="inline-input" placeholder="?"></strong></p>
+
+    <p style="margin-top:12px;"><strong>(c)</strong> a를 &#x2460;에 대입하여 b를 구합니다.</p>
+    <div style="font-family:var(--mono); font-size:14px; margin:8px 0 8px 16px;">
+      4 &times; <input class="inline-input" placeholder="a"> + b &equiv; 2 (mod 26)<br>
+      <input class="inline-input" placeholder="?"> + b &equiv; 2 (mod 26)<br>
+      b &equiv; 2 &minus; <input class="inline-input" placeholder="?"> &equiv; <input class="inline-input" placeholder="?"> (mod 26)
+    </div>
+    <p>&rarr; b = <strong><input class="inline-input" placeholder="?"></strong></p>
+
+    <p style="margin-top:12px;"><strong>(d)</strong> 결과: a = <input class="inline-input" placeholder="?">, b = <input class="inline-input" placeholder="?"></p>
+    <div class="callout callout-danger">
+      &#x1F4CA; 아핀 암호는 키가 312개나 되지만, 빈도 분석으로 글자 <strong>2개만 추정</strong>하면 키가 밝혀집니다!
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>D-3. 고전 암호의 근본 한계 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p>시저, 곱하기, 아핀, 단순 치환 &mdash; 이 모든 암호의 <strong>공통점</strong>은?</p>
+    <div class="callout callout-tip">&#x1F4A1; 힌트: "A가 항상 G로 바뀐다면, 1000번째 A도 G로 바뀝니다."</div>
+    <p><strong>(a)</strong> 공통점:</p>
+    <textarea class="answer" placeholder="공통점..."></textarea>
+    <p><strong>(b)</strong> 왜 치명적인 약점인가요?</p>
+    <textarea class="answer" placeholder="이유..."></textarea>
+    <p><strong>(c)</strong></p>
+    <div class="fill-blank">
+      "한 글자가 항상 <input class="inline-input wide" placeholder="?"> 글자로 바뀌는 한, <input class="inline-input wide" placeholder="?">라는 지문은 지울 수 없다."
+    </div>
+    <p style="margin-top:12px;"><strong>(d)</strong> &#x1F4AC; 사고 실험: 같은 글자를 매번 <strong>다른 글자로</strong> 바꿀 수 있다면?</p>
+    <textarea class="answer" placeholder="나의 생각..."></textarea>
+  </div>
+</div>
+
+<!-- ===== [C] CHALLENGE ===== -->
+<div class="section" id="challenge">
+  <span class="section-badge badge-c">C 도전</span>
+  <h2>경계를 넘어서</h2>
+
+  <div class="card">
+    <h3>C-1. 종합 해독 미션 &#x1F513; <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p>다음 시저 암호를 <strong>패턴과 추론만으로</strong> 풀어 봅시다.</p>
+    <div class="cipher-display">YMJWJ NX ST LWJFYJW FLTSD YMFS YT QNAJ NS AFNS</div>
+
+    <details>
+      <summary>힌트 1 (방향)</summary>
+      <div class="hint-content">두 글자짜리 단어를 먼저 찾으세요. 영어에서 흔한 두 글자 단어: IS, IN, TO, NO</div>
+    </details>
+    <details>
+      <summary>힌트 2 (전략)</summary>
+      <div class="hint-content">NX가 IS라면 키는? YT가 TO라면 키는? 두 추정이 같은 키를 주는지 확인하세요.</div>
+    </details>
+    <details>
+      <summary>힌트 3 (절차)</summary>
+      <div class="hint-content">N(13) &rarr; I(8): 13 &minus; k &equiv; 8, k = 5. Y(24) &rarr; T(19): 24 &minus; 5 = 19 &#x2705;</div>
+    </details>
+
+    <p style="margin-top:12px;"><strong>(a)</strong> 추정한 키: k = <strong><input class="inline-input" placeholder="?"></strong></p>
+
+    <p style="margin-top:12px;"><strong>(b)</strong> 복호화:</p>
+    <div style="overflow-x:auto;">
+      <table style="font-size:12px; min-width:600px;">
+        <tr><th>암호</th><td>Y</td><td>M</td><td>J</td><td>W</td><td>J</td><td></td><td>N</td><td>X</td><td></td><td>S</td><td>T</td><td></td><td>L</td><td>W</td><td>J</td><td>F</td><td>Y</td><td>J</td><td>W</td></tr>
+        <tr><th>번호</th><td>24</td><td>12</td><td>9</td><td>22</td><td>9</td><td></td><td>13</td><td>23</td><td></td><td>18</td><td>19</td><td></td><td>11</td><td>22</td><td>9</td><td>5</td><td>24</td><td>9</td><td>22</td></tr>
+        <tr><th>&minus;k</th><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td></tr>
+        <tr><th>원문</th><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td><td><input style="width:24px;border:none;border-bottom:1px solid #ccc;text-align:center;font-size:12px;"></td></tr>
+      </table>
+    </div>
+    <p style="margin-top:8px;"><strong>원문:</strong></p>
+    <textarea class="answer" placeholder="THERE IS NO GREATER..."></textarea>
+  </div>
+
+  <div class="card">
+    <h3>C-2. 빈도 분석을 무력화하려면? <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">⚪ 선택</span></h3>
+    <p><strong>(a)</strong> "같은 E라도, 문장에서의 <strong>위치에 따라</strong> 다른 글자로 바뀌게 하려면?"</p>
+    <textarea class="answer" placeholder="나의 아이디어..."></textarea>
+
+    <p style="margin-top:12px;"><strong>(b)</strong> 예를 들어 "HELLO"를 위치마다 다른 키로 암호화:</p>
+    <div style="font-family:var(--mono); font-size:14px; margin:8px 0 8px 16px; line-height:2;">
+      H(7)+3 = 10 &rarr; <strong>K</strong><br>
+      E(4)+7 = 11 &rarr; <strong>L</strong><br>
+      L(11)+1 = 12 &rarr; <strong>M</strong><br>
+      L(11)+ <input class="inline-input" placeholder="?"> = <input class="inline-input" placeholder="?"> &rarr; <input class="inline-input" placeholder="?"><br>
+      O(14)+ <input class="inline-input" placeholder="?"> = <input class="inline-input" placeholder="?"> &rarr; <input class="inline-input" placeholder="?">
+    </div>
+    <div class="callout callout-tip">두 L이 <strong>서로 다른 암호 글자</strong>가 됩니다!</div>
+
+    <p style="margin-top:12px;"><strong>(c)</strong> 이 방식의 장점과 새로운 어려움은?</p>
+    <textarea class="answer" placeholder="장점:&#10;&#10;새로운 어려움:"></textarea>
+  </div>
+</div>
+
+<!-- ===== [R] REFLECT ===== -->
+<div class="section" id="reflect">
+  <span class="section-badge badge-r">R 성찰</span>
+  <h2>오늘의 탐험을 돌아보며</h2>
+
+  <div class="card">
+    <h3>R-1. 여정 요약 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <div class="fill-blank" style="line-height:2.5;">
+      글자의 습관 발견: 영어에서 가장 많은 글자는 <input class="inline-input" placeholder="?"> (약 12.7%)<br>
+      &darr;<br>
+      시저 암호 공격: 빈도 그래프를 <input class="inline-input wide" placeholder="?">하면 키를 찾을 수 있다<br>
+      &darr;<br>
+      치환 암호 공격: 빈도 순위 + <input class="inline-input wide" placeholder="?"> 등의 단서로 한 글자씩 해독<br>
+      &darr;<br>
+      아핀 암호 공격: 빈도 추정 2개로 <input class="inline-input wide" placeholder="?">을 세워 키를 구함<br>
+      &darr;<br>
+      결론: "한 글자 &rarr; 같은 글자" 치환은 <input class="inline-input wide" placeholder="?">에 취약하다
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>R-2. 발견 노트 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p><strong>(a)</strong> 오늘 수업에서 가장 인상 깊었던 순간은?</p>
+    <textarea class="answer" placeholder=""></textarea>
+    <p><strong>(b)</strong> 왜 그 순간이 인상 깊었나요?</p>
+    <textarea class="answer" placeholder=""></textarea>
+  </div>
+
+  <div class="card">
+    <h3>R-3. 연결 질문 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p><strong>(a)</strong> 세 차시의 흐름:</p>
+    <table>
+      <tr><th>차시</th><th>mod 연산의 역할</th><th>핵심 활동</th></tr>
+      <tr><td>1차시</td><td>오류 검출 (체크섬)</td><td>숫자의 오류를 잡는 데 mod 사용</td></tr>
+      <tr><td>2차시</td><td><input style="width:100%;border:none;border-bottom:1px solid #ccc;font-size:13px;padding:4px;"></td><td><input style="width:100%;border:none;border-bottom:1px solid #ccc;font-size:13px;padding:4px;"></td></tr>
+      <tr><td>3차시</td><td><input style="width:100%;border:none;border-bottom:1px solid #ccc;font-size:13px;padding:4px;"></td><td><input style="width:100%;border:none;border-bottom:1px solid #ccc;font-size:13px;padding:4px;"></td></tr>
+    </table>
+    <p style="margin-top:12px;"><strong>(b)</strong> "만드는 것"과 "깨뜨리는 것"은 어떤 관계인가요?</p>
+    <textarea class="answer" placeholder=""></textarea>
+  </div>
+
+  <div class="card">
+    <h3>R-4. 예고편 — 다음 시간을 위한 질문 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p>고전 암호는 수백 년간 빈도 분석에 뚫려왔습니다. 1977년, 세 수학자가 완전히 다른 접근을 했습니다.</p>
+    <div class="callout callout-info"><strong>"암호화 키와 복호화 키를 아예 다르게 만들면?"</strong></div>
+    <ul style="margin:8px 0 8px 20px; font-size:14px;">
+      <li>지금까지의 암호에서, 암호화 키를 알면 복호화 키도 알 수 있었나요? &rarr;
+        <label><input type="radio" name="r4q"> 네</label>
+        <label><input type="radio" name="r4q"> 아니오</label>
+      </li>
+    </ul>
+    <p>&#x1F4AC; <strong>암호화 키를 공개해도 복호화가 안 되는</strong> 암호가 있다면?</p>
+    <textarea class="answer" placeholder="나의 생각..."></textarea>
+    <div class="callout callout-danger">&#x1F52E; 그 열쇠는... <strong>소수</strong>입니다. 다음 시간에 밝혀집니다!</div>
+  </div>
+
+  <div class="card">
+    <h3>R-5. 자기 평가 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">⚪ 선택</span></h3>
+    <table class="assess-table">
+      <tr>
+        <th style="text-align:left;">항목</th>
+        <th>&#x1F615; 아직 어려워요</th>
+        <th>&#x1F914; 대략 알겠어요</th>
+        <th>&#x1F60A; 자신 있어요</th>
+      </tr>
+      <tr><td style="text-align:left;">영어 글자 빈도 패턴 이해하기</td><td><input type="radio" name="a1"></td><td><input type="radio" name="a1"></td><td><input type="radio" name="a1"></td></tr>
+      <tr><td style="text-align:left;">시저 암호를 빈도 분석으로 깨기</td><td><input type="radio" name="a2"></td><td><input type="radio" name="a2"></td><td><input type="radio" name="a2"></td></tr>
+      <tr><td style="text-align:left;">단순 치환 암호를 탐정처럼 해독하기</td><td><input type="radio" name="a3"></td><td><input type="radio" name="a3"></td><td><input type="radio" name="a3"></td></tr>
+      <tr><td style="text-align:left;">고전 암호의 근본 한계 설명하기</td><td><input type="radio" name="a4"></td><td><input type="radio" name="a4"></td><td><input type="radio" name="a4"></td></tr>
+    </table>
+    <p style="margin-top:8px;"><strong>가장 더 연습하고 싶은 것</strong>: <input class="inline-input x-wide" style="width:100%;" placeholder=""></p>
+  </div>
+</div>
+
+<section class="section answer-key" id="answer-key" style="page-break-before:always">
+  <h2 style="text-align:center;color:#b91c1c;border-bottom:3px double #b91c1c;padding-bottom:12px">
+    📋 교사용 정답키·해설
+  </h2>
+
+  <h3>W-2. 글자의 습관?</h3>
+  <p><span class="ans">THE QUICK BROWN FOX... → 가장 많은 글자: O (4회, 이 특정 문장에서)</span></p>
+  <p><span class="ans">(참고: 짧은 문장이라 표준 빈도와 다를 수 있음 — 이것이 E-1~E-3의 포인트)</span></p>
+
+  <h3>E-3. 핵심 발견</h3>
+  <p><span class="ans">1위: E (약 12.7%)</span></p>
+  <p><span class="ans">"영어에서 글자 빈도는 균등하지 않다. E가 가장 많고 Z가 가장 적다."</span></p>
+
+  <h3>E-4. 패턴으로 키 추정 (시저 k=3, 보물섬)</h3>
+  <p><span class="ans">암호문에서 가장 많은 글자: H (23회, 17.0%)</span></p>
+  <p><span class="ans">표준 영어에서 가장 많은 글자: E (12.7%)</span></p>
+  <p><span class="ans">H(7) − E(4) = 3 → 키 k=3 추정</span></p>
+
+  <h3>E-5. 그래프 슬라이딩</h3>
+  <p><span class="ans">암호문 빈도 그래프를 왼쪽으로 3칸 밀면 표준 빈도 그래프와 겹침</span></p>
+  <p><span class="ans">→ 이동량 3 = 키 k=3</span></p>
+  <p><span class="ans">복호화 결과: SQUIRE TRELAWNEY DR LIVESEY AND THE REST OF THESE GENTLEMEN…</span></p>
+
+  <h3>E-6. 왜 이게 되는 걸까?</h3>
+  <p><span class="ans">시저 암호: E(x)=(x+k) mod 26 → 빈도 그래프가 k만큼 평행 이동</span></p>
+  <p><span class="ans">→ 표준 그래프와 겹치도록 밀면 k를 찾을 수 있다</span></p>
+
+  <h3>E-7. 그래프 밀기가 안 통한다!</h3>
+  <p><span class="ans">단순 치환은 순서 보존이 아니므로 그래프 밀기로는 키를 찾을 수 없다.</span></p>
+  <p><span class="ans">4×10²⁶ 가지 키 → 전수조사 불가능</span></p>
+
+  <h3>D-1. 아핀 암호의 빈도 분석 정리</h3>
+  <p><span class="ans">빈도 상위: C(11회), I(11회), ZRC 반복 → THE 추정</span></p>
+  <p><span class="ans">C=E(4), Z=T(19)</span></p>
+
+  <h3>D-2. 연립합동식 풀기</h3>
+  <p><span class="ans">(a) 15a ≡ 23 (mod 26)</span></p>
+  <p><span class="ans">(b) 75 mod 26 = 23 → ✅, a = 5</span></p>
+  <p><span class="ans">(c) 4×5=20, 20+b≡2 (mod 26), b≡2−20≡−18≡8 (mod 26), b = 8</span></p>
+  <p><span class="ans">(d) a=5, b=8</span></p>
+
+  <h3>D-3. 고전 암호의 근본 한계</h3>
+  <p><span class="ans">(a) 공통점: 한 글자가 항상 같은 글자로 바뀌는 단일 치환</span></p>
+  <p><span class="ans">(b) 빈도 패턴이 보존되어 통계적 공격에 취약</span></p>
+  <p><span class="ans">(c) "같은" / "빈도"</span></p>
+  <p><span class="ans">(d) 같은 글자가 매번 다르게 바뀌면 빈도 분석이 무력화됨 (→ 비즈네르 복선)</span></p>
+
+  <h3>C-1. 종합 해독 미션</h3>
+  <p><span class="ans">키: k = 5</span></p>
+  <p><span class="ans">원문: THERE IS NO GREATER AGONY THAN TO LIVE IN VAIN</span></p>
+  <p><span class="ans">검증: Y(24)−5=19=T, M(12)−5=7=H, J(9)−5=4=E...</span></p>
+
+  <h3>C-2. 빈도 분석을 무력화하려면? [선택]</h3>
+  <p><span class="ans">(b) HELLO → K, L, M, O, V (키 [3,7,1,3,7] 순환)</span></p>
+  <p><span class="ans">(c) 장점: 같은 글자가 다른 암호가 됨 → 빈도 분석 무력화</span></p>
+  <p><span class="ans">새로운 어려움: 키를 안전하게 공유하는 방법, 키 길이</span></p>
+
+  <h3>R-1. 여정 요약</h3>
+  <p><span class="ans">E / 밀기(슬라이딩) / 이중글자·단어 패턴 / 연립합동식 / 빈도(분석)</span></p>
+
+  <h3>R-3. 연결 질문</h3>
+  <table style="font-size:13px">
+    <tr><th>차시</th><th>mod 연산의 역할</th><th>핵심 활동</th></tr>
+    <tr><td>2차시</td><td><span class="ans">암호화/복호화</span></td><td><span class="ans">글자를 숫자로 바꿔 mod 연산으로 암호 만들기</span></td></tr>
+    <tr><td>3차시</td><td><span class="ans">암호 해독</span></td><td><span class="ans">빈도 분석으로 mod 연산의 키를 역추적</span></td></tr>
+  </table>
+
+  <h3>R-4. 예고편</h3>
+  <p><span class="ans">네 (암호화 키를 알면 복호화 키도 알 수 있었다)</span></p>
+</section>
+
+</div><!-- .main -->
+
+<script>
+// Alpha table
+(function(){
+  const t=document.getElementById('alphaTable');
+  let h='';
+  for(let i=0;i<26;i++) h+=`<div class="letter">${String.fromCharCode(65+i)}</div>`;
+  for(let i=0;i<26;i++) h+=`<div class="number">${i}</div>`;
+  t.innerHTML=h;
+})();
+
+// Nav highlight
+const sections=document.querySelectorAll('.section');
+const navLinks=document.querySelectorAll('nav a');
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      navLinks.forEach(l=>l.classList.remove('active'));
+      const link=document.querySelector(`nav a[href="#${e.target.id}"]`);
+      if(link) link.classList.add('active');
+    }
+  });
+},{threshold:0.3,rootMargin:'-80px 0px -50% 0px'});
+sections.forEach(s=>observer.observe(s));
+</script>
+</body>
+</html>

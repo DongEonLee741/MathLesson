@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4차시: 소수의 힘 - 통합 학습앱</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1a1a2e;--ink2:#4a4a68;--ink3:#8888a4;
+  --bg:#f7f7fb;--card:#fff;--border:#ebebf0;
+  --theme:#10b981;--theme-light:#ecfdf5;--theme-dark:#059669;
+  --ok:#10b981;--ok-light:#ecfdf5;
+  --err:#f43f5e;--err-light:#fff1f2;
+  --warn:#f59e0b;--warn-light:#fffbeb;
+  --purple:#a855f7;--purple-light:#faf5ff;
+  --shadow:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.06);
+  --radius:14px;
+  --font:'Pretendard','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'Fira Code','Consolas',monospace;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:15px;line-height:1.75;
+  padding-top:60px;padding-bottom:48px;min-height:100vh}
+
+.sticky-nav{position:fixed;top:0;left:0;right:0;height:56px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;z-index:200;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.nav-title{font-weight:800;font-size:15px;color:var(--theme);white-space:nowrap;flex-shrink:0}
+.nav-progress{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;min-width:40px;margin:0 8px}
+.nav-progress-fill{height:100%;background:linear-gradient(90deg,var(--theme),#6366f1);border-radius:3px;transition:width .5s ease;width:0%}
+.nav-dots{display:flex;gap:4px;flex-shrink:0}
+.nav-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid var(--border);color:var(--ink3);background:#fff;cursor:default;transition:all .25s ease;user-select:none}
+.nav-dot.locked{opacity:.5}
+.nav-dot.unlocked{border-color:var(--theme);color:var(--theme);background:var(--theme-light);cursor:pointer}
+.nav-dot.unlocked:hover{transform:scale(1.1)}
+.nav-dot.active{border-color:var(--theme-dark);color:#fff;background:var(--theme);cursor:pointer;transform:scale(1.05)}
+.nav-dot.done{border-color:var(--ok);color:#fff;background:var(--ok);cursor:pointer}
+
+main{max-width:820px;margin:0 auto;padding:24px 20px}
+.app-section{display:none;animation:fadeIn .35s ease}
+.app-section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(-4px)}}
+@keyframes confettiFall{0%{transform:translateY(-10vh) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+.section-header{margin-bottom:20px}
+.section-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:8px}
+.badge-warmup{background:#fef9ed;color:#a16207}
+.badge-explore{background:#eef0ff;color:#4338ca}
+.badge-deepen{background:#f5f0ff;color:#7c3aed}
+.badge-challenge{background:#fef2f2;color:#b91c1c}
+.badge-reflect{background:var(--ok-light);color:#15803d}
+.badge-complete{background:#fff7ed;color:#c2410c}
+.section-header h2{font-size:clamp(20px,3.5vw,26px);font-weight:800;line-height:1.35}
+.section-header p.subtitle{font-size:15px;color:var(--ink2);margin-top:4px}
+
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:24px;margin-bottom:20px}
+.card h4{font-size:16px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card .num{background:var(--theme);color:#fff;width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+
+.layout-zone .zone-concept{background:var(--theme-light);border-left:3px solid var(--theme);padding:16px 20px;border-radius:10px;margin:12px 0}
+.layout-split{display:grid;grid-template-columns:2fr 3fr;gap:20px;align-items:start}
+.split-left{position:sticky;top:72px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);max-height:calc(100vh - 88px);overflow-y:auto}
+.split-right{min-width:0}
+
+.cardflow-steps{display:flex;gap:6px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+.cardflow-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;transition:all .25s ease;cursor:pointer}
+.cardflow-dot.locked{background:var(--bg);color:var(--ink3);border:2px solid var(--border);cursor:default}
+.cardflow-dot.active{background:var(--theme);color:#fff;border:2px solid var(--theme);transform:scale(1.1);box-shadow:0 2px 12px rgba(16,185,129,.3)}
+.cardflow-dot.done{background:var(--ok);color:#fff;border:2px solid var(--ok);cursor:pointer}
+.cardflow-card{display:none;animation:fadeIn .3s ease}
+.cardflow-card.active{display:block}
+
+.mission-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;box-shadow:var(--shadow)}
+.mission-xp-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin:8px 0}
+.mission-xp-fill{height:100%;background:linear-gradient(90deg,var(--theme),#6366f1);border-radius:4px;transition:width .6s ease}
+
+.info-box{background:var(--theme-light);border-left:3px solid var(--theme);padding:14px 18px;border-radius:10px;margin:12px 0;font-size:15px}
+.warn-box{background:var(--warn-light);border-left:3px solid var(--warn);padding:14px 18px;border-radius:10px;margin:12px 0;font-size:14px}
+.success-box{background:var(--ok-light);border-left:3px solid var(--ok);padding:14px 18px;border-radius:10px;margin:12px 0;font-size:15px}
+.err-box{background:var(--err-light);border-left:3px solid var(--err);padding:14px 18px;border-radius:10px;margin:12px 0;font-size:14px}
+.link-back{background:var(--purple-light);border-left:3px solid var(--purple);padding:14px 18px;border-radius:10px;margin:12px 0;font-size:14px;color:#7c3aed}
+
+textarea{width:100%;border:2px solid var(--border);border-radius:10px;padding:12px 14px;font-family:var(--font);font-size:15px;line-height:1.65;resize:vertical;min-height:72px;color:var(--ink);background:var(--card);transition:border-color .2s,box-shadow .2s}
+textarea:focus{border-color:var(--theme);outline:none;box-shadow:0 0 0 3px rgba(16,185,129,.12)}
+.inline-input{display:inline-block;border:none;border-bottom:2px solid var(--border);width:60px;text-align:center;font-family:var(--font);font-size:inherit;font-weight:700;color:var(--theme);background:transparent;padding:2px 4px;transition:border-color .2s}
+.inline-input:focus{outline:none;border-bottom-color:var(--theme)}
+.inline-input.wide{width:120px}
+.inline-input.correct{border-bottom-color:var(--ok);color:var(--ok)}
+.inline-input.incorrect{border-bottom-color:var(--err);color:var(--err);animation:shake .4s}
+
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+th,td{border:1px solid var(--border);padding:10px 12px;text-align:center}
+th{background:transparent;font-weight:700;font-size:13px;border-bottom:2px solid var(--border)}
+
+.btn{padding:12px 28px;border-radius:10px;font-size:15px;font-weight:600;border:none;cursor:pointer;transition:all .2s ease;min-height:44px;display:inline-flex;align-items:center;gap:8px;font-family:var(--font)}
+.btn-primary{background:var(--theme);color:#fff}
+.btn-primary:hover{background:var(--theme-dark);transform:translateY(-1px);box-shadow:0 4px 12px rgba(16,185,129,.3)}
+.btn-primary:disabled{background:var(--ink3);cursor:not-allowed;transform:none;box-shadow:none}
+.btn-secondary{background:#fff;color:var(--theme);border:1.5px solid var(--theme)}
+.btn-secondary:hover{background:var(--theme-light)}
+.btn-success{background:var(--ok);color:#fff}
+.btn-sm{padding:8px 18px;font-size:14px;border-radius:8px}
+.btn-complete{display:none;width:100%;padding:14px;border-radius:12px;font-size:16px;font-weight:700;border:none;cursor:pointer;background:var(--theme);color:#fff;margin-top:24px;font-family:var(--font);transition:all .2s ease}
+.btn-complete:hover{background:var(--theme-dark)}
+
+/* Sieve Grid */
+.sieve-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin:16px 0}
+.sieve-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;border-radius:8px;border:2px solid var(--border);background:#fff;cursor:pointer;transition:all .25s;user-select:none}
+.sieve-cell.elim-2{background:#fecaca;border-color:#f87171;color:#b91c1c;text-decoration:line-through;cursor:default}
+.sieve-cell.elim-3{background:#fed7aa;border-color:#fb923c;color:#c2410c;text-decoration:line-through;cursor:default}
+.sieve-cell.elim-5{background:#fef08a;border-color:#facc15;color:#a16207;text-decoration:line-through;cursor:default}
+.sieve-cell.elim-7{background:#e9d5ff;border-color:#a78bfa;color:#6d28d9;text-decoration:line-through;cursor:default}
+.sieve-cell.eliminated-final{background:#f3f4f6;border-color:#d1d5db;color:#9ca3af;text-decoration:line-through;cursor:default}
+.sieve-cell.prime{background:var(--theme-light);border-color:var(--theme);color:var(--theme);font-weight:800}
+.sieve-cell.one{background:#f3f4f6;color:#9ca3af;cursor:default}
+.sieve-cell.sieve-pop{animation:sievePop .2s ease}
+@keyframes sievePop{0%{transform:scale(.85)}100%{transform:scale(1)}}
+
+/* Prime Buttons */
+.prime-btn{padding:12px 18px;border:2px solid var(--border);border-radius:10px;background:#fff;font-size:18px;font-weight:800;cursor:pointer;transition:all .2s;font-family:var(--mono);min-width:52px}
+.prime-btn:hover{border-color:var(--theme);background:var(--theme-light)}
+.prime-btn.selected{border-color:var(--theme);background:var(--theme);color:#fff}
+.prime-btn:disabled{opacity:.4;cursor:default}
+
+/* RSA Key Card */
+.rsa-keys{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.key-card{padding:20px;border-radius:var(--radius);text-align:center}
+.key-card.pub{background:#eff6ff;border:2px solid #93c5fd}
+.key-card.priv{background:#fef2f2;border:2px solid #fca5a5}
+.key-card .kc-icon{font-size:32px;margin-bottom:4px}
+.key-card .kc-label{font-size:13px;font-weight:700;color:var(--ink2)}
+.key-card .kc-value{font-family:var(--mono);font-size:18px;font-weight:800;margin:4px 0}
+
+/* Letter Grid */
+.letter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px;margin:12px 0}
+.letter-btn{padding:8px 4px;border:2px solid var(--border);border-radius:8px;background:#fff;font-size:14px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;font-family:var(--mono)}
+.letter-btn:hover{border-color:var(--theme);background:var(--theme-light)}
+.letter-btn.selected{border-color:var(--theme);background:var(--theme);color:#fff}
+.letter-btn:disabled{opacity:.3;cursor:default}
+
+/* Trial History */
+.trial-row{padding:6px 10px;border-radius:6px;margin:4px 0;font-family:var(--mono);font-size:13px;display:flex;align-items:center;gap:8px}
+.trial-row.ok{background:var(--ok-light)}
+.trial-row.fail{background:var(--err-light)}
+
+/* Timer */
+.timer{font-family:var(--mono);font-weight:700;color:var(--theme);font-size:16px}
+
+/* Confetti */
+.confetti-container{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:999;overflow:hidden}
+.confetti-piece{position:absolute;top:-20px;animation:confettiFall 3s ease-out forwards}
+
+/* Assess */
+.assess-table{width:100%;border-collapse:collapse;margin:14px 0}
+.assess-table th,.assess-table td{border:1px solid var(--border);padding:12px 10px;text-align:center;font-size:14px}
+.assess-table th{font-weight:700;border-bottom:2px solid var(--border)}
+.assess-table input[type=radio]{width:18px;height:18px;cursor:pointer;accent-color:var(--theme)}
+
+.xp-toast{position:fixed;bottom:24px;right:24px;z-index:300;background:var(--theme);color:#fff;padding:12px 22px;border-radius:12px;font-weight:700;font-size:15px;box-shadow:0 8px 24px rgba(16,185,129,.3);transform:translateY(100px);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+.xp-toast.show{transform:translateY(0);opacity:1}
+.xp-badge{position:fixed;bottom:24px;left:24px;z-index:250;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px 16px;font-size:13px;font-weight:700;color:var(--theme);box-shadow:var(--shadow);display:flex;align-items:center;gap:6px}
+.xp-badge .xp-val{font-size:18px;color:var(--ok)}
+
+.mono{font-family:var(--mono)}
+details{margin-top:8px}
+details summary{cursor:pointer;color:var(--warn);font-weight:600;font-size:14px;padding:4px 0}
+
+@media(max-width:700px){.layout-split{grid-template-columns:1fr}.split-left{position:static;max-height:none}}
+@media(max-width:600px){
+  .sticky-nav{padding:0 10px;gap:6px}.nav-title{font-size:13px}.nav-dot{width:24px;height:24px;font-size:10px}
+  main{padding:16px 12px}.card{padding:18px 16px}table{font-size:12px}th,td{padding:7px 5px}
+  .sieve-cell{font-size:11px}.cardflow-dot{width:30px;height:30px;font-size:11px}
+  .rsa-keys{grid-template-columns:1fr}.xp-badge{bottom:12px;left:12px}.xp-toast{bottom:12px;right:12px}
+}
+</style>
+</head>
+<body>
+<nav class="sticky-nav">
+  <span class="nav-title">4차시: 소수의 힘</span>
+  <div class="nav-progress"><div class="nav-progress-fill" id="progressFill"></div></div>
+  <div class="nav-dots" id="navDots"></div>
+</nav>
+<div class="xp-badge">&#x2B50; XP <span class="xp-val" id="xpDisplay">0</span></div>
+<div class="xp-toast" id="xpToast"></div>
+<div class="confetti-container" id="confettiContainer"></div>
+
+<main>
+
+<!-- SEC 1: Warmup (Zone) -->
+<section id="sec-1" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-warmup">W 워밍업</span>
+    <h2>지난 시간, 그리고 새로운 질문</h2>
+  </div>
+  <div class="layout-zone">
+    <div class="card">
+      <h4><span class="num">1</span> 3차시 되돌아보기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+      <p>3차시에서 빈도 분석으로 어떤 암호를 깼나요?</p>
+      <p style="margin:8px 0">(a) 시저 암호: <input class="inline-input wide" data-save="w1a" type="text" placeholder="깨는 방법은?"></p>
+      <p>(b) 아핀 암호도 빈도 분석에 약한 이유:</p>
+      <textarea rows="2" placeholder="이유를 써보세요"></textarea>
+    </div>
+    <div class="card">
+      <h4><span class="num">2</span> &#x1F4EE; 편지함의 비유 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+      <div class="info-box">
+        <p><strong>상상해보세요:</strong> 열린 자물쇠가 달린 우체통이 있습니다.</p>
+        <p>&#x1F513; 누구나 편지를 넣고 자물쇠를 <strong>잠글</strong> 수 있지만,</p>
+        <p>&#x1F511; <strong>열쇠</strong>를 가진 주인만 열 수 있습니다.</p>
+      </div>
+      <p style="margin-top:12px">(a) "열린 자물쇠" = <input class="inline-input wide" data-save="w2a" type="text" placeholder="??키"></p>
+      <p>(b) "열쇠" = <input class="inline-input wide" data-save="w2b" type="text" placeholder="??키"></p>
+      <p style="margin-top:12px">(c) 이런 암호가 가능하려면 어떤 수학이 필요할까요?</p>
+      <textarea rows="2" placeholder="나의 추측:"></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="SM.complete(1)" style="width:100%">시작하기 &#x2192;</button>
+  </div>
+</section>
+
+<!-- SEC 2: Sieve (CardFlow 3-step) -->
+<section id="sec-2" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-explore">E1 탐구</span>
+    <h2>소수 사냥 &mdash; 에라토스테네스의 체</h2>
+  </div>
+  <div class="layout-cardflow">
+    <div class="cardflow-steps" id="cf2-steps">
+      <div class="cardflow-dot active" data-step="1" onclick="CF2.goTo(1)">1</div>
+      <div class="cardflow-dot locked" data-step="2" onclick="CF2.goTo(2)">2</div>
+      <div class="cardflow-dot locked" data-step="3" onclick="CF2.goTo(3)">3</div>
+    </div>
+    <div class="cardflow-card active" id="cf2-card-1">
+      <div class="card">
+        <h4>&#x1F50D; 100까지의 소수 찾기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+        <p>버튼을 순서대로 눌러 배수를 지워 나가세요!</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
+          <button class="btn btn-sm btn-primary" id="sieveBtn2" onclick="sieveStep(2)">2의 배수 제거</button>
+          <button class="btn btn-sm btn-primary" id="sieveBtn3" onclick="sieveStep(3)" disabled>3의 배수 제거</button>
+          <button class="btn btn-sm btn-primary" id="sieveBtn5" onclick="sieveStep(5)" disabled>5의 배수 제거</button>
+          <button class="btn btn-sm btn-primary" id="sieveBtn7" onclick="sieveStep(7)" disabled>7의 배수 제거</button>
+        </div>
+        <div id="sieveStepCount" style="font-size:14px;font-weight:600;color:var(--theme);min-height:24px;margin-bottom:8px"></div>
+        <div class="sieve-grid" id="sieveGrid"></div>
+        <p style="margin-top:8px">소수 개수: <strong id="primeCount">0</strong>개</p>
+        <div id="sieveResult"></div>
+        <div style="text-align:center;margin-top:12px">
+          <button class="btn btn-sm btn-secondary" onclick="CF2.unlock(2)">다음: 효율성 &#x2192;</button>
+        </div>
+      </div>
+    </div>
+    <div class="cardflow-card" id="cf2-card-2">
+      <div class="card">
+        <h4>&#x26A1; 에라토스테네스의 효율 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+        <div class="info-box" style="margin-bottom:12px">
+          <strong>&#x1F4A1; 왜 2, 3, 5, 7만으로 충분할까?</strong><br>
+          만약 100 이하의 합성수 n이 있다면, n = a &times; b로 쓸 수 있습니다.<br>
+          a와 b 둘 다 10보다 크면? a &times; b &gt; 100이므로 모순!<br>
+          &rarr; 반드시 하나는 &radic;100 = 10 이하입니다.<br>
+          &rarr; 10 이하의 소수(2, 3, 5, 7)로만 체를 걸면 충분합니다!
+        </div>
+        <p>&#x221A;100 = <input class="inline-input" data-answer="10" data-save="sqrt100" type="text" placeholder="?">이므로, <input class="inline-input" data-answer="10" data-save="check_upto" type="text" placeholder="?">까지의 소수로만 체를 걸면 됩니다.</p>
+        <div class="info-box" style="margin-top:12px">
+          10 이하의 소수는 <strong>2, 3, 5, 7</strong> &mdash; 단 4번의 체질로 100까지의 모든 소수를 찾았습니다!
+        </div>
+        <p style="margin-top:12px">1000까지의 소수를 찾으려면? &#x221A;1000 &approx; 31.6이므로, <input class="inline-input" data-save="sieve1000" type="text" placeholder="?">까지의 소수로 체를 걸면 됩니다.</p>
+        <div style="text-align:center;margin-top:12px">
+          <button class="btn btn-sm btn-secondary" onclick="CF2.unlock(3)">다음: 소수의 분포 &#x2192;</button>
+        </div>
+      </div>
+    </div>
+    <div class="cardflow-card" id="cf2-card-3">
+      <div class="card">
+        <h4>&#x1F4CA; 소수의 분포 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">&#x26AA; 선택</span></h4>
+        <p>소수는 숫자가 커질수록 <input class="inline-input wide" data-save="dist_pattern" type="text" placeholder="많아진다/줄어든다/불규칙하다">.</p>
+        <p style="margin-top:8px">하지만 <strong>무한히 많다</strong>는 것이 증명되어 있습니다!</p>
+        <div style="text-align:center;margin:16px 0">
+          <button class="btn btn-sm btn-primary" id="sieve1000Btn" onclick="runSieve1000()">&#x1F680; 1000까지 체 돌려보기</button>
+        </div>
+        <div id="sieve1000Progress" style="display:none;margin:12px 0">
+          <div style="background:#e5e7eb;border-radius:8px;height:12px;overflow:hidden"><div id="sieve1000Bar" style="background:var(--theme);height:100%;width:0%;transition:width .3s"></div></div>
+          <p style="font-size:12px;color:var(--ink3);margin-top:4px;text-align:center" id="sieve1000Status">처리 중...</p>
+        </div>
+        <div id="sieve1000Result" style="display:none"></div>
+        <div class="info-box" style="margin-top:12px">
+          &#x1F4A1; <strong>핵심 질문</strong>: 소수는 찾기 쉽지만, 큰 수를 소인수분해하는 것은 어렵습니다.<br>
+          이 <strong>비대칭성</strong>이 현대 암호의 핵심입니다!
+        </div>
+      </div>
+      <button class="btn-complete" id="cf2-complete-btn" onclick="SM.complete(2)">다음 섹션으로 &#x2192;</button>
+    </div>
+  </div>
+</section>
+
+<!-- SEC 3: Multiply vs Factor (Mission) -->
+<section id="sec-3" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-explore">E2 탐구</span>
+    <h2>곱하기 vs 소인수분해</h2>
+    <p class="subtitle">같은 수인데 방향이 다르면 난이도가 다르다?</p>
+  </div>
+  <div class="layout-mission">
+    <div class="mission-card">
+      <h4>&#x23F1; 곱하기 도전 (3문제) <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+      <div id="multiplyProblems"></div>
+    </div>
+    <div class="mission-card" id="factorSection" style="display:none">
+      <h4>&#x1F9E9; 소인수분해 도전 (3문제) <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+      <div id="factorProblems"></div>
+    </div>
+    <div id="compareSection" style="display:none">
+      <div class="mission-card">
+        <h4>&#x1F4CA; 시간 비교 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+        <div id="compareChart"></div>
+        <div class="info-box" style="margin-top:12px">
+          <strong>발견</strong>: 숫자 크기가 비슷해도 방향이 다르면 시간 차이가 극적입니다!<br>
+          이 <strong>비대칭성</strong>이 RSA 암호의 기반입니다.
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px" id="rsaRealCard">
+        <h4>&#x1F310; 실제 인터넷에서 쓰이는 RSA 키</h4>
+        <div style="font-family:var(--mono);font-size:11px;word-break:break-all;background:var(--bg);padding:16px;border-radius:10px;line-height:1.8;color:var(--ink2)">n = 25195908475657893494027183240048398571429282126204032027777137836043662020707595556264018525880784406918290641249515082189298559149176184502808489120072844992687392807287776735971418347270261896375014971824691165077613379859095700097330459748808428401797429100642458691817195118746121515172654632282216869987549182422433637259085141865462043576798423387184774447920739934236584823824281198163815010674810451660377306056201619676256133844143603833904414952634432190114657544454178424020924616515723350778707749817125772467962926386356373289912154831438167899885040445364023527381951378636564391212010397122822120720357</div>
+        <p style="margin-top:8px;font-size:14px"><strong>617자리</strong> &mdash; 이 숫자를 두 소수로 분해하려면 현존 최고 슈퍼컴퓨터로도 <strong>수십억 년</strong>이 걸립니다.</p>
+        <p style="font-size:13px;color:var(--ink3)">여러분이 방금 체험한 33 = 3 &times; 11은 2자리. 실제 RSA는 617자리입니다!</p>
+      </div>
+      <button class="btn btn-primary" onclick="SM.complete(3)" style="width:100%">다음: RSA 키 만들기 &#x2192;</button>
+    </div>
+  </div>
+</section>
+
+<!-- SEC 4: RSA Key Gen (CardFlow 6-step) -->
+<section id="sec-4" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-deepen">D 심화</span>
+    <h2>RSA 키 생성 &mdash; 5단계</h2>
+    <p class="subtitle">나만의 공개키와 비밀키를 만들어봅시다</p>
+  </div>
+  <div class="layout-cardflow">
+    <div class="cardflow-steps" id="cf4-steps">
+      <div class="cardflow-dot active" data-step="1" onclick="CF4.goTo(1)">1</div>
+      <div class="cardflow-dot locked" data-step="2" onclick="CF4.goTo(2)">2</div>
+      <div class="cardflow-dot locked" data-step="3" onclick="CF4.goTo(3)">3</div>
+      <div class="cardflow-dot locked" data-step="4" onclick="CF4.goTo(4)">4</div>
+      <div class="cardflow-dot locked" data-step="5" onclick="CF4.goTo(5)">5</div>
+      <div class="cardflow-dot locked" data-step="6" onclick="CF4.goTo(6)">6</div>
+    </div>
+
+    <!-- Step 1: Choose p, q -->
+    <div class="cardflow-card active" id="cf4-card-1">
+      <div class="card">
+        <h4>&#x1F522; Step 1: 서로 다른 소수 p, q 선택</h4>
+        <p>아래에서 두 소수를 골라주세요 (같은 소수는 안 됩니다):</p>
+        <div style="display:flex;gap:10px;justify-content:center;margin:16px 0;flex-wrap:wrap" id="primeSelectBtns"></div>
+        <div style="text-align:center;font-size:20px;font-weight:800;margin:12px 0">
+          p = <span id="pDisplay" style="color:var(--theme)">?</span> , &nbsp;
+          q = <span id="qDisplay" style="color:var(--theme)">?</span>
+        </div>
+        <div style="text-align:center;margin-top:12px">
+          <button class="btn btn-primary" id="step1Next" disabled onclick="goStep(2)">다음: n 계산 &#x2192;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: n = p × q -->
+    <div class="cardflow-card" id="cf4-card-2">
+      <div class="card">
+        <h4>&#x1F4CF; Step 2: n = p &times; q</h4>
+        <p><span id="s2p"></span> &times; <span id="s2q"></span> = <input class="inline-input" id="s2Answer" type="text" placeholder="?"></p>
+        <div style="text-align:right;margin-top:8px">
+          <button class="btn btn-sm btn-primary" onclick="checkStep2()">확인</button>
+        </div>
+        <div id="s2Result"></div>
+        <div class="info-box" style="margin-top:12px">n은 RSA의 <strong>핵심 모듈러스</strong>입니다. 공개키와 비밀키 모두에 들어갑니다.</div>
+        <div style="text-align:center;margin-top:12px">
+          <button class="btn btn-primary" id="step2Next" disabled onclick="goStep(3)">다음: &phi;(n) 계산 &#x2192;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: φ(n) = (p-1)(q-1) -->
+    <div class="cardflow-card" id="cf4-card-3">
+      <div class="card">
+        <h4>&#x1F4D0; Step 3: &phi;(n) = (p&minus;1)(q&minus;1)</h4>
+        <p>(p&minus;1) = <input class="inline-input" id="s3a" type="text" style="width:40px" placeholder="?"> &nbsp;&nbsp;
+        (q&minus;1) = <input class="inline-input" id="s3b" type="text" style="width:40px" placeholder="?"></p>
+        <p style="margin-top:8px">&phi;(n) = <input class="inline-input" id="s3Answer" type="text" placeholder="?"></p>
+        <div style="text-align:right;margin-top:8px">
+          <button class="btn btn-sm btn-primary" onclick="checkStep3()">확인</button>
+        </div>
+        <div id="s3Result"></div>
+        <div class="link-back" style="margin-top:12px">&#x1F517; 2차시의 <strong>오일러 &phi; 함수</strong>가 여기 나옵니다!</div>
+        <div style="text-align:center;margin-top:12px">
+          <button class="btn btn-primary" id="step3Next" disabled onclick="goStep(4)">다음: e 선택 &#x2192;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Choose e -->
+    <div class="cardflow-card" id="cf4-card-4">
+      <div class="card">
+        <h4>&#x1F511; Step 4: 공개지수 e 선택</h4>
+        <p>&phi;(n) = <span id="s4phi"></span>과 <strong>서로소</strong>인 수 중 하나를 골라주세요:</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0" id="eButtons"></div>
+        <div style="text-align:center;font-size:18px;font-weight:800;margin:8px 0">
+          e = <span id="eDisplay" style="color:var(--theme)">?</span>
+        </div>
+        <div class="link-back" style="margin-top:8px">&#x1F517; 2차시의 <strong>서로소</strong> 개념이 핵심!</div>
+        <div style="text-align:center;margin-top:12px">
+          <button class="btn btn-primary" id="step4Next" disabled onclick="goStep(5)">다음: d 찾기 &#x2192;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5: Find d -->
+    <div class="cardflow-card" id="cf4-card-5">
+      <div class="card">
+        <h4>&#x1F50D; Step 5: 비밀지수 d 찾기</h4>
+        <p>e &times; d &equiv; 1 (mod &phi;(n)) 을 만족하는 d를 찾으세요.</p>
+        <p style="margin-top:8px"><span id="s5e"></span> &times; d &equiv; 1 (mod <span id="s5phi"></span>)</p>
+        <div style="display:flex;align-items:center;gap:8px;margin:12px 0">
+          <label style="font-weight:700">d =</label>
+          <input type="number" id="s5Input" min="2" style="width:70px;padding:8px;border:2px solid var(--border);border-radius:8px;text-align:center;font-weight:700;font-family:var(--mono)">
+          <button class="btn btn-sm btn-primary" onclick="tryDValue()">시도</button>
+        </div>
+        <div id="trialHistory" style="max-height:200px;overflow-y:auto"></div>
+        <div id="s5Result"></div>
+        <div class="link-back" style="margin-top:12px">&#x1F517; 2차시의 <strong>역원 찾기</strong>와 같은 구조!</div>
+        <div style="text-align:center;margin-top:12px">
+          <button class="btn btn-primary" id="step5Next" disabled onclick="goStep(6)">키 카드 보기 &#x2192;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6: Key Card -->
+    <div class="cardflow-card" id="cf4-card-6">
+      <div class="card">
+        <h4>&#x1F389; 나의 RSA 키 카드</h4>
+        <div class="rsa-keys" id="keyCardDisplay"></div>
+        <div class="info-box" style="margin-top:12px">
+          <strong>공개키</strong>는 누구에게나 알려줘도 됩니다.<br>
+          <strong>비밀키</strong>는 나만 알고 있어야 합니다!
+        </div>
+      </div>
+      <button class="btn-complete" id="cf4-complete-btn" onclick="SM.complete(4)">다음: 암복호화 체험 &#x2192;</button>
+    </div>
+  </div>
+</section>
+
+<!-- SEC 5: RSA Encrypt/Decrypt (Split) -->
+<section id="sec-5" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-deepen">D 실습</span>
+    <h2>RSA 암호화 &amp; 복호화</h2>
+  </div>
+  <div class="card" style="background:linear-gradient(135deg, #eff6ff, #faf5ff); border:2px solid #93c5fd;margin-bottom:20px">
+    <h4>&#x1F4E8; 미션: 비밀 편지 보내기</h4>
+    <p>여러분은 <strong>Alice</strong>입니다. 친구 <strong>Bob</strong>에게 비밀 글자를 보내려 합니다.</p>
+    <p>Bob이 자신의 <strong>공개키 (e, n)</strong>을 여러분에게 알려줬습니다.</p>
+    <div class="info-box" style="margin-top:12px">
+      <strong>작전 순서</strong>:<br>
+      &#x2460; Alice가 Bob의 공개키로 글자를 <strong>잠근다</strong> (암호화)<br>
+      &#x2461; 잠긴 글자를 Bob에게 보낸다 (누가 봐도 원래 글자를 모른다!)<br>
+      &#x2462; Bob만이 자신의 비밀키로 <strong>연다</strong> (복호화)
+    </div>
+    <p style="margin-top:12px;color:var(--ink2)">&#x26A0;&#xFE0F; 비밀키가 없는 사람은? n을 소인수분해해야 하는데... 그건 엄청나게 어렵죠!</p>
+  </div>
+  <div class="layout-split">
+    <div class="split-left">
+      <h4 style="font-size:14px;margin-bottom:8px;color:var(--theme)">&#x1F511; 나의 RSA 키</h4>
+      <div class="rsa-keys" id="sideKeyCard" style="grid-template-columns:1fr;gap:10px"></div>
+      <div class="info-box" style="margin-top:12px;font-size:13px">
+        <strong>암호화</strong>: C = M<sup>e</sup> mod n<br>
+        <strong>복호화</strong>: M = C<sup>d</sup> mod n
+      </div>
+    </div>
+    <div class="split-right">
+      <div class="card">
+        <h4>&#x1F4E4; Step &#x2460;: Alice가 글자를 잠근다 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+        <p>암호화할 글자를 선택하세요 (숫자 &lt; n만 가능):</p>
+        <div class="letter-grid" id="encLetterGrid"></div>
+        <div id="encCalcArea" style="display:none">
+          <div id="encSteps" style="margin:12px 0"></div>
+          <div id="encResult"></div>
+        </div>
+      </div>
+      <div class="card" id="decCard" style="display:none">
+        <h4>&#x1F4E5; Step &#x2462;: Bob이 잠금을 연다 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+        <div id="decCalcArea">
+          <p>암호문 C = <strong id="decC" class="mono"></strong>를 비밀키로 복호화:</p>
+          <p class="mono" style="margin:8px 0">C<sup>d</sup> mod n = <span id="decFormula"></span></p>
+          <div id="decSteps" style="margin:12px 0"></div>
+          <div id="decResult"></div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="sec5CompleteBtn" style="width:100%;display:none" onclick="SM.complete(5)">다음 섹션으로 &#x2192;</button>
+    </div>
+  </div>
+</section>
+
+<!-- SEC 6: Challenge (Mission) -->
+<section id="sec-6" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-challenge">C 도전</span>
+    <h2>경계를 넘어서</h2>
+  </div>
+  <div class="layout-mission">
+    <div class="mission-card">
+      <h4>&#x1F512; C-1. 나만의 RSA로 암호화하기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+      <p>p=5, q=7으로 RSA를 만들어 보세요.</p>
+      <table>
+        <tr><th>항목</th><th>계산</th><th>값</th></tr>
+        <tr><td>n</td><td>5 &times; 7</td><td><input class="inline-input" data-save="c1_n" data-answer="35" type="text" placeholder="?"></td></tr>
+        <tr><td>&phi;(n)</td><td>(5&minus;1)(7&minus;1)</td><td><input class="inline-input" data-save="c1_phi" data-answer="24" type="text" placeholder="?"></td></tr>
+        <tr><td>e</td><td>&phi;와 서로소</td><td><input class="inline-input" data-save="c1_e" type="text" placeholder="?"></td></tr>
+        <tr><td>d</td><td>e&times;d &equiv; 1 (mod &phi;)</td><td><input class="inline-input" data-save="c1_d" type="text" placeholder="?"></td></tr>
+      </table>
+      <div style="text-align:right;margin-top:8px">
+        <button class="btn btn-sm btn-primary" onclick="checkC1()">확인</button>
+      </div>
+      <div id="c1Result"></div>
+    </div>
+    <div class="mission-card">
+      <h4>&#x1F916; C-2. 양자컴퓨터의 위협 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">&#x26AA; 선택</span></h4>
+      <p>만약 소인수분해를 순식간에 해내는 컴퓨터가 있다면, RSA는 어떻게 될까요?</p>
+      <textarea rows="3" placeholder="나의 생각:"></textarea>
+      <div class="info-box" style="margin-top:12px">
+        <strong>양자컴퓨터</strong>의 "쇼어 알고리즘"은 소인수분해를 빠르게 풀 수 있습니다.<br>
+        이에 대비한 <strong>양자내성 암호</strong>가 연구 중입니다!
+      </div>
+    </div>
+    <button class="btn btn-complete" onclick="SM.complete(6)" style="display:block">다음 섹션으로 &#x2192;</button>
+  </div>
+</section>
+
+<!-- SEC 7: Reflect (Zone) -->
+<section id="sec-7" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-reflect">R 성찰</span>
+    <h2>4차시를 돌아보며</h2>
+  </div>
+  <div class="layout-zone">
+    <div class="card">
+      <h4><span class="num">1</span> 여정 요약 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+      <div style="background:var(--bg);border-radius:10px;padding:18px;font-size:14px;line-height:2.2">
+        &#x1F522; 소수 사냥 &rarr; &#x23F1; 곱하기는 쉽고 분해는 어렵다 &rarr; &#x1F511; RSA 키 만들기 &rarr; &#x1F512; 암복호화<br>
+        <strong>핵심</strong>: <input class="inline-input wide" data-save="r_key" type="text" placeholder="???">의 비대칭성이 현대 암호의 기반
+      </div>
+    </div>
+    <div class="card">
+      <h4><span class="num">2</span> 발견 노트 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+      <p>오늘 가장 인상적이었던 것:</p>
+      <textarea rows="3" placeholder=""></textarea>
+    </div>
+    <button class="btn btn-complete" onclick="SM.complete(7)" style="display:block">다음 섹션으로 &#x2192;</button>
+  </div>
+</section>
+
+<!-- SEC 8: Course Review (Split) -->
+<section id="sec-8" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-reflect">R 전체 리뷰</span>
+    <h2>4차시 여정을 한눈에</h2>
+  </div>
+  <div class="layout-split">
+    <div class="split-left">
+      <h4 style="font-size:14px;margin-bottom:8px;color:var(--theme)">&#x1F4CB; 4차시 요약</h4>
+      <table style="font-size:12px">
+        <tr><th>차시</th><th>핵심 개념</th></tr>
+        <tr><td style="color:#6366f1;font-weight:700">1차시</td><td>mod 연산, ISBN, Luhn</td></tr>
+        <tr><td style="color:#a855f7;font-weight:700">2차시</td><td>시저, 곱셈, 아핀 암호</td></tr>
+        <tr><td style="color:#f43f5e;font-weight:700">3차시</td><td>빈도 분석, 암호 해독</td></tr>
+        <tr><td style="color:var(--theme);font-weight:700">4차시</td><td>소수, RSA 공개키 암호</td></tr>
+      </table>
+      <div class="info-box" style="margin-top:12px;font-size:13px">
+        1차시의 mod &rarr; 2차시의 서로소 &rarr; 3차시의 빈도 약점 &rarr; 4차시의 RSA<br>
+        모든 것이 <strong>연결</strong>되어 있습니다!
+      </div>
+    </div>
+    <div class="split-right">
+      <div class="card">
+        <h4>연결 발견 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">&#x1F535; 필수</span></h4>
+        <p>4차시 동안 배운 개념들이 어떻게 연결되어 있나요?</p>
+        <textarea rows="3" placeholder="예: mod 연산은 1차시에서 체크디짓에 사용되었고, 2차시에서는..."></textarea>
+      </div>
+      <div class="card">
+        <h4>일상 속 수학 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">&#x26AA; 선택</span></h4>
+        <p>우리가 배운 수학이 실생활에서 사용되는 예시를 찾아보세요:</p>
+        <textarea rows="3" placeholder="예: 인터넷 쇼핑을 할 때 HTTPS 자물쇠 아이콘은..."></textarea>
+      </div>
+      <div class="card">
+        <h4>자기 평가 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">&#x26AA; 선택</span></h4>
+        <table class="assess-table">
+          <tr><th>항목</th><th>&#x1F60E;</th><th>&#x1F60A;</th><th>&#x1F914;</th></tr>
+          <tr><td style="text-align:left">소수의 성질 이해</td><td><input type="radio" name="a1" value="3"></td><td><input type="radio" name="a1" value="2"></td><td><input type="radio" name="a1" value="1"></td></tr>
+          <tr><td style="text-align:left">RSA 키 생성</td><td><input type="radio" name="a2" value="3"></td><td><input type="radio" name="a2" value="2"></td><td><input type="radio" name="a2" value="1"></td></tr>
+          <tr><td style="text-align:left">암복호화 과정</td><td><input type="radio" name="a3" value="3"></td><td><input type="radio" name="a3" value="2"></td><td><input type="radio" name="a3" value="1"></td></tr>
+          <tr><td style="text-align:left">4차시 연결 이해</td><td><input type="radio" name="a4" value="3"></td><td><input type="radio" name="a4" value="2"></td><td><input type="radio" name="a4" value="1"></td></tr>
+        </table>
+      </div>
+      <button class="btn btn-primary" onclick="SM.complete(8)" style="width:100%">마지막: 과정 완료 &#x2192;</button>
+    </div>
+  </div>
+</section>
+
+<!-- SEC 9: Course Complete (Mission) -->
+<section id="sec-9" class="app-section">
+  <div class="section-header">
+    <span class="section-badge badge-complete">&#x1F3C6; 완료</span>
+    <h2>전체 과정 완료!</h2>
+  </div>
+  <div class="layout-mission">
+    <div class="mission-card" style="text-align:center;padding:32px">
+      <div style="font-size:64px">&#x1F389;</div>
+      <h3 style="font-size:24px;color:var(--theme);margin-top:8px">축하합니다!</h3>
+      <p style="color:var(--ink2);margin-top:8px">"우리들의 암호 이야기" 4차시 과정을 모두 완료했습니다!</p>
+      <div style="font-size:28px;font-weight:800;color:var(--ok);margin:16px 0">
+        &#x2B50; 총 XP: <span id="finalXP">0</span>
+      </div>
+    </div>
+    <div class="mission-card">
+      <h4>&#x1F4DC; 학습 여정 타임라인</h4>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0;text-align:center">
+        <div style="padding:16px 8px;background:#eef2ff;border-radius:12px;border-top:4px solid #6366f1">
+          <div style="font-size:24px">&#x1F50D;</div>
+          <div style="font-weight:800;font-size:13px;margin-top:4px">1차시</div>
+          <div style="font-size:11px;color:var(--ink3)">mod &middot; 체크디짓</div>
+        </div>
+        <div style="padding:16px 8px;background:#faf5ff;border-radius:12px;border-top:4px solid #a855f7">
+          <div style="font-size:24px">&#x1F512;</div>
+          <div style="font-weight:800;font-size:13px;margin-top:4px">2차시</div>
+          <div style="font-size:11px;color:var(--ink3)">시저 &middot; 아핀</div>
+        </div>
+        <div style="padding:16px 8px;background:#fff1f2;border-radius:12px;border-top:4px solid #f43f5e">
+          <div style="font-size:24px">&#x1F4CA;</div>
+          <div style="font-weight:800;font-size:13px;margin-top:4px">3차시</div>
+          <div style="font-size:11px;color:var(--ink3)">빈도 &middot; 해독</div>
+        </div>
+        <div style="padding:16px 8px;background:var(--theme-light);border-radius:12px;border-top:4px solid var(--theme)">
+          <div style="font-size:24px">&#x1F9EA;</div>
+          <div style="font-weight:800;font-size:13px;margin-top:4px">4차시</div>
+          <div style="font-size:11px;color:var(--ink3)">소수 &middot; RSA</div>
+        </div>
+      </div>
+    </div>
+    <div class="mission-card">
+      <h4>&#x2B50; 마지막 한마디</h4>
+      <textarea rows="3" placeholder="이 수업을 통해 느낀 점, 더 알고 싶은 것을 자유롭게 써보세요"></textarea>
+    </div>
+    <div style="text-align:center;margin-top:20px">
+      <a href="index.html" class="btn btn-primary" style="text-decoration:none">&#x1F3E0; 메인으로 돌아가기</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+// ================================================================
+// CONFIG
+// ================================================================
+const SECTION_COUNT=9;
+const SECTION_TITLES=['워밍업','소수 사냥','곱하기vs분해','RSA 키 생성','RSA 암복호화','도전','성찰','전체 리뷰','과정 완료'];
+const SECTION_XP=[5,20,25,40,30,50,15,15,20];
+const RSA_PRIMES=[3,5,7,11,13];
+const MULT_PROBS=[{a:7,b:13,ans:91},{a:23,b:41,ans:943},{a:61,b:89,ans:5429}];
+const FACT_PROBS=[{n:77,f:[7,11]},{n:899,f:[29,31]},{n:1517,f:[37,41]}];
+
+// ================================================================
+// MATH FUNCTIONS
+// ================================================================
+function isPrime(n){if(n<2)return false;for(let i=2;i*i<=n;i++)if(n%i===0)return false;return true;}
+function gcd(a,b){return b===0?a:gcd(b,a%b);}
+function modPow(base,exp,mod){let result=1;base=base%mod;while(exp>0){if(exp%2===1)result=(result*base)%mod;exp=Math.floor(exp/2);base=(base*base)%mod;}return result;}
+function findD(e,phi){for(let d=2;d<phi*2;d++){if((e*d)%phi===1)return d;}return null;}
+function getECandidates(phi){const r=[];for(let e=2;e<phi;e++){if(gcd(e,phi)===1)r.push(e);}return r.slice(0,12);}
+
+// RSA State
+const RSA={p:null,q:null,n:null,phi:null,e:null,d:null,encrypted:null,message:null};
+
+// ================================================================
+// XP SYSTEM
+// ================================================================
+const XP={
+  total:0,el:null,toastEl:null,
+  init(){this.el=document.getElementById('xpDisplay');this.toastEl=document.getElementById('xpToast');const s=localStorage.getItem('session4_xp');if(s)this.total=parseInt(s)||0;this.render();},
+  add(n){this.total+=n;localStorage.setItem('session4_xp',this.total);this.render();this.toast('+'+n+' XP');},
+  render(){if(this.el)this.el.textContent=this.total;},
+  toast(msg){if(!this.toastEl)return;this.toastEl.textContent=msg;this.toastEl.classList.add('show');setTimeout(()=>this.toastEl.classList.remove('show'),2200);}
+};
+
+// ================================================================
+// SECTION MANAGER
+// ================================================================
+const SM={
+  current:1,unlocked:[1],completed:[],
+  init(){const s=localStorage.getItem('session4_sm');if(s){try{const d=JSON.parse(s);this.current=d.current||1;this.unlocked=d.unlocked||[1];this.completed=d.completed||[];}catch(e){}}this.buildDots();this.show(this.current);},
+  save(){localStorage.setItem('session4_sm',JSON.stringify({current:this.current,unlocked:this.unlocked,completed:this.completed}));},
+  buildDots(){const c=document.getElementById('navDots');c.innerHTML='';for(let i=1;i<=SECTION_COUNT;i++){const d=document.createElement('div');d.className='nav-dot';d.textContent=i;d.title=SECTION_TITLES[i-1];d.dataset.sec=i;d.addEventListener('click',()=>this.dotClick(i));c.appendChild(d);}this.updateDots();},
+  updateDots(){document.querySelectorAll('.nav-dot').forEach(d=>{const i=parseInt(d.dataset.sec);d.className='nav-dot';if(this.completed.includes(i))d.classList.add('done');else if(i===this.current)d.classList.add('active');else if(this.unlocked.includes(i))d.classList.add('unlocked');else d.classList.add('locked');});document.getElementById('progressFill').style.width=Math.round((this.completed.length/SECTION_COUNT)*100)+'%';},
+  dotClick(i){if(this.unlocked.includes(i)||this.completed.includes(i))this.show(i);},
+  show(i){document.querySelectorAll('.app-section').forEach(s=>s.classList.remove('active'));const sec=document.getElementById('sec-'+i);if(sec){sec.classList.add('active');this.current=i;this.updateDots();this.save();window.scrollTo({top:0,behavior:'smooth'});}if(i===2)initSieve();if(i===3)initMultiply();if(i===4)initStep1();if(i===5)initEncryptUI();if(i===9){document.getElementById('finalXP').textContent=XP.total;fireConfetti();}},
+  complete(i){if(!this.completed.includes(i)){this.completed.push(i);XP.add(SECTION_XP[i-1]);}const next=i+1;if(next<=SECTION_COUNT){if(!this.unlocked.includes(next))this.unlocked.push(next);this.show(next);}this.save();this.updateDots();}
+};
+
+function createCardFlow(prefix,totalSteps){
+  return{current:1,maxUnlocked:1,
+    goTo(step){if(step>this.maxUnlocked)return;this.current=step;
+      document.querySelectorAll('#'+prefix+'-steps .cardflow-dot').forEach(d=>{const s=parseInt(d.dataset.step);d.className='cardflow-dot';if(s<step)d.classList.add('done');else if(s===step)d.classList.add('active');else if(s<=this.maxUnlocked)d.classList.add('done');else d.classList.add('locked');});
+      for(let s=1;s<=totalSteps;s++){const card=document.getElementById(prefix+'-card-'+s);if(card)card.classList.toggle('active',s===step);}
+      if(this.maxUnlocked>=totalSteps){const btn=document.getElementById(prefix+'-complete-btn');if(btn)btn.style.display='block';}},
+    unlock(step){if(step>this.maxUnlocked)this.maxUnlocked=step;this.goTo(step);}};
+}
+const CF2=createCardFlow('cf2',3);
+const CF4=createCardFlow('cf4',6);
+
+// ================================================================
+// AUTOSAVE
+// ================================================================
+const AutoSave={
+  key:'session4_unified_data',timer:null,
+  init(){this.restore();document.addEventListener('input',e=>{if(e.target.matches('[data-save]')||e.target.matches('textarea')||e.target.matches('input[type=text]'))this.scheduleSave();});document.addEventListener('change',e=>{if(e.target.matches('input[type=radio]'))this.scheduleSave();});},
+  scheduleSave(){clearTimeout(this.timer);this.timer=setTimeout(()=>this.save(),500);},
+  save(){const data={};document.querySelectorAll('[data-save]').forEach(el=>{data[el.dataset.save]=el.value;});document.querySelectorAll('textarea:not([data-save])').forEach((el,i)=>{data['_ta_'+i]=el.value;});document.querySelectorAll('input[type=radio]:checked').forEach(el=>{data['_radio_'+el.name]=el.value;});localStorage.setItem(this.key,JSON.stringify(data));},
+  restore(){const raw=localStorage.getItem(this.key);if(!raw)return;try{const data=JSON.parse(raw);document.querySelectorAll('[data-save]').forEach(el=>{if(data[el.dataset.save]!==undefined)el.value=data[el.dataset.save];});document.querySelectorAll('textarea:not([data-save])').forEach((el,i)=>{if(data['_ta_'+i]!==undefined)el.value=data['_ta_'+i];});document.querySelectorAll('input[type=radio]').forEach(el=>{if(data['_radio_'+el.name]===el.value)el.checked=true;});}catch(e){}}
+};
+
+// ================================================================
+// SIEVE (Section 2)
+// ================================================================
+let sieveState=new Array(101).fill('none');
+let sieveCompleted=0;
+const sieveOrder=[2,3,5,7];
+const sieveColorClass={2:'elim-2',3:'elim-3',5:'elim-5',7:'elim-7'};
+function initSieve(){
+  const grid=document.getElementById('sieveGrid');if(!grid)return;
+  grid.innerHTML='';sieveState=new Array(101).fill('none');sieveCompleted=0;
+  sieveState[1]='one';
+  for(let i=1;i<=100;i++){
+    const cell=document.createElement('div');cell.className='sieve-cell'+(i===1?' one':'');
+    cell.textContent=i;cell.id='sieve-'+i;grid.appendChild(cell);
+  }
+  // Reset buttons
+  sieveOrder.forEach((p,idx)=>{const btn=document.getElementById('sieveBtn'+p);if(btn){btn.disabled=idx!==0;btn.style.opacity=idx===0?'1':'0.5';}});
+  document.getElementById('sieveStepCount').textContent='';
+  document.getElementById('sieveResult').innerHTML='';
+  updatePrimeCount();
+}
+function sieveStep(p){
+  const btn=document.getElementById('sieveBtn'+p);if(btn){btn.disabled=true;btn.style.opacity='0.5';}
+  // Collect cells to eliminate
+  const toElim=[];
+  for(let i=p*2;i<=100;i+=p){
+    if(sieveState[i]==='none'){toElim.push(i);sieveState[i]='elim-'+p;}
+  }
+  // Mark p itself as prime
+  sieveState[p]='prime';
+  const pcell=document.getElementById('sieve-'+p);if(pcell)pcell.className='sieve-cell prime';
+  // Animate elimination 60ms apart
+  toElim.forEach((num,idx)=>{
+    setTimeout(()=>{
+      const cell=document.getElementById('sieve-'+num);
+      if(cell){cell.className='sieve-cell '+sieveColorClass[p]+' sieve-pop';setTimeout(()=>cell.classList.remove('sieve-pop'),200);}
+      if(idx===toElim.length-1){
+        // Show step count
+        document.getElementById('sieveStepCount').textContent=p+'의 배수: '+toElim.length+'개 '+(sieveCompleted===0?'제거':'새로 제거');
+        sieveCompleted++;
+        // Enable next button
+        if(sieveCompleted<4){const nextP=sieveOrder[sieveCompleted];const nextBtn=document.getElementById('sieveBtn'+nextP);if(nextBtn){nextBtn.disabled=false;nextBtn.style.opacity='1';}}
+        // All 4 done?
+        if(sieveCompleted===4){finalizeSieve();}
+        updatePrimeCount();
+      }
+    },idx*60);
+  });
+  if(toElim.length===0){
+    document.getElementById('sieveStepCount').textContent=p+'의 배수: 0개 새로 제거';
+    sieveCompleted++;
+    if(sieveCompleted<4){const nextP=sieveOrder[sieveCompleted];const nextBtn=document.getElementById('sieveBtn'+nextP);if(nextBtn){nextBtn.disabled=false;nextBtn.style.opacity='1';}}
+    if(sieveCompleted===4){finalizeSieve();}
+    updatePrimeCount();
+  }
+}
+function finalizeSieve(){
+  // Convert all eliminated cells to gray
+  for(let i=2;i<=100;i++){
+    if(sieveState[i].startsWith('elim-')){sieveState[i]='eliminated-final';const c=document.getElementById('sieve-'+i);if(c)c.className='sieve-cell eliminated-final';}
+  }
+  // Highlight remaining primes
+  for(let i=2;i<=100;i++){
+    if(sieveState[i]==='none'){sieveState[i]='prime';const c=document.getElementById('sieve-'+i);if(c)c.className='sieve-cell prime';}
+  }
+  updatePrimeCount();
+  document.getElementById('sieveResult').innerHTML='<div class="success-box">&#x1F389; 25개 소수를 모두 찾았습니다!</div>';
+}
+function updatePrimeCount(){
+  const count=sieveState.filter(s=>s==='prime').length;
+  document.getElementById('primeCount').textContent=count;
+}
+
+// ================================================================
+// MULTIPLY vs FACTOR (Section 3)
+// ================================================================
+let multIdx=0,multTimes=[],multStart=null,multTimer=null;
+let factIdx=0,factTimes=[],factStart=null,factTimer=null;
+
+function initMultiply(){multIdx=0;multTimes=[];renderMultProb();}
+function renderMultProb(){
+  const c=document.getElementById('multiplyProblems');if(!c)return;
+  let html='';
+  MULT_PROBS.forEach((p,i)=>{
+    if(i<multIdx){html+=`<div style="padding:8px;margin:4px 0;background:var(--ok-light);border-radius:8px;font-family:var(--mono)">&#x2705; ${p.a} &times; ${p.b} = ${p.ans} (${multTimes[i]}s)</div>`;}
+    else if(i===multIdx){html+=`<div style="padding:12px;margin:4px 0;background:var(--theme-light);border-radius:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="mono" style="font-weight:700">${p.a} &times; ${p.b} =</span><input id="mult-inp" type="number" style="width:80px;padding:8px;border:2px solid var(--border);border-radius:8px;font-weight:700;font-family:var(--mono)" onkeydown="if(event.key==='Enter')checkMult()"><button class="btn btn-sm btn-primary" onclick="checkMult()">확인</button><span class="timer" id="mult-timer">0.0s</span></div>`;}
+    else{html+=`<div style="padding:8px;margin:4px 0;opacity:.4;font-family:var(--mono)">${p.a} &times; ${p.b} = ?</div>`;}
+  });
+  c.innerHTML=html;
+  if(multIdx<3){multStart=performance.now();clearInterval(multTimer);multTimer=setInterval(()=>{const el=document.getElementById('mult-timer');if(el)el.textContent=((performance.now()-multStart)/1000).toFixed(1)+'s';},100);}
+}
+function checkMult(){
+  const val=parseInt(document.getElementById('mult-inp').value);
+  if(val===MULT_PROBS[multIdx].ans){clearInterval(multTimer);multTimes.push(((performance.now()-multStart)/1000).toFixed(1));multIdx++;
+    if(multIdx>=3){document.getElementById('factorSection').style.display='block';initFactor();}renderMultProb();}
+  else{const inp=document.getElementById('mult-inp');inp.style.borderColor='var(--err)';setTimeout(()=>{inp.style.borderColor='var(--border)';inp.value='';},500);}
+}
+function initFactor(){factIdx=0;factTimes=[];renderFactProb();}
+function renderFactProb(){
+  const c=document.getElementById('factorProblems');if(!c)return;
+  let html='';
+  FACT_PROBS.forEach((p,i)=>{
+    if(i<factIdx){html+=`<div style="padding:8px;margin:4px 0;background:var(--ok-light);border-radius:8px;font-family:var(--mono)">&#x2705; ${p.n} = ${p.f[0]} &times; ${p.f[1]} (${factTimes[i]}s)</div>`;}
+    else if(i===factIdx){html+=`<div style="padding:12px;margin:4px 0;background:var(--err-light);border-radius:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="mono" style="font-weight:700">${p.n} =</span><input id="fact-a" type="number" style="width:60px;padding:8px;border:2px solid var(--border);border-radius:8px;font-weight:700" placeholder="?">&times;<input id="fact-b" type="number" style="width:60px;padding:8px;border:2px solid var(--border);border-radius:8px;font-weight:700" placeholder="?" onkeydown="if(event.key==='Enter')checkFact()"><button class="btn btn-sm btn-primary" onclick="checkFact()">확인</button><span class="timer" id="fact-timer">0.0s</span></div>`;}
+    else{html+=`<div style="padding:8px;margin:4px 0;opacity:.4;font-family:var(--mono)">${p.n} = ? &times; ?</div>`;}
+  });
+  c.innerHTML=html;
+  if(factIdx<3){factStart=performance.now();clearInterval(factTimer);factTimer=setInterval(()=>{const el=document.getElementById('fact-timer');if(el)el.textContent=((performance.now()-factStart)/1000).toFixed(1)+'s';},100);}
+}
+function checkFact(){
+  const a=parseInt(document.getElementById('fact-a').value),b=parseInt(document.getElementById('fact-b').value);
+  const p=FACT_PROBS[factIdx];
+  if((a===p.f[0]&&b===p.f[1])||(a===p.f[1]&&b===p.f[0])){clearInterval(factTimer);factTimes.push(((performance.now()-factStart)/1000).toFixed(1));factIdx++;
+    if(factIdx>=3){showCompare();}renderFactProb();}
+  else{document.getElementById('fact-a').style.borderColor='var(--err)';document.getElementById('fact-b').style.borderColor='var(--err)';setTimeout(()=>{document.getElementById('fact-a').style.borderColor='var(--border)';document.getElementById('fact-b').style.borderColor='var(--border)';},500);}
+}
+function showCompare(){
+  document.getElementById('compareSection').style.display='block';
+  const c=document.getElementById('compareChart');
+  const multAvg=(multTimes.reduce((a,b)=>a+Number(b),0)/3).toFixed(1);
+  const factAvg=(factTimes.reduce((a,b)=>a+Number(b),0)/3).toFixed(1);
+  const allTimes=[...multTimes.map(Number),...factTimes.map(Number)];
+  const maxT=Math.max(...allTimes,0.1);
+  let html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0">';
+  // Multiply bars
+  html+='<div><div style="text-align:center;font-weight:700;color:var(--theme);margin-bottom:8px">&#x2705; 곱하기</div>';
+  MULT_PROBS.forEach((p,i)=>{const h=Math.max((Number(multTimes[i])/maxT)*80,10);html+=`<div style="text-align:center;margin:6px 0"><div style="font-size:11px;color:var(--ink3)">${p.a}&times;${p.b}</div><div style="background:var(--theme);height:${h}px;border-radius:4px;margin:4px auto;width:36px;display:flex;align-items:end;justify-content:center"><span style="font-size:10px;color:#fff;padding:2px">${multTimes[i]}s</span></div></div>`;});
+  html+=`<div style="text-align:center;font-size:13px;margin-top:8px;padding:6px;background:var(--theme-light);border-radius:8px">평균: <strong>${multAvg}s</strong></div></div>`;
+  // Factor bars
+  html+='<div><div style="text-align:center;font-weight:700;color:var(--err);margin-bottom:8px">&#x1F9E9; 분해</div>';
+  FACT_PROBS.forEach((p,i)=>{const h=Math.max((Number(factTimes[i])/maxT)*80,10);html+=`<div style="text-align:center;margin:6px 0"><div style="font-size:11px;color:var(--ink3)">${p.n}</div><div style="background:var(--err);height:${h}px;border-radius:4px;margin:4px auto;width:36px;display:flex;align-items:end;justify-content:center"><span style="font-size:10px;color:#fff;padding:2px">${factTimes[i]}s</span></div></div>`;});
+  html+=`<div style="text-align:center;font-size:13px;margin-top:8px;padding:6px;background:var(--err-light);border-radius:8px">평균: <strong>${factAvg}s</strong></div></div>`;
+  html+='</div>';
+  html+=`<p style="text-align:center;font-size:13px;margin-top:8px">곱하기 평균: <strong>${multAvg}s</strong> / 분해 평균: <strong>${factAvg}s</strong></p>`;
+  c.innerHTML=html;
+}
+
+// ================================================================
+// RSA STEP 1: Choose p, q
+// ================================================================
+function initStep1(){
+  const btns=document.getElementById('primeSelectBtns');if(!btns)return;
+  btns.innerHTML=RSA_PRIMES.map(p=>`<button class="prime-btn" id="pbtn-${p}" onclick="selectPrime(${p})">${p}</button>`).join('');
+  document.getElementById('pDisplay').textContent=RSA.p||'?';
+  document.getElementById('qDisplay').textContent=RSA.q||'?';
+}
+function selectPrime(val){
+  if(!RSA.p){RSA.p=val;}else if(!RSA.q){if(val===RSA.p){XP.toast('p와 q는 달라야 합니다!');return;}RSA.q=val;}else{RSA.p=val;RSA.q=null;}
+  document.getElementById('pDisplay').textContent=RSA.p||'?';
+  document.getElementById('qDisplay').textContent=RSA.q||'?';
+  document.querySelectorAll('.prime-btn').forEach(b=>{b.className='prime-btn';if(parseInt(b.textContent)===RSA.p||parseInt(b.textContent)===RSA.q)b.classList.add('selected');});
+  if(RSA.p&&RSA.q)document.getElementById('step1Next').disabled=false;
+}
+function goStep(s){CF4.unlock(s);
+  if(s===2){document.getElementById('s2p').textContent=RSA.p;document.getElementById('s2q').textContent=RSA.q;}
+  if(s===3){document.getElementById('s3Result').innerHTML='';document.getElementById('step3Next').disabled=true;}
+  if(s===4){document.getElementById('s4phi').textContent=RSA.phi;const cands=getECandidates(RSA.phi);document.getElementById('eButtons').innerHTML=cands.map(e=>`<button class="prime-btn" style="font-size:14px;min-width:40px;padding:8px 12px" onclick="selectE(${e})" id="ebtn-${e}">${e}</button>`).join('');document.getElementById('eDisplay').textContent=RSA.e||'?';}
+  if(s===5){document.getElementById('s5e').textContent=RSA.e;document.getElementById('s5phi').textContent=RSA.phi;document.getElementById('trialHistory').innerHTML='';document.getElementById('s5Result').innerHTML='';}
+  if(s===6){showKeyCard();}
+}
+
+// Step 2
+function checkStep2(){
+  const val=parseInt(document.getElementById('s2Answer').value);const correct=RSA.p*RSA.q;
+  if(val===correct){RSA.n=correct;document.getElementById('s2Result').innerHTML='<div class="success-box">&#x2705; n = '+correct+'</div>';document.getElementById('step2Next').disabled=false;XP.toast('정답!');}
+  else{document.getElementById('s2Answer').style.borderBottomColor='var(--err)';setTimeout(()=>document.getElementById('s2Answer').style.borderBottomColor='var(--border)',500);}
+}
+
+// Step 3
+function checkStep3(){
+  const a=parseInt(document.getElementById('s3a').value),b=parseInt(document.getElementById('s3b').value),ans=parseInt(document.getElementById('s3Answer').value);
+  const ca=RSA.p-1,cb=RSA.q-1,cphi=ca*cb;let ok=true;
+  [['s3a',ca],['s3b',cb],['s3Answer',cphi]].forEach(([id,exp])=>{const el=document.getElementById(id);if(parseInt(el.value)===exp){el.classList.add('correct');el.classList.remove('incorrect');}else{el.classList.add('incorrect');el.classList.remove('correct');ok=false;}});
+  if(ok){RSA.phi=cphi;document.getElementById('s3Result').innerHTML='<div class="success-box">&#x2705; &phi;('+RSA.n+') = '+cphi+'</div>';document.getElementById('step3Next').disabled=false;XP.toast('정답!');}
+}
+
+// Step 4
+function selectE(val){
+  RSA.e=val;document.getElementById('eDisplay').textContent=val;
+  document.querySelectorAll('#eButtons .prime-btn').forEach(b=>b.classList.remove('selected'));
+  const btn=document.getElementById('ebtn-'+val);if(btn)btn.classList.add('selected');
+  document.getElementById('step4Next').disabled=false;
+}
+
+// Step 5
+function tryDValue(){
+  const d=parseInt(document.getElementById('s5Input').value);if(!d||d<1)return;
+  const product=RSA.e*d;const rem=product%RSA.phi;const found=rem===1;
+  const hist=document.getElementById('trialHistory');
+  const row=document.createElement('div');row.className='trial-row '+(found?'ok':'fail');
+  row.innerHTML=(found?'&#x2705;':'&#x274C;')+` d=${d}: ${RSA.e}&times;${d}=${product}, ${product} mod ${RSA.phi} = ${rem}`;
+  hist.prepend(row);
+  if(found){RSA.d=d;document.getElementById('s5Result').innerHTML='<div class="success-box" style="font-size:18px;text-align:center">&#x1F389; 비밀키 d = '+d+' 발견!</div>';document.getElementById('step5Next').disabled=false;document.getElementById('s5Input').disabled=true;XP.toast('비밀키 발견!');}
+  else{document.getElementById('s5Input').value='';document.getElementById('s5Input').focus();
+    // Hint after many attempts
+    const attempts=hist.children.length;
+    if(attempts>=8&&!RSA.d){const correctD=findD(RSA.e,RSA.phi);XP.toast('힌트: d='+correctD+'를 시도해보세요');}}
+}
+
+// Step 6: Key Card
+function showKeyCard(){
+  const html=`<div class="key-card pub"><div class="kc-icon">&#x1F310;</div><div class="kc-label">공개키</div><div class="kc-value">e = ${RSA.e}</div><div class="kc-value">n = ${RSA.n}</div></div><div class="key-card priv"><div class="kc-icon">&#x1F512;</div><div class="kc-label">비밀키</div><div class="kc-value">d = ${RSA.d}</div><div class="kc-value">n = ${RSA.n}</div></div>`;
+  document.getElementById('keyCardDisplay').innerHTML=html;
+  CF4.unlock(6);document.getElementById('cf4-complete-btn').style.display='block';
+}
+
+// ================================================================
+// RSA ENCRYPT/DECRYPT (Section 5)
+// ================================================================
+function initEncryptUI(){
+  if(!RSA.n)return;
+  // Side key card
+  document.getElementById('sideKeyCard').innerHTML=`<div class="key-card pub" style="padding:12px"><div style="font-size:13px;font-weight:700">&#x1F310; 공개키</div><div class="mono" style="font-size:16px;font-weight:800">e=${RSA.e}, n=${RSA.n}</div></div><div class="key-card priv" style="padding:12px"><div style="font-size:13px;font-weight:700">&#x1F512; 비밀키</div><div class="mono" style="font-size:16px;font-weight:800">d=${RSA.d}, n=${RSA.n}</div></div>`;
+  // Letter grid
+  const grid=document.getElementById('encLetterGrid');grid.innerHTML='';
+  for(let i=0;i<26;i++){
+    const letter=String.fromCharCode(65+i);const disabled=i>=RSA.n?'disabled':'';
+    const btn=document.createElement('button');btn.className='letter-btn';btn.innerHTML=letter+'<br><span style="font-size:10px;color:var(--ink3)">'+i+'</span>';
+    if(i>=RSA.n)btn.disabled=true;
+    btn.onclick=()=>selectEncLetter(i);
+    grid.appendChild(btn);
+  }
+}
+function selectEncLetter(m){
+  RSA.message=m;
+  document.querySelectorAll('.letter-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.letter-btn')[m].classList.add('selected');
+  const area=document.getElementById('encCalcArea');area.style.display='block';
+  const letter=String.fromCharCode(65+m);
+  // Calculate M^e mod n step by step
+  const e=RSA.e,n=RSA.n;
+  let html=`<p>글자 <strong>${letter}</strong> (=${m})를 암호화:</p><p class="mono" style="margin:8px 0">${m}<sup>${e}</sup> mod ${n} = ?</p>`;
+  if(e<=5){
+    const power=Math.pow(m,e);
+    html+=`<p>${m}<sup>${e}</sup> = <input class="inline-input" id="enc-pow" style="width:80px" type="text" placeholder="?"> </p>`;
+    html+=`<p><span id="enc-pow-val"></span> mod ${n} = <input class="inline-input" id="enc-mod" style="width:60px" type="text" placeholder="?"></p>`;
+    html+=`<div style="text-align:right;margin-top:8px"><button class="btn btn-sm btn-primary" onclick="checkEncrypt(${power},${power%n})">확인</button></div>`;
+  }else{
+    const result=modPow(m,e,n);
+    html+=`<p>결과: <input class="inline-input" id="enc-result" style="width:60px" type="text" placeholder="?"></p>`;
+    html+=`<div style="text-align:right;margin-top:8px"><button class="btn btn-sm btn-primary" onclick="checkEncryptDirect(${result})">확인</button></div>`;
+  }
+  html+=`<div id="encResultBox"></div>`;
+  document.getElementById('encSteps').innerHTML=html;
+  document.getElementById('encResult').innerHTML='';
+}
+function checkEncrypt(power,result){
+  const powInp=document.getElementById('enc-pow');const modInp=document.getElementById('enc-mod');
+  let ok=true;
+  if(parseInt(powInp.value)===power){powInp.classList.add('correct');document.getElementById('enc-pow-val').textContent=power;}else{powInp.classList.add('incorrect');ok=false;}
+  if(parseInt(modInp.value)===result){modInp.classList.add('correct');}else{modInp.classList.add('incorrect');ok=false;}
+  if(ok){RSA.encrypted=result;showEncResult(result);}
+}
+function checkEncryptDirect(result){
+  const inp=document.getElementById('enc-result');
+  if(parseInt(inp.value)===result){inp.classList.add('correct');RSA.encrypted=result;showEncResult(result);}
+  else{inp.classList.add('incorrect');}
+}
+function showEncResult(result){
+  const letter=String.fromCharCode(65+RSA.message);
+  document.getElementById('encResult').innerHTML=`<div class="success-box" style="text-align:center;font-size:16px">&#x1F512; ${letter}(=${RSA.message}) &rarr; 암호문 <strong class="mono">${result}</strong></div><p style="text-align:center;margin-top:8px;color:var(--theme)">&#x1F4EE; 암호문 ${result}를 Bob에게 전송합니다... 도청자가 보더라도 원래 글자를 알 수 없습니다!</p>`;
+  XP.toast('암호화 성공!');
+  // Show decrypt section
+  document.getElementById('decCard').style.display='block';
+  initDecryptUI();
+}
+
+function initDecryptUI(){
+  const C=RSA.encrypted,d=RSA.d,n=RSA.n;
+  document.getElementById('decC').textContent=C;
+  document.getElementById('decFormula').textContent=C+'^'+d+' mod '+n;
+  const result=modPow(C,d,n);
+  let html=`<p>비밀키(d=${d})로 복호화:</p>`;
+  html+=`<p class="mono">${C}<sup>${d}</sup> mod ${n} = <input class="inline-input" id="dec-ans" style="width:60px" type="text" placeholder="?"></p>`;
+  html+=`<details style="margin-top:8px"><summary>힌트: 반복제곱법</summary><p style="padding:8px 0;font-size:13px;color:var(--ink2)">`;
+  // Binary exponentiation hint
+  let exp=1;while(exp<=d){html+=`${C}<sup>${exp}</sup> mod ${n} = ${modPow(C,exp,n)}<br>`;exp*=2;}
+  html+=`</p></details>`;
+  html+=`<div style="text-align:right;margin-top:8px"><button class="btn btn-sm btn-success" onclick="checkDecrypt(${result})">확인</button></div>`;
+  html+=`<div id="decResultBox"></div>`;
+  document.getElementById('decSteps').innerHTML=html;
+}
+function checkDecrypt(result){
+  const inp=document.getElementById('dec-ans');
+  if(parseInt(inp.value)===result){
+    inp.classList.add('correct');
+    const letter=String.fromCharCode(65+result);
+    document.getElementById('decResult').innerHTML=`<div class="success-box" style="text-align:center;font-size:18px">&#x1F389; Bob이 비밀키로 열었습니다! 원래 글자 <strong>${letter}</strong>(=${result})이 무사히 도착했습니다.<br><span style="font-size:14px">공개키로 잠그고 &rarr; 비밀키로 열기. 이것이 RSA 공개키 암호의 핵심입니다!</span></div>`;
+    document.getElementById('sec5CompleteBtn').style.display='block';
+    XP.toast('복호화 성공!');fireConfetti();
+  }else{inp.classList.add('incorrect');setTimeout(()=>inp.classList.remove('incorrect'),500);}
+}
+
+// ================================================================
+// CHALLENGE (Section 6)
+// ================================================================
+function checkC1(){
+  const n=parseInt(document.querySelector('[data-save="c1_n"]').value);
+  const phi=parseInt(document.querySelector('[data-save="c1_phi"]').value);
+  const e=parseInt(document.querySelector('[data-save="c1_e"]').value);
+  const d=parseInt(document.querySelector('[data-save="c1_d"]').value);
+  let msgs=[];
+  if(n===35)msgs.push('n=35 &#x2705;');else msgs.push('n 확인 필요');
+  if(phi===24)msgs.push('&phi;=24 &#x2705;');else msgs.push('&phi; 확인 필요');
+  if(e&&gcd(e,24)===1&&e>1&&e<24){msgs.push('e='+e+' (24와 서로소) &#x2705;');
+    if(d&&(e*d)%24===1)msgs.push('d='+d+' (e&times;d mod 24=1) &#x2705;');
+    else msgs.push('d 확인: e&times;d mod 24 = 1이어야 합니다');
+  }else{msgs.push('e는 24와 서로소인 수여야 합니다');}
+  document.getElementById('c1Result').innerHTML='<div class="info-box">'+msgs.join('<br>')+'</div>';
+}
+
+// ================================================================
+// SIEVE 1000 DEMO (Section 2, Card 3)
+// ================================================================
+function runSieve1000(){
+  document.getElementById('sieve1000Btn').disabled=true;
+  document.getElementById('sieve1000Progress').style.display='block';
+  const bar=document.getElementById('sieve1000Bar');
+  const status=document.getElementById('sieve1000Status');
+  const ranges=[100,200,500,1000];
+  const counts=[];
+  let step=0;
+  function countPrimesUpTo(max){let sieve=new Array(max+1).fill(true);sieve[0]=sieve[1]=false;for(let i=2;i*i<=max;i++){if(sieve[i])for(let j=i*2;j<=max;j+=i)sieve[j]=false;}return sieve.filter(Boolean).length;}
+  function doStep(){
+    if(step>=ranges.length){
+      bar.style.width='100%';status.textContent='완료!';
+      const res=document.getElementById('sieve1000Result');res.style.display='block';
+      let html='<table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:12px"><tr style="background:var(--theme-light)"><th style="padding:8px;border:1px solid var(--border)">범위</th><th style="padding:8px;border:1px solid var(--border)">소수 개수</th><th style="padding:8px;border:1px solid var(--border)">비율</th></tr>';
+      ranges.forEach((r,i)=>{html+=`<tr><td style="padding:8px;border:1px solid var(--border);text-align:center">1~${r}</td><td style="padding:8px;border:1px solid var(--border);text-align:center;font-weight:700">${counts[i]}</td><td style="padding:8px;border:1px solid var(--border);text-align:center">${(counts[i]/r*100).toFixed(1)}%</td></tr>`;});
+      html+='</table><div class="info-box" style="margin-top:12px">&#x1F4A1; 숫자가 커질수록 소수의 <strong>비율</strong>은 줄어든다!</div>';
+      res.innerHTML=html;
+      return;
+    }
+    counts.push(countPrimesUpTo(ranges[step]));
+    bar.style.width=((step+1)/ranges.length*100)+'%';
+    status.textContent=ranges[step]+'까지 체 완료... 소수 '+counts[step]+'개';
+    step++;
+    setTimeout(doStep,400);
+  }
+  doStep();
+}
+
+// ================================================================
+// CONFETTI
+// ================================================================
+function fireConfetti(){
+  const c=document.getElementById('confettiContainer');c.innerHTML='';
+  const colors=['#059669','#10B981','#FCD34D','#F59E0B','#3B82F6','#8B5CF6','#EF4444'];
+  for(let i=0;i<50;i++){const p=document.createElement('div');p.className='confetti-piece';p.style.left=Math.random()*100+'%';p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.animationDelay=Math.random()*2+'s';p.style.animationDuration=(2+Math.random()*2)+'s';p.style.width=(6+Math.random()*6)+'px';p.style.height=(6+Math.random()*6)+'px';p.style.borderRadius=Math.random()>.5?'50%':'0';c.appendChild(p);}
+  setTimeout(()=>{c.innerHTML='';},4000);
+}
+
+// ================================================================
+// BOOT
+// ================================================================
+document.addEventListener('DOMContentLoaded',function(){XP.init();AutoSave.init();SM.init();});
+</script>
+</body>
+</html>

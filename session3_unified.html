@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3차시: 암호를 깨뜨려라 — 통합 학습</title>
+<style>
+:root {
+  --ink:#1a1a2e; --ink2:#4a4a68; --ink3:#8888a4;
+  --bg:#f7f7fb; --card:#fff; --border:#ebebf0;
+  --theme:#f43f5e; --theme-light:#fff1f2; --theme-dark:#e11d48;
+  --ok:#10b981; --ok-light:#ecfdf5;
+  --err:#f43f5e; --err-light:#fff1f2;
+  --warn:#f59e0b; --warn-light:#fffbeb;
+  --shadow:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.06);
+  --radius:14px;
+  --font:'Pretendard','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'Fira Code','Consolas',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:15px;line-height:1.75;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ===== STICKY NAV ===== */
+.top-nav{position:sticky;top:0;z-index:100;background:var(--card);border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.top-nav-inner{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.nav-title{font-size:15px;font-weight:800;color:var(--ink);white-space:nowrap}
+.nav-dots{display:flex;gap:6px;flex:1;justify-content:center}
+.nav-dot{width:28px;height:28px;border-radius:50%;background:var(--bg);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--ink3);cursor:pointer;transition:all .25s}
+.nav-dot:hover{border-color:var(--theme);color:var(--theme)}
+.nav-dot.active{background:var(--theme);color:#fff;border-color:var(--theme);transform:scale(1.1)}
+.nav-dot.done{background:var(--ok-light);color:var(--ok);border-color:var(--ok)}
+.xp-badge{background:var(--theme-light);color:var(--theme);padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap}
+.progress-track{position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--border)}
+.progress-fill{height:100%;background:var(--theme);transition:width .4s ease-out;border-radius:0 2px 2px 0}
+
+/* ===== SECTIONS ===== */
+.section-page{display:none;max-width:900px;margin:0 auto;padding:28px 20px 48px;animation:fadeUp .4s ease}
+.section-page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== CARDS ===== */
+.card{background:var(--card);border-radius:var(--radius);padding:24px 28px;margin-bottom:16px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.card h3{font-size:16px;font-weight:700;margin:0 0 12px;color:var(--ink)}
+.section-header{margin-bottom:20px}
+.section-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 12px;border-radius:100px;font-size:12px;font-weight:700;letter-spacing:.2px;margin-bottom:8px}
+.badge-w{background:#e0e7ff;color:#3730a3}.badge-e{background:#fef3c7;color:#92400e}
+.badge-d{background:#f3e8ff;color:#7c3aed}.badge-c{background:var(--theme-light);color:var(--theme)}
+.badge-r{background:#f0fdf4;color:#16a34a}.badge-s{background:#e0e7ff;color:#3730a3}
+.section-header h2{font-size:21px;font-weight:750;color:var(--ink);letter-spacing:-.2px;margin-top:4px}
+
+/* ===== SPLIT PANEL ===== */
+.split-panel{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+.split-panel .left-panel{position:sticky;top:70px}
+@media(max-width:800px){.split-panel{grid-template-columns:1fr}.split-panel .left-panel{position:static}}
+
+/* ===== CARD FLOW ===== */
+.card-flow-steps{display:flex;gap:6px;margin-bottom:16px}
+.cf-step{padding:8px 18px;border-radius:100px;font-size:13px;font-weight:600;border:2px solid var(--border);background:var(--card);color:var(--ink3);cursor:pointer;transition:all .2s}
+.cf-step.active{background:var(--theme);color:#fff;border-color:var(--theme)}
+.cf-step.done{background:var(--ok-light);color:var(--ok);border-color:var(--ok)}
+.cf-panel{display:none;animation:fadeUp .3s ease}.cf-panel.active{display:block}
+
+/* ===== MISSION BOARD ===== */
+.mission-board{display:grid;grid-template-columns:1fr;gap:16px}
+.mission-card{background:var(--card);border-radius:var(--radius);padding:24px;border:1px solid var(--border);box-shadow:var(--shadow);transition:box-shadow .2s}
+.mission-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.08)}
+
+/* ===== INPUTS ===== */
+.inline-input{display:inline-block;width:64px;border:none;border-bottom:2px solid var(--theme);background:transparent;text-align:center;font-size:15px;font-family:var(--mono);padding:4px 6px;color:var(--theme-dark);font-weight:600;outline:none;transition:border-color .2s;border-radius:0}
+.inline-input:focus{border-color:var(--ink)}
+.inline-input.wide{width:128px}.inline-input.x-wide{width:200px}
+textarea.answer{width:100%;min-height:76px;border:2px solid var(--border);border-radius:10px;padding:14px 16px;font-family:var(--font);font-size:14px;line-height:1.7;resize:vertical;transition:border-color .2s,background .2s;background:var(--bg);color:var(--ink)}
+textarea.answer:focus{border-color:var(--theme);outline:none;background:#fff}
+
+/* ===== BUTTONS ===== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border:none;border-radius:10px;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--theme);color:#fff}.btn-primary:hover{background:var(--theme-dark)}
+.btn-primary:disabled{background:var(--border);color:var(--ink3);cursor:not-allowed}
+.btn-secondary{background:var(--theme-light);color:var(--theme)}.btn-secondary:hover{background:#ffe4e6}
+.btn-success{background:var(--ok);color:#fff}.btn-success:hover{background:#059669}
+.btn-outline{background:transparent;border:2px solid var(--theme);color:var(--theme)}.btn-outline:hover{background:var(--theme-light)}
+.btn-sm{padding:7px 16px;font-size:13px}.btn-lg{padding:14px 32px;font-size:17px}
+.btn-nav{margin-top:20px;text-align:center}
+
+/* ===== TABLES ===== */
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+th,td{padding:10px 12px;border:1px solid var(--border);text-align:center}
+th{background:var(--ink);color:#fff;font-weight:700;font-size:13px}
+td{background:var(--card);color:var(--ink)}
+td input.tbl-in{width:100%;border:none;text-align:center;font-family:var(--mono);font-size:14px;background:transparent;outline:none;color:var(--theme-dark);font-weight:600}
+
+/* ===== CALLOUT ===== */
+.callout{padding:14px 20px;border-radius:10px;margin:14px 0;font-size:14px;line-height:1.75}
+.callout-info{background:#eff6ff;border-left:3px solid #2563eb;color:#1e40af}
+.callout-warn{background:var(--warn-light);border-left:3px solid var(--warn);color:#92400e}
+.callout-tip{background:#f0fdf4;border-left:3px solid var(--ok);color:#166534}
+.callout-danger{background:var(--theme-light);border-left:3px solid var(--theme);color:var(--theme-dark)}
+
+/* ===== HINTS ===== */
+details{margin:10px 0}
+details summary{cursor:pointer;padding:10px 16px;background:var(--warn-light);border-radius:10px;font-size:13px;font-weight:600;color:var(--warn);list-style:none;transition:background .15s}
+details summary:hover{background:#fef3c7}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:'💡 '}
+details .hint-content{padding:12px 16px;font-size:14px;background:#fffef5;border-radius:0 0 10px 10px;border:1px solid #fde68a;border-top:none;color:var(--ink2);line-height:1.75}
+
+/* ===== FILL BLANK ===== */
+.fill-blank{background:var(--theme-light);border-radius:10px;padding:16px 20px;margin:14px 0;font-size:15px;line-height:2;color:var(--ink)}
+
+/* ===== FREQUENCY BAR CHART ===== */
+.bar-row{display:flex;align-items:center;height:28px;gap:6px;cursor:pointer;border-radius:6px;padding:0 4px}
+.bar-row:hover{background:rgba(26,26,46,.02)}
+.bar-label{width:20px;font-family:var(--mono);font-weight:700;font-size:13px;text-align:center;color:var(--ink)}
+.bar-track{flex:1;height:18px;background:var(--bg);border-radius:5px;position:relative;overflow:hidden}
+.bar-fill{height:100%;background:var(--theme);border-radius:5px;transition:width .5s ease-out;position:relative;z-index:2}
+.bar-fill.overlay{position:absolute;top:0;left:0;background:rgba(37,99,235,.18);border:1px dashed #2563EB;z-index:1}
+.bar-pct{width:52px;font-size:12px;text-align:right;color:var(--ink3);font-family:var(--mono)}
+.bar-count{width:30px;font-size:11px;text-align:right;color:var(--ink3)}
+
+/* ===== VERTICAL BAR CHART (SLIDER) ===== */
+.vchart-container{position:relative;overflow:hidden;border-radius:10px;background:var(--bg);border:1px solid var(--border)}
+.vchart-wrapper{display:flex;align-items:flex-end;gap:2px;padding:8px 4px;height:130px;transition:transform .2s ease-out}
+.vchart-bar{flex:1;min-width:18px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.vchart-bar .vbar-fill{width:100%;min-height:2px;border-radius:3px 3px 0 0;transition:height .3s}
+.vchart-bar .vbar-label{font-size:10px;font-family:var(--mono);font-weight:600;margin-top:2px;color:var(--ink3)}
+.vchart-cipher .vbar-fill{background:var(--theme)}.vchart-standard .vbar-fill{background:#2563EB}
+.match-indicator{height:8px;border-radius:4px;background:var(--bg);border:1px solid var(--border);overflow:hidden;margin:10px 0}
+.match-fill{height:100%;border-radius:4px;transition:width .3s,background .3s}
+.slider-controls{display:flex;align-items:center;justify-content:center;gap:14px;margin:12px 0}
+.shift-display{font-family:var(--mono);font-size:24px;font-weight:800;color:var(--theme);min-width:40px;text-align:center}
+
+/* ===== MAPPING GRID ===== */
+.mapping-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px}
+.mapping-item{display:flex;align-items:center;gap:4px;font-size:13px}
+.mapping-item .cipher-letter{font-family:var(--mono);font-weight:700;width:22px;color:var(--theme)}
+.mapping-item .arrow{color:var(--ink3);font-size:11px}
+.mapping-item input{width:42px;padding:5px;border:2px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:13px;font-weight:600;text-align:center;text-transform:uppercase;background:var(--card);transition:border-color .2s,box-shadow .2s}
+.mapping-item input:focus{outline:none;border-color:var(--theme);box-shadow:0 0 0 3px rgba(244,63,94,.1)}
+.mapping-item.correct input{border-color:var(--ok);background:var(--ok-light)}
+.mapping-item.wrong input{border-color:var(--err);background:var(--err-light)}
+
+/* ===== CIPHER TEXT DISPLAY ===== */
+.cipher-display{background:#1e1b4b;color:#fb7185;font-family:var(--mono);font-size:15px;padding:16px 22px;border-radius:10px;letter-spacing:2px;word-break:break-all;line-height:1.8;margin:10px 0}
+.cipher-text{font-family:var(--mono);font-size:14px;line-height:2;background:var(--bg);padding:14px;border-radius:10px;word-break:break-all;letter-spacing:1px;border:1px solid var(--border)}
+.cipher-text .letter{display:inline;cursor:pointer;transition:all .15s;padding:1px 0}
+.cipher-text .letter.highlight{background:#fef08a;border-radius:2px}
+.preview-text{font-family:var(--mono);font-size:14px;line-height:2;background:var(--ok-light);padding:14px;border-radius:10px;border:1px solid #a7f3d0;word-break:break-all;letter-spacing:1px}
+.preview-text .known{color:#2563EB;font-weight:700}
+.preview-text .unknown{color:#c4c4d4}
+
+/* ===== TOOL BAR ===== */
+.tool-bar{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+
+/* ===== HINT BOX ===== */
+.hint-box{background:var(--warn-light);border-left:3px solid var(--warn);border-radius:0 10px 10px 0;padding:14px 18px;margin:8px 0;font-size:13px;display:none}
+.hint-box.visible{display:block}
+
+/* ===== TOAST ===== */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== POPOVER ===== */
+.popover-backdrop{position:fixed;inset:0;background:rgba(26,26,46,.2);backdrop-filter:blur(2px);z-index:199;display:none}
+.popover-backdrop.show{display:block}
+.popover{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--card);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);border:1px solid var(--border);z-index:200;max-width:400px;width:90%;display:none}
+.popover.show{display:block}
+.popover h3{font-size:16px;margin-bottom:10px;color:var(--ink)}
+.popover p{font-size:14px;line-height:1.7;color:var(--ink2)}
+
+/* ===== TEACHER DEMO ===== */
+.step-nav{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.step-btn{width:36px;height:36px;border-radius:50%;border:2px solid var(--border);background:var(--card);font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;color:var(--ink2)}
+.step-btn.active{background:var(--theme);color:#fff;border-color:var(--theme)}
+.step-btn.done{background:var(--ok-light);border-color:var(--ok);color:var(--ok)}
+.step-content{background:var(--bg);border-radius:10px;padding:18px;min-height:80px;border:1px solid var(--border);font-size:14px;line-height:1.8}
+.step-content .math{font-family:var(--mono);font-weight:600;color:var(--theme)}
+
+/* ===== SELF-ASSESS ===== */
+.assess-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+.assess-table th{background:var(--bg);color:var(--ink2);font-weight:600;padding:10px;border:1px solid var(--border)}
+.assess-table td{padding:10px;text-align:center;border:1px solid var(--border)}
+.assess-table input[type="radio"]{transform:scale(1.3);cursor:pointer;accent-color:var(--theme)}
+
+/* ===== COMPLETE / CONFETTI ===== */
+.star-display{font-size:36px;margin:12px 0}
+.confetti-container{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:300;overflow:hidden}
+.confetti-piece{position:absolute;width:10px;height:10px;opacity:.8;animation:confettiFall 3s ease-in forwards}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(105vh) rotate(720deg);opacity:0}}
+
+/* ===== ALPHA TABLE ===== */
+.alpha-table{display:grid;grid-template-columns:repeat(13,1fr);gap:2px;margin:14px 0;font-size:12px;text-align:center}
+.alpha-table .letter{background:var(--theme);color:#fff;font-weight:700;padding:5px 2px;border-radius:5px 5px 0 0}
+.alpha-table .number{background:var(--theme-light);color:var(--theme-dark);font-weight:600;padding:5px 2px;border-radius:0 0 5px 5px}
+
+/* ===== FREQ TABLE ===== */
+.freq-table{font-size:13px}.freq-table th{background:#2563eb;padding:8px 10px;font-size:12px}.freq-table td{padding:8px 10px}
+
+/* ===== DRAGGABLE ===== */
+.draggable{cursor:grab;touch-action:none}.draggable:active{cursor:grabbing}
+
+/* ===== UTILITY ===== */
+p{margin-top:6px}strong{color:var(--ink)}
+select{padding:9px 14px;border:2px solid var(--border);border-radius:10px;font-family:var(--font);font-size:14px;background:var(--card);cursor:pointer;transition:border-color .2s;color:var(--ink)}
+select:focus{outline:none;border-color:var(--theme)}
+.text-center{text-align:center}.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}
+.expand-btn{font-size:12px;color:var(--theme);cursor:pointer;text-decoration:underline;margin-top:4px}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:600px){
+  .section-page{padding:16px 12px 40px}
+  .card{padding:18px}
+  .alpha-table{font-size:10px}
+  .nav-title{display:none}
+  .xp-badge{font-size:11px;padding:3px 8px}
+  .nav-dot{width:24px;height:24px;font-size:10px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== STICKY NAV ===== -->
+<nav class="top-nav">
+  <div class="top-nav-inner" style="position:relative">
+    <div class="nav-title">3차시</div>
+    <div class="nav-dots" id="navDots"></div>
+    <div class="xp-badge" id="xpBadge">0 XP</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+</nav>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== POPOVER ===== -->
+<div class="popover-backdrop" id="popoverBackdrop" onclick="closePopover()"></div>
+<div class="popover" id="popover">
+  <h3 id="popoverTitle"></h3>
+  <p id="popoverContent"></p>
+  <div class="text-center mt-12">
+    <button class="btn btn-primary btn-sm" onclick="closePopover()">확인</button>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- SECTION 3.1: 워밍업 -->
+<!-- ======================================================== -->
+<div class="section-page" id="sec-1">
+  <div class="section-header">
+    <span class="section-badge badge-w">W 워밍업</span>
+    <h2>2차시를 이어서</h2>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <strong style="font-size:14px;color:var(--ink2)">알파벳-숫자 대응표</strong>
+    <div class="alpha-table" id="alphaTable"></div>
+  </div>
+
+  <div class="card" id="w1-card">
+    <h3>W-1. 복습 질문 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p>2차시에서 아핀 암호의 키 공간은 <strong>312가지</strong>였습니다. 전수조사로 풀 수 있다는 것도 확인했죠.</p>
+    <div class="callout callout-info">만약 키가 312개가 아니라 <strong>수억 개</strong>라면? 전수조사로도 힘들다면, 다른 방법이 있을까요?</div>
+    <textarea class="answer" data-save="w1" placeholder="나의 생각..."></textarea>
+  </div>
+
+  <div class="card" id="w2-card">
+    <h3>W-2. 글자의 습관? <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p>아래 문장을 보고, <strong>가장 많이 나오는 알파벳</strong>이 무엇일지 예측해 보세요.</p>
+    <div class="cipher-display" style="background:#eff6ff;color:#2563eb;font-size:14px;letter-spacing:1px">THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG</div>
+    <p style="margin-top:8px">예측: <input class="inline-input" data-save="w2-pred" placeholder="?"></p>
+    <div class="callout callout-info">영어에서 어떤 글자가 유독 자주 나올까요? 평소 느낌으로 예측해 봅시다.</div>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-primary" onclick="completeSection(1)">완료하고 다음으로 &rarr;</button>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- SECTION 3.2: 빈도 발견 (Split Panel) -->
+<!-- ======================================================== -->
+<div class="section-page" id="sec-2">
+  <div class="section-header">
+    <span class="section-badge badge-e">E 탐구 1</span>
+    <h2>"글자에도 습관이 있다" &mdash; 빈도 발견</h2>
+  </div>
+
+  <div class="split-panel">
+    <!-- LEFT: Reference -->
+    <div class="left-panel">
+      <div class="card">
+        <h3>표준 영어 빈도표</h3>
+        <table class="freq-table">
+          <tr><th>순위</th><th>글자</th><th>빈도</th></tr>
+          <tr><td>1</td><td style="color:var(--theme);font-weight:700">E</td><td>12.7%</td></tr>
+          <tr><td>2</td><td>T</td><td>9.1%</td></tr>
+          <tr><td>3</td><td>A</td><td>8.2%</td></tr>
+          <tr><td>4</td><td>O</td><td>7.5%</td></tr>
+          <tr><td>5</td><td>I</td><td>7.0%</td></tr>
+          <tr><td>6</td><td>N</td><td>6.7%</td></tr>
+          <tr><td>7</td><td>S</td><td>6.3%</td></tr>
+          <tr><td>8</td><td>H</td><td>6.1%</td></tr>
+          <tr><td>9</td><td>R</td><td>6.0%</td></tr>
+          <tr><td>10</td><td>D</td><td>4.3%</td></tr>
+        </table>
+        <div class="callout callout-danger"><strong>E</strong>가 압도적 1위! 약 8글자 중 1글자가 E입니다.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Workspace -->
+    <div>
+      <div class="card">
+        <h3>E-1. 글자 세기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+        <p>텍스트를 선택하고 글자 빈도를 자동으로 세어 봅시다.</p>
+        <div class="mb-12" style="margin-top:10px">
+          <label style="font-size:13px;font-weight:600;display:block;color:var(--ink2);margin-bottom:6px">텍스트 선택:</label>
+          <select id="textSelect" onchange="onTextSelect()" style="width:100%">
+            <option value="">-- 텍스트를 선택하세요 --</option>
+            <option value="0">이상한 나라의 앨리스 (첫 문단)</option>
+            <option value="1">셜록 홈즈 (첫 문단)</option>
+            <option value="2">어린 왕자 (영문, 첫 문단)</option>
+            <option value="3">과학 교과서 문단</option>
+          </select>
+        </div>
+        <div id="textDisplay" style="max-height:80px;overflow:hidden;position:relative;display:none;margin-bottom:12px">
+          <div id="textContent" class="cipher-text" style="font-size:12px;line-height:1.6;letter-spacing:.5px"></div>
+          <div style="position:absolute;bottom:0;left:0;right:0;height:30px;background:linear-gradient(transparent,white)"></div>
+        </div>
+        <div class="text-center mb-12">
+          <button class="btn btn-primary" id="countBtn" onclick="countLetters()" disabled>🔢 글자 세기</button>
+        </div>
+        <div id="freqChart" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:14px;font-weight:600;color:var(--ink)">빈도 차트 (높은 순)</span>
+            <span id="totalCount" style="font-size:12px;color:var(--ink3)"></span>
+          </div>
+          <div id="barContainer"></div>
+          <div id="expandArea" style="display:none">
+            <span class="expand-btn" onclick="toggleExpand()">&#9660; 나머지 글자 보기</span>
+          </div>
+          <div class="mt-12">
+            <button class="btn btn-secondary btn-sm" id="overlayBtn" onclick="toggleOverlay()">📈 표준 빈도 오버레이</button>
+            <span id="overlayStatus" style="font-size:12px;color:var(--ink3);margin-left:8px"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p><strong>(a)</strong> 가장 많이 나온 글자 1~3위:</p>
+        <div style="display:flex;gap:16px;margin:8px 0">
+          <span>1위: <input class="inline-input" data-save="e1a1" placeholder="?"></span>
+          <span>2위: <input class="inline-input" data-save="e1a2" placeholder="?"></span>
+          <span>3위: <input class="inline-input" data-save="e1a3" placeholder="?"></span>
+        </div>
+        <p style="margin-top:12px"><strong>(b)</strong> 다른 텍스트도 2~3개 확인해 보세요. 텍스트마다 1위 글자가 같나요, 다른가요?</p>
+        <textarea class="answer" data-save="e1b" placeholder="관찰 결과..."></textarea>
+      </div>
+
+      <div class="card">
+        <h3>E-2. 표준 빈도와 비교 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+        <p><strong>(a)</strong> E-1의 관찰과 표준 빈도표를 비교하면?</p>
+        <textarea class="answer" data-save="e2a" placeholder="비교 결과..."></textarea>
+        <p style="margin-top:8px"><strong>(b)</strong> 이 사실이 암호를 깨는 데 어떻게 쓰일 수 있을지 예측해 보세요.</p>
+        <textarea class="answer" data-save="e2b" placeholder="나의 예측..."></textarea>
+      </div>
+
+      <div class="card">
+        <h3>E-3. 핵심 발견 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+        <div class="fill-blank">
+          "어떤 영어 텍스트를 분석하든, 글자의 빈도 순서는 거의 <input class="inline-input wide" data-save="e3a" placeholder="?">. 이것은 마치 언어의 <strong><input class="inline-input wide" data-save="e3b" placeholder="?"></strong>과 같다."
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-primary" onclick="completeSection(2)">완료하고 다음으로 &rarr;</button>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- SECTION 3.3: 시저 공격 (Card Flow, 3 steps) -->
+<!-- ======================================================== -->
+<div class="section-page" id="sec-3">
+  <div class="section-header">
+    <span class="section-badge badge-e">E 탐구 2</span>
+    <h2>"시저를 1분 만에 깨기" &mdash; 그래프 슬라이딩</h2>
+  </div>
+
+  <div class="card-flow-steps">
+    <button class="cf-step active" onclick="showCFStep(3,1)">Step 1: 패턴 발견</button>
+    <button class="cf-step" onclick="showCFStep(3,2)">Step 2: 그래프 슬라이딩</button>
+    <button class="cf-step" onclick="showCFStep(3,3)">Step 3: 원리 정리</button>
+  </div>
+
+  <!-- Step 1 -->
+  <div class="cf-panel active" id="sec3-step1">
+    <div class="card">
+      <h3>E-4. 패턴으로 키 추정하기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+      <p>다음은 시저 암호(k = ?)로 만들어진 암호문입니다.</p>
+      <div class="cipher-display" style="font-size:12px;letter-spacing:.5px;word-break:break-all">VTXLUH WUHODZQHB GU OLYHVHB DQG WKH UHVW RI WKHVH JHQWOHPHQ KDYLQJ DVNHG PH WR ZULWH GRZQ WKH ZKROH SDUWLFXODUV DERXW WUHDVXUH LVODQG</div>
+      <p><strong>(a)</strong> 반복되는 세 글자 단어가 있나요?</p>
+      <p style="margin-left:16px">반복되는 단어: <input class="inline-input wide" data-save="e4a" placeholder="?"></p>
+      <p style="margin-top:12px"><strong>(b)</strong> 영어에서 가장 흔한 세 글자 단어는 <strong>THE</strong>입니다. "WKH" = "THE"라면?</p>
+      <div style="margin-left:16px;font-family:var(--mono);font-size:14px;line-height:2.2">
+        W(22) &rarr; T(19): 키 = 22 &minus; 19 = <input class="inline-input" data-save="e4b1" placeholder="?"><br>
+        K(10) &rarr; H(7): 키 = 10 &minus; 7 = <input class="inline-input" data-save="e4b2" placeholder="?"><br>
+        H(7) &rarr; E(4): 키 = 7 &minus; 4 = <input class="inline-input" data-save="e4b3" placeholder="?">
+      </div>
+      <p style="margin-top:8px">세 계산이 모두 같은 키? &rarr; k = <strong><input class="inline-input" data-save="e4bk" data-answer="3" placeholder="?"></strong></p>
+      <div class="callout callout-info">짧은 문장에서는 <strong>반복 패턴</strong>이 강력한 단서가 됩니다!</div>
+    </div>
+    <div class="btn-nav"><button class="btn btn-primary" onclick="showCFStep(3,2)">다음 단계 &rarr;</button></div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="cf-panel" id="sec3-step2">
+    <div class="card">
+      <h3>E-5. 그래프 슬라이딩 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+      <p>암호문의 빈도 그래프를 <strong>좌우로 밀어</strong> 표준 빈도와 맞춰보세요!</p>
+      <div class="cipher-text mb-12" id="m2CipherDisplay" style="font-size:12px;word-break:break-all"></div>
+      <div class="vchart-container mb-8">
+        <div style="padding:6px 10px;font-size:12px;font-weight:600;color:var(--theme)">암호문 빈도 (&#x25C0; 드래그로 이동 &#x25B6;)</div>
+        <div id="cipherChartArea" class="draggable" style="overflow:hidden;padding:0 4px">
+          <div id="cipherBars" class="vchart-wrapper vchart-cipher"></div>
+        </div>
+        <div style="height:1px;background:var(--border);margin:4px 0"></div>
+        <div style="padding:6px 10px;font-size:12px;font-weight:600;color:#2563EB">표준 영어 빈도 (고정)</div>
+        <div style="overflow:hidden;padding:0 4px">
+          <div id="standardBars" class="vchart-wrapper vchart-standard"></div>
+        </div>
+      </div>
+      <div class="match-indicator"><div class="match-fill" id="matchFill"></div></div>
+      <div class="text-center mb-8" style="font-size:13px;color:var(--ink2)">일치도: <strong id="matchPct" style="color:var(--ink)">0</strong>%</div>
+      <div class="slider-controls">
+        <button class="btn btn-secondary btn-sm" onclick="changeShift(-1)">&#x25C0;</button>
+        <div style="color:var(--ink2)">이동량: <span class="shift-display" id="shiftDisplay">0</span></div>
+        <button class="btn btn-secondary btn-sm" onclick="changeShift(1)">&#x25B6;</button>
+      </div>
+      <div class="mt-8">
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:var(--ink)">복호화 결과:</div>
+        <div class="preview-text" id="m2Preview" style="font-size:13px"></div>
+      </div>
+      <div class="text-center mt-12">
+        <button class="btn btn-success" onclick="checkCaesar()">정답 확인</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <p><strong>(a)</strong> 두 그래프의 <strong>모양</strong>을 비교하면?</p>
+      <textarea class="answer" data-save="e5a" placeholder="관찰..."></textarea>
+      <p style="margin-top:8px"><strong>(b)</strong> 가장 잘 겹치는 위치에서의 이동량:</p>
+      <p style="margin-left:16px">밀어야 하는 칸 수 = <strong><input class="inline-input" data-save="e5b" placeholder="?">칸</strong> &rarr; 이것이 바로 <strong>키</strong>!</p>
+      <p style="margin-top:8px"><strong>(c)</strong> 원문: <input class="inline-input x-wide" data-save="e5c" style="width:100%" placeholder="복호화 결과"></p>
+    </div>
+    <div class="btn-nav"><button class="btn btn-primary" onclick="showCFStep(3,3)">다음 단계 &rarr;</button></div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="cf-panel" id="sec3-step3">
+    <div class="card">
+      <h3>E-6. 왜 이게 되는 걸까? <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+      <p>시저 암호는 모든 글자를 <strong>같은 수만큼</strong> 밉니다.</p>
+      <div class="callout callout-tip">원문에서 E가 가장 많았다면, 암호문에서도 <strong>E가 밀려간 글자</strong>가 가장 많습니다.</div>
+      <div class="fill-blank">
+        "시저 암호는 빈도 그래프를 <input class="inline-input wide" data-save="e6a" placeholder="?">할 뿐이므로, 그래프를 다시 <input class="inline-input wide" data-save="e6b" placeholder="?">하면 키를 찾을 수 있다."
+      </div>
+    </div>
+    <div class="btn-nav"><button class="btn btn-primary" onclick="completeSection(3)">완료하고 다음으로 &rarr;</button></div>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- SECTION 3.4: 치환 암호 해독 (Split Panel) -->
+<!-- ======================================================== -->
+<div class="section-page" id="sec-4">
+  <div class="section-header">
+    <span class="section-badge badge-e">E 탐구 3</span>
+    <h2>"진짜 탐정 체험" &mdash; 치환 암호 해독</h2>
+  </div>
+
+  <div class="split-panel" style="grid-template-columns:280px 1fr">
+    <!-- LEFT: Tools -->
+    <div class="left-panel">
+      <div class="card" style="padding:14px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--ink)">암호문 빈도</div>
+        <div id="m3FreqBars"></div>
+      </div>
+      <div class="card" style="padding:14px;margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:13px;font-weight:600;color:var(--ink)">대응표</span>
+          <span style="font-size:12px;color:var(--ink3)" id="mappingCount">0/26</span>
+        </div>
+        <div class="mapping-grid" id="mappingGrid"></div>
+      </div>
+      <div class="tool-bar" style="margin-top:12px">
+        <button class="btn btn-secondary btn-sm" onclick="toolSingleLetter()">🔤 1글자 단어</button>
+        <button class="btn btn-secondary btn-sm" onclick="toolFreqPattern()">📊 빈출 패턴</button>
+        <button class="btn btn-secondary btn-sm" onclick="toolAutoE()">E 자동 추정</button>
+        <button class="btn btn-outline btn-sm" onclick="resetMapping()">↩ 리셋</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: Workspace -->
+    <div>
+      <div class="card">
+        <h3>E-7. 그래프 밀기가 안 통한다! <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+        <p>알파벳을 <strong>무작위로 뒤섞어서</strong>(단순 치환 암호) 만든 암호문입니다.</p>
+        <div style="font-size:13px;font-weight:600;margin:10px 0 6px;color:var(--ink)">암호문:</div>
+        <div class="cipher-text" id="m3CipherDisplay" style="font-size:13px"></div>
+        <div style="font-size:13px;font-weight:600;margin:14px 0 6px;color:var(--ink)">복호화 미리보기:</div>
+        <div class="preview-text" id="m3Preview" style="font-size:13px"></div>
+      </div>
+
+      <div class="hint-box" id="m3HintBox"></div>
+
+      <div class="card">
+        <button class="btn btn-secondary btn-sm" onclick="showM3Hint()" style="margin-bottom:12px">💡 힌트 보기</button>
+
+        <details>
+          <summary>힌트 1 (방향)</summary>
+          <div class="hint-content">"부분적으로 드러난 단어를 살펴보세요. 네 글자이고 E가 세 번째인 흔한 영어 단어는?"</div>
+        </details>
+        <details>
+          <summary>힌트 2 (전략)</summary>
+          <div class="hint-content">"TBXH &rarr; OVER라면 T&rarr;O, B&rarr;V, H&rarr;R. 두 글자 단어에서 새 대응을 찾으세요."</div>
+        </details>
+        <details>
+          <summary>힌트 3 (절차)</summary>
+          <div class="hint-content">"빈도 차트를 활용하세요. 암호문에서 자주 나오는 글자일수록 E, T, A, O, I, N에 대응될 가능성이 높습니다."</div>
+        </details>
+
+        <div class="text-center mt-12">
+          <button class="btn btn-success" onclick="checkSubstitution()">정답 확인</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>E-8. 한 글자씩 밝혀 가기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">⚪ 선택</span></h3>
+        <p><strong>(a)</strong> 밝혀낸 원문의 첫 문장:</p>
+        <textarea class="answer" data-save="e8a" placeholder="원문..."></textarea>
+        <p style="margin-top:8px"><strong>(b)</strong> 가장 도움이 됐던 단서는?</p>
+        <textarea class="answer" data-save="e8b" placeholder="가장 도움이 됐던 단서..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-primary" onclick="completeSection(4)">완료하고 다음으로 &rarr;</button>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- SECTION 3.5: 아핀도 무너진다 (Zone) -->
+<!-- ======================================================== -->
+<div class="section-page" id="sec-5">
+  <div class="section-header">
+    <span class="section-badge badge-d">D 심화</span>
+    <h2>아핀 암호도 빈도 분석 앞에 무너진다</h2>
+  </div>
+
+  <!-- Teacher Demo -->
+  <div class="card">
+    <h3>아핀 암호 빈도 분석 (교사 시연)</h3>
+    <div class="cipher-text mb-12" id="tdCipher" style="font-size:12px"></div>
+    <div class="split-panel" style="grid-template-columns:220px 1fr">
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--ink)">빈도 차트 (상위 2글자 클릭)</div>
+        <div id="tdFreqBars"></div>
+        <div style="font-size:12px;color:var(--ink3);margin-top:4px" id="tdSelected">선택: 없음</div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--ink)">연립방정식 풀이</div>
+        <div class="step-nav" id="tdStepNav"></div>
+        <div class="step-content" id="tdStepContent">왼쪽 빈도 차트에서 상위 2글자를 클릭하세요.</div>
+      </div>
+    </div>
+    <div class="mt-12">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:var(--ink)">복호화 결과:</div>
+      <div class="preview-text" id="tdPreview" style="font-size:13px">아직 풀이 전입니다...</div>
+    </div>
+  </div>
+
+  <!-- Worksheet D-1 -->
+  <div class="card">
+    <h3>D-1. 아핀 암호의 빈도 분석 정리 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p><strong>(a)</strong> 아핀 암호문 분석 결과:</p>
+    <ul style="margin:8px 0 8px 20px;font-size:14px">
+      <li>가장 많이 나온 글자: <strong>C</strong>와 <strong>I</strong> (각 11회 동률)</li>
+      <li><strong>"ZRC"</strong>가 반복 &rarr; 원문의 <strong>THE</strong>로 추정</li>
+      <li>ZRC의 C가 E일 가능성 높음!</li>
+    </ul>
+    <p>두 가지 사실:</p>
+    <table>
+      <tr><th>원문 글자</th><th>원문 번호</th><th>암호 글자</th><th>암호 번호</th></tr>
+      <tr><td>E</td><td>4</td><td>C</td><td>2</td></tr>
+      <tr><td>T</td><td>19</td><td>Z</td><td>25</td></tr>
+    </table>
+    <p style="margin-top:12px"><strong>(b)</strong> 아핀 암호 규칙에 대입하면 두 개의 합동식:</p>
+    <div style="font-family:var(--mono);font-size:15px;margin:8px 0;line-height:2">
+      E &rarr; C: 4a + b &equiv; 2 (mod 26) &hellip; &#x2460;<br>
+      T &rarr; Z: 19a + b &equiv; 25 (mod 26) &hellip; &#x2461;
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>D-2. 연립합동식 풀기 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p><strong>(a)</strong> &#x2461;에서 &#x2460;을 빼면 b가 사라집니다.</p>
+    <div style="font-family:var(--mono);font-size:14px;margin:8px 0 8px 16px">
+      (19a + b) &minus; (4a + b) &equiv; 25 &minus; 2 (mod 26)<br>
+      15a &equiv; <input class="inline-input" data-save="d2a" data-answer="23" placeholder="?"> (mod 26)
+    </div>
+    <p style="margin-top:12px"><strong>(b)</strong> a = 1, 2, 3, ... 을 넣어서 풀어 봅시다.</p>
+    <table>
+      <tr><th>a</th><th>15 &times; a</th><th>mod 26</th><th>= 23?</th></tr>
+      <tr><td>1</td><td>15</td><td>15</td><td>&#x274C;</td></tr>
+      <tr><td>2</td><td>30</td><td>4</td><td>&#x274C;</td></tr>
+      <tr><td>3</td><td>45</td><td>19</td><td>&#x274C;</td></tr>
+      <tr><td>4</td><td>60</td><td>8</td><td>&#x274C;</td></tr>
+      <tr><td>5</td><td>75</td><td><input class="inline-input" data-save="d2b1" data-answer="23" placeholder="?"></td><td><input class="inline-input" data-save="d2b2" data-answer="✅" placeholder="?"></td></tr>
+    </table>
+    <p>&rarr; a = <strong><input class="inline-input" data-save="d2ba" data-answer="5" placeholder="?"></strong></p>
+    <p style="margin-top:12px"><strong>(c)</strong> a를 &#x2460;에 대입하여 b를 구합니다.</p>
+    <div style="font-family:var(--mono);font-size:14px;margin:8px 0 8px 16px">
+      4 &times; <input class="inline-input" data-save="d2c1" data-answer="5" placeholder="a"> + b &equiv; 2 (mod 26)<br>
+      <input class="inline-input" data-save="d2c2" data-answer="20" placeholder="?"> + b &equiv; 2 (mod 26)<br>
+      b &equiv; 2 &minus; <input class="inline-input" data-save="d2c3" data-answer="20" placeholder="?"> &equiv; <input class="inline-input" data-save="d2c4" data-answer="8" placeholder="?"> (mod 26)
+    </div>
+    <p>&rarr; b = <strong><input class="inline-input" data-save="d2bb" data-answer="8" placeholder="?"></strong></p>
+    <p style="margin-top:12px"><strong>(d)</strong> 결과: a = <input class="inline-input" data-save="d2d1" data-answer="5" placeholder="?">, b = <input class="inline-input" data-save="d2d2" data-answer="8" placeholder="?"></p>
+    <div class="callout callout-danger">아핀 암호는 키가 312개나 되지만, 빈도 분석으로 글자 <strong>2개만 추정</strong>하면 키가 밝혀집니다!</div>
+  </div>
+
+  <div class="card">
+    <h3>D-3. 고전 암호의 근본 한계 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p>시저, 곱하기, 아핀, 단순 치환 &mdash; 이 모든 암호의 <strong>공통점</strong>은?</p>
+    <div class="callout callout-tip">힌트: "A가 항상 G로 바뀐다면, 1000번째 A도 G로 바뀝니다."</div>
+    <p><strong>(a)</strong> 공통점:</p>
+    <textarea class="answer" data-save="d3a" placeholder="공통점..."></textarea>
+    <p><strong>(b)</strong> 왜 치명적인 약점인가요?</p>
+    <textarea class="answer" data-save="d3b" placeholder="이유..."></textarea>
+    <p><strong>(c)</strong></p>
+    <div class="fill-blank">
+      "한 글자가 항상 <input class="inline-input wide" data-save="d3c1" placeholder="?"> 글자로 바뀌는 한, <input class="inline-input wide" data-save="d3c2" placeholder="?">라는 지문은 지울 수 없다."
+    </div>
+    <p style="margin-top:12px"><strong>(d)</strong> 사고 실험: 같은 글자를 매번 <strong>다른 글자로</strong> 바꿀 수 있다면?</p>
+    <textarea class="answer" data-save="d3d" placeholder="나의 생각..."></textarea>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-primary" onclick="completeSection(5)">완료하고 다음으로 &rarr;</button>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- SECTION 3.6: 도전 과제 (Mission Board) -->
+<!-- ======================================================== -->
+<div class="section-page" id="sec-6">
+  <div class="section-header">
+    <span class="section-badge badge-c">C 도전</span>
+    <h2>경계를 넘어서</h2>
+  </div>
+
+  <div class="mission-board">
+    <div class="mission-card">
+      <h3>C-1. 종합 해독 미션 🔓 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+      <p>다음 시저 암호를 <strong>패턴과 추론만으로</strong> 풀어 봅시다.</p>
+      <div class="cipher-display">YMJWJ NX ST LWJFYJW FLTSD YMFS YT QNAJ NS AFNS</div>
+      <details>
+        <summary>힌트 1 (방향)</summary>
+        <div class="hint-content">두 글자짜리 단어를 먼저 찾으세요. 영어에서 흔한 두 글자 단어: IS, IN, TO, NO</div>
+      </details>
+      <details>
+        <summary>힌트 2 (전략)</summary>
+        <div class="hint-content">NX가 IS라면 키는? YT가 TO라면 키는? 두 추정이 같은 키를 주는지 확인하세요.</div>
+      </details>
+      <details>
+        <summary>힌트 3 (절차)</summary>
+        <div class="hint-content">N(13) &rarr; I(8): 13 &minus; k &equiv; 8, k = 5. Y(24) &rarr; T(19): 24 &minus; 5 = 19 &#x2705;</div>
+      </details>
+      <p style="margin-top:12px"><strong>(a)</strong> 추정한 키: k = <strong><input class="inline-input" data-save="c1a" data-answer="5" placeholder="?"></strong></p>
+      <p style="margin-top:12px"><strong>(b)</strong> 복호화된 원문:</p>
+      <textarea class="answer" data-save="c1b" placeholder="THERE IS NO GREATER..."></textarea>
+    </div>
+
+    <div class="mission-card">
+      <h3>C-2. 빈도 분석을 무력화하려면? <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">⚪ 선택</span></h3>
+      <p><strong>(a)</strong> "같은 E라도, 문장에서의 <strong>위치에 따라</strong> 다른 글자로 바뀌게 하려면?"</p>
+      <textarea class="answer" data-save="c2a" placeholder="나의 아이디어..."></textarea>
+      <p style="margin-top:12px"><strong>(b)</strong> 예를 들어 "HELLO"를 위치마다 다른 키로 암호화:</p>
+      <div style="font-family:var(--mono);font-size:14px;margin:8px 0 8px 16px;line-height:2">
+        H(7)+3 = 10 &rarr; <strong>K</strong><br>
+        E(4)+7 = 11 &rarr; <strong>L</strong><br>
+        L(11)+1 = 12 &rarr; <strong>M</strong><br>
+        L(11)+ <input class="inline-input" data-save="c2b1" placeholder="?"> = <input class="inline-input" data-save="c2b2" placeholder="?"> &rarr; <input class="inline-input" data-save="c2b3" placeholder="?"><br>
+        O(14)+ <input class="inline-input" data-save="c2b4" placeholder="?"> = <input class="inline-input" data-save="c2b5" placeholder="?"> &rarr; <input class="inline-input" data-save="c2b6" placeholder="?">
+      </div>
+      <div class="callout callout-tip">두 L이 <strong>서로 다른 암호 글자</strong>가 됩니다!</div>
+      <p style="margin-top:12px"><strong>(c)</strong> 이 방식의 장점과 새로운 어려움은?</p>
+      <textarea class="answer" data-save="c2c" placeholder="장점:&#10;&#10;새로운 어려움:"></textarea>
+    </div>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-primary" onclick="completeSection(6)">완료하고 다음으로 &rarr;</button>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- SECTION 3.7: 성찰 (Zone) -->
+<!-- ======================================================== -->
+<div class="section-page" id="sec-7">
+  <div class="section-header">
+    <span class="section-badge badge-r">R 성찰</span>
+    <h2>오늘의 탐험을 돌아보며</h2>
+  </div>
+
+  <div class="card">
+    <h3>R-1. 여정 요약 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <div class="fill-blank" style="line-height:2.5">
+      글자의 습관 발견: 영어에서 가장 많은 글자는 <input class="inline-input" data-save="r1a" data-answer="E" placeholder="?"> (약 12.7%)<br>
+      &darr;<br>
+      시저 암호 공격: 빈도 그래프를 <input class="inline-input wide" data-save="r1b" placeholder="?">하면 키를 찾을 수 있다<br>
+      &darr;<br>
+      치환 암호 공격: 빈도 순위 + <input class="inline-input wide" data-save="r1c" placeholder="?"> 등의 단서로 한 글자씩 해독<br>
+      &darr;<br>
+      아핀 암호 공격: 빈도 추정 2개로 <input class="inline-input wide" data-save="r1d" placeholder="?">을 세워 키를 구함<br>
+      &darr;<br>
+      결론: "한 글자 &rarr; 같은 글자" 치환은 <input class="inline-input wide" data-save="r1e" placeholder="?">에 취약하다
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>R-2. 발견 노트 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p><strong>(a)</strong> 오늘 수업에서 가장 인상 깊었던 순간은?</p>
+    <textarea class="answer" data-save="r2a" placeholder=""></textarea>
+    <p><strong>(b)</strong> 왜 그 순간이 인상 깊었나요?</p>
+    <textarea class="answer" data-save="r2b" placeholder=""></textarea>
+  </div>
+
+  <div class="card">
+    <h3>R-3. 연결 질문 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p><strong>(a)</strong> 세 차시의 흐름:</p>
+    <table>
+      <tr><th>차시</th><th>mod 연산의 역할</th><th>핵심 활동</th></tr>
+      <tr><td>1차시</td><td>오류 검출 (체크섬)</td><td>숫자의 오류를 잡는 데 mod 사용</td></tr>
+      <tr><td>2차시</td><td><input class="tbl-in" data-save="r3a1" style="width:100%;border:none;border-bottom:1px solid #ccc;font-size:13px;padding:4px"></td><td><input class="tbl-in" data-save="r3a2" style="width:100%;border:none;border-bottom:1px solid #ccc;font-size:13px;padding:4px"></td></tr>
+      <tr><td>3차시</td><td><input class="tbl-in" data-save="r3a3" style="width:100%;border:none;border-bottom:1px solid #ccc;font-size:13px;padding:4px"></td><td><input class="tbl-in" data-save="r3a4" style="width:100%;border:none;border-bottom:1px solid #ccc;font-size:13px;padding:4px"></td></tr>
+    </table>
+    <p style="margin-top:12px"><strong>(b)</strong> "만드는 것"과 "깨뜨리는 것"은 어떤 관계인가요?</p>
+    <textarea class="answer" data-save="r3b" placeholder=""></textarea>
+  </div>
+
+  <div class="card">
+    <h3>R-4. 예고편 &mdash; 다음 시간을 위한 질문 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#dbeafe;color:#2563eb;font-weight:700;vertical-align:middle">🔵 필수</span></h3>
+    <p>고전 암호는 수백 년간 빈도 분석에 뚫려왔습니다. 1977년, 세 수학자가 완전히 다른 접근을 했습니다.</p>
+    <div class="callout callout-info"><strong>"암호화 키와 복호화 키를 아예 다르게 만들면?"</strong></div>
+    <ul style="margin:8px 0 8px 20px;font-size:14px">
+      <li>지금까지의 암호에서, 암호화 키를 알면 복호화 키도 알 수 있었나요? &rarr;
+        <label><input type="radio" name="r4q" data-save="r4q" value="yes"> 네</label>
+        <label><input type="radio" name="r4q" data-save="r4q" value="no"> 아니오</label>
+      </li>
+    </ul>
+    <p><strong>암호화 키를 공개해도 복호화가 안 되는</strong> 암호가 있다면?</p>
+    <textarea class="answer" data-save="r4a" placeholder="나의 생각..."></textarea>
+    <div class="callout callout-danger">그 열쇠는... <strong>소수</strong>입니다. 다음 시간에 밝혀집니다!</div>
+  </div>
+
+  <div class="card">
+    <h3>R-5. 자기 평가 <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;font-weight:700;vertical-align:middle">⚪ 선택</span></h3>
+    <table class="assess-table">
+      <tr>
+        <th style="text-align:left">항목</th>
+        <th>아직 어려워요</th>
+        <th>대략 알겠어요</th>
+        <th>자신 있어요</th>
+      </tr>
+      <tr><td style="text-align:left">영어 글자 빈도 패턴 이해하기</td><td><input type="radio" name="a1" value="1"></td><td><input type="radio" name="a1" value="2"></td><td><input type="radio" name="a1" value="3"></td></tr>
+      <tr><td style="text-align:left">시저 암호를 빈도 분석으로 깨기</td><td><input type="radio" name="a2" value="1"></td><td><input type="radio" name="a2" value="2"></td><td><input type="radio" name="a2" value="3"></td></tr>
+      <tr><td style="text-align:left">단순 치환 암호를 탐정처럼 해독하기</td><td><input type="radio" name="a3" value="1"></td><td><input type="radio" name="a3" value="2"></td><td><input type="radio" name="a3" value="3"></td></tr>
+      <tr><td style="text-align:left">고전 암호의 근본 한계 설명하기</td><td><input type="radio" name="a4" value="1"></td><td><input type="radio" name="a4" value="2"></td><td><input type="radio" name="a4" value="3"></td></tr>
+    </table>
+    <p style="margin-top:8px"><strong>가장 더 연습하고 싶은 것</strong>: <input class="inline-input x-wide" data-save="r5" style="width:100%" placeholder=""></p>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-primary" onclick="completeSection(7)">완료하고 다음으로 &rarr;</button>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- SECTION 3.8: 성취 요약 (Mission Board) -->
+<!-- ======================================================== -->
+<div class="section-page" id="sec-8">
+  <div class="section-header">
+    <span class="section-badge badge-s">S 요약</span>
+    <h2>미션 완료!</h2>
+  </div>
+
+  <div class="text-center" style="padding:20px 0">
+    <div style="font-size:56px">🎉</div>
+    <div class="star-display" id="starDisplay"></div>
+    <p style="font-size:18px;font-weight:700;margin-top:8px;color:var(--ink)">3차시 학습을 마쳤습니다!</p>
+    <p style="color:var(--ink2)">총 획득 XP: <strong id="finalXP">0</strong></p>
+  </div>
+
+  <div class="mission-board">
+    <div class="mission-card">
+      <h3>핵심 정리</h3>
+      <ol style="text-align:left;font-size:14px;line-height:2;padding-left:20px;color:var(--ink2)">
+        <li>영어에는 글자 빈도 패턴(지문)이 있다 &mdash; <strong>E, T, A, O, I, N</strong></li>
+        <li>시저 암호 &rarr; 빈도 그래프 밀기로 <strong>순식간에</strong> 해독</li>
+        <li>치환 암호 &rarr; 빈도 분석 + 패턴으로 해독</li>
+        <li>아핀 312개도 빈도 2글자로 해독</li>
+        <li>고전 암호의 근본 약점 = <strong>빈도</strong></li>
+      </ol>
+    </div>
+
+    <div class="mission-card">
+      <h3>나의 발견 노트</h3>
+      <div id="discoveryNotes" style="font-size:13px;line-height:1.8"></div>
+      <button class="btn btn-secondary btn-sm mt-8" onclick="copyNotes()">복사하기</button>
+    </div>
+
+    <div class="mission-card">
+      <h3>별점 평가</h3>
+      <p style="font-size:14px;color:var(--ink2);margin-bottom:8px">오늘 수업은 어땠나요?</p>
+      <div id="starRating" style="font-size:32px;cursor:pointer"></div>
+    </div>
+  </div>
+
+  <div class="callout callout-danger" style="margin-top:20px;text-align:center">
+    <strong>4차시 예고</strong>: 고전 암호가 모두 뚫린다면, 현대 인터넷은 뭘로 지켜지나?<br>
+    답은 <strong>'소수'</strong>. 다음 시간에 만나요!
+  </div>
+</div>
+
+<!-- ===== CONFETTI CONTAINER ===== -->
+<div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const ENGLISH_FREQ={E:12.7,T:9.1,A:8.2,O:7.5,I:7.0,N:6.7,S:6.3,H:6.1,R:6.0,D:4.3,L:4.0,C:2.8,U:2.8,M:2.4,W:2.4,F:2.2,G:2.0,Y:2.0,P:1.9,B:1.5,V:1.0,K:0.8,J:0.2,X:0.2,Q:0.1,Z:0.1};
+const FREQ_ORDER='ETAOINSHRDLCUMWFGYPBVKJXQZ';
+
+const SAMPLE_TEXTS=[
+  {title:'이상한 나라의 앨리스',text:'ALICE WAS BEGINNING TO GET VERY TIRED OF SITTING BY HER SISTER ON THE BANK AND OF HAVING NOTHING TO DO ONCE OR TWICE SHE HAD PEEPED INTO THE BOOK HER SISTER WAS READING BUT IT HAD NO PICTURES OR CONVERSATIONS IN IT AND WHAT IS THE USE OF A BOOK THOUGHT ALICE WITHOUT PICTURES OR CONVERSATIONS'},
+  {title:'셜록 홈즈',text:'TO SHERLOCK HOLMES SHE IS ALWAYS THE WOMAN I HAVE SELDOM HEARD HIM MENTION HER UNDER ANY OTHER NAME IN HIS EYES SHE ECLIPSES AND PREDOMINATES THE WHOLE OF HER SEX IT WAS NOT THAT HE FELT ANY EMOTION AKIN TO LOVE FOR IRENE ADLER ALL EMOTIONS AND THAT ONE PARTICULARLY WERE ABHORRENT TO HIS COLD PRECISE BUT ADMIRABLY BALANCED MIND'},
+  {title:'어린 왕자',text:'ONCE WHEN I WAS SIX YEARS OLD I SAW A MAGNIFICENT PICTURE IN A BOOK CALLED TRUE STORIES FROM NATURE ABOUT THE PRIMEVAL FOREST IT WAS A PICTURE OF A BOA CONSTRICTOR IN THE ACT OF SWALLOWING AN ANIMAL THE BOOK SAID BOA CONSTRICTORS SWALLOW THEIR PREY WHOLE WITHOUT CHEWING IT AFTER THAT I PONDERED DEEPLY OVER THE ADVENTURES OF THE JUNGLE'},
+  {title:'과학 교과서',text:'THE CELL IS THE BASIC STRUCTURAL AND FUNCTIONAL UNIT OF ALL LIVING ORGANISMS SOME ORGANISMS SUCH AS BACTERIA ARE UNICELLULAR CONSISTING OF A SINGLE CELL OTHER ORGANISMS SUCH AS HUMANS ARE MULTICELLULAR WHICH IN HUMANS MEANS ROUGHLY THIRTY SEVEN TRILLION CELLS THE CELL WAS DISCOVERED BY ROBERT HOOKE IN SIXTEEN SIXTY FIVE'}
+];
+
+const CAESAR_CHALLENGES=[
+  {ciphertext:'VTXLUH WUHODZQHB GU OLYHVHB DQG WKH UHVW RI WKHVH JHQWOHPHQ KDYLQJ DVNHG PH WR ZULWH GRZQ WKH ZKROH SDUWLFXODUV DERXW WUHDVXUH LVODQG',key:3,plaintext:'SQUIRE TRELAWNEY DR LIVESEY AND THE REST OF THESE GENTLEMEN HAVING ASKED ME TO WRITE DOWN THE WHOLE PARTICULARS ABOUT TREASURE ISLAND'},
+  {ciphertext:'YMJWJ NX ST LWJFYJW FLTSD YMFS YT QNAJ NS AFNS',key:5,plaintext:'THERE IS NO GREATER AGONY THAN TO LIVE IN VAIN'}
+];
+
+const SUBSTITUTION_ENCRYPT={A:'F',B:'Q',C:'W',D:'N',E:'X',F:'K',G:'V',H:'J',I:'Z',J:'G',K:'P',L:'A',M:'R',N:'E',O:'T',P:'D',Q:'Y',R:'H',S:'I',T:'M',U:'L',V:'B',W:'O',X:'C',Y:'S',Z:'U'};
+const SUBSTITUTION_DECRYPT={};
+for(const[k,v]of Object.entries(SUBSTITUTION_ENCRYPT))SUBSTITUTION_DECRYPT[v]=k;
+const SUBSTITUTION_PLAINTEXT='THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG IT IS A TRUTH UNIVERSALLY ACKNOWLEDGED THAT A SINGLE MAN IN POSSESSION OF A GOOD FORTUNE MUST BE IN WANT OF A WIFE';
+const SUBSTITUTION_CIPHERTEXT=SUBSTITUTION_PLAINTEXT.split('').map(c=>c===' '?' ':SUBSTITUTION_ENCRYPT[c]).join('');
+
+const AFFINE_DEMO={a:5,b:8,plaintext:'FREQUENCY ANALYSIS CAN BREAK ANY CLASSICAL CIPHER THAT USES SIMPLE SUBSTITUTION THE PATTERN OF LANGUAGE IS THE KEY'};
+const M3_HINTS=['가장 많은 글자부터 시작하세요. 영어에서 가장 많은 글자는 E입니다.','한 글자짜리 단어(F)는 영어에서 보통 I 또는 A입니다.','THE는 영어에서 가장 흔한 세 글자 단어입니다. MJX 패턴을 찾아보세요.'];
+
+// ============================================================
+// STATE
+// ============================================================
+const SECTION_XP=[0,10,25,25,30,20,50,10,15];
+const SECTION_NAMES=['','3.1 워밍업','3.2 빈도','3.3 시저','3.4 치환','3.5 아핀','3.6 도전','3.7 성찰','3.8 요약'];
+const TOTAL_SECTIONS=8;
+
+let State={
+  currentSection:1,
+  completedSections:new Set(),
+  xp:0,
+  discoveryNotes:[],
+  m1:{textsExplored:0,overlayUsed:false,expanded:false,overlayOn:false,currentFreq:null},
+  m2:{shift:0},
+  m3:{mapping:{},highlightLetter:null,hintIndex:0},
+  td:{selectedLetters:[],step:0,a:null,b:null},
+  starRating:0
+};
+
+// ============================================================
+// AUTOSAVE
+// ============================================================
+const SAVE_KEY='session3_unified_data';
+function autoSave(){
+  const data={};
+  document.querySelectorAll('[data-save]').forEach(el=>{
+    const k=el.dataset.save;
+    if(el.type==='radio'){if(el.checked)data[k]=el.value;}
+    else data[k]=el.value;
+  });
+  data.__state={
+    currentSection:State.currentSection,
+    completedSections:[...State.completedSections],
+    xp:State.xp,
+    discoveryNotes:State.discoveryNotes,
+    m3Mapping:State.m3.mapping,
+    starRating:State.starRating
+  };
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify(data));}catch(e){}
+}
+function autoLoad(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(!raw)return;
+    const data=JSON.parse(raw);
+    document.querySelectorAll('[data-save]').forEach(el=>{
+      const k=el.dataset.save;
+      if(el.type==='radio'){if(data[k]===el.value)el.checked=true;}
+      else if(data[k]!=null)el.value=data[k];
+    });
+    if(data.__state){
+      const s=data.__state;
+      State.currentSection=s.currentSection||1;
+      State.completedSections=new Set(s.completedSections||[]);
+      State.xp=s.xp||0;
+      State.discoveryNotes=s.discoveryNotes||[];
+      if(s.m3Mapping)State.m3.mapping=s.m3Mapping;
+      State.starRating=s.starRating||0;
+    }
+  }catch(e){}
+}
+setInterval(autoSave,5000);
+
+// ============================================================
+// UTILS
+// ============================================================
+function countFrequency(text){
+  const counts={};let total=0;
+  for(const c of text){if(c>='A'&&c<='Z'){counts[c]=(counts[c]||0)+1;total++;}}
+  const freq={};for(const[k,v]of Object.entries(counts))freq[k]=(v/total)*100;
+  return{counts,total,freq};
+}
+function sortByFrequency(freq){return Object.entries(freq).sort((a,b)=>b[1]-a[1]).map(([letter,pct])=>({letter,pct}));}
+function caesarDecrypt(text,key){return text.split('').map(c=>{if(c<'A'||c>'Z')return c;return String.fromCharCode(((c.charCodeAt(0)-65-key+26)%26)+65);}).join('');}
+function affineEncrypt(text,a,b){return text.split('').map(c=>{if(c===' ')return' ';const n=c.charCodeAt(0)-65;return String.fromCharCode(((a*n+b)%26+26)%26+65);}).join('');}
+function modInverse(a,m){for(let i=1;i<m;i++){if((a*i)%m===1)return i;}return null;}
+function affineDecrypt(text,a,b){const aInv=modInverse(a,26);if(!aInv)return text;return text.split('').map(c=>{if(c===' ')return' ';const n=c.charCodeAt(0)-65;return String.fromCharCode((((aInv*(n-b))%26)+26)%26+65);}).join('');}
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function showPopover(title,content){document.getElementById('popoverTitle').textContent=title;document.getElementById('popoverContent').innerHTML=content;document.getElementById('popover').classList.add('show');document.getElementById('popoverBackdrop').classList.add('show');}
+function closePopover(){document.getElementById('popover').classList.remove('show');document.getElementById('popoverBackdrop').classList.remove('show');}
+
+// ============================================================
+// XP SYSTEM
+// ============================================================
+function addXP(amount){
+  State.xp+=amount;
+  document.getElementById('xpBadge').textContent=State.xp+' XP';
+  toast('+'+amount+' XP!');
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function buildNav(){
+  const dots=document.getElementById('navDots');
+  dots.innerHTML='';
+  for(let i=1;i<=TOTAL_SECTIONS;i++){
+    const d=document.createElement('div');
+    d.className='nav-dot'+(i===State.currentSection?' active':'')+(State.completedSections.has(i)?' done':'');
+    d.textContent=i;
+    d.title=SECTION_NAMES[i];
+    d.onclick=()=>goToSection(i);
+    dots.appendChild(d);
+  }
+  updateProgress();
+}
+function updateProgress(){
+  const pct=(State.completedSections.size/TOTAL_SECTIONS)*100;
+  document.getElementById('progressFill').style.width=pct+'%';
+}
+function goToSection(n){
+  document.querySelectorAll('.section-page').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById('sec-'+n);
+  if(el){el.classList.add('active');State.currentSection=n;buildNav();window.scrollTo({top:0,behavior:'smooth'});}
+  // Init interactive sections
+  if(n===2)initSection2();
+  if(n===3)initSection3();
+  if(n===4)initSection4();
+  if(n===5)initSection5();
+  if(n===8)initSection8();
+}
+function completeSection(n){
+  if(!State.completedSections.has(n)){
+    State.completedSections.add(n);
+    addXP(SECTION_XP[n]);
+    // Add discovery notes
+    if(n===2)State.discoveryNotes.push("영어 텍스트는 어떤 글이든 E, T, A, O, I, N 순으로 글자가 많다.");
+    if(n===3)State.discoveryNotes.push("시저 암호는 빈도 그래프를 밀어 맞추기만 하면 키를 찾을 수 있다.");
+    if(n===4)State.discoveryNotes.push("치환 암호도 빈도 패턴이 그대로 남아서 풀린다.");
+    if(n===5)State.discoveryNotes.push("아핀 암호는 빈도 추정 2글자로 연립방정식을 세워 풀 수 있다.");
+  }
+  autoSave();
+  if(n<TOTAL_SECTIONS)goToSection(n+1);
+  else goToSection(8);
+}
+
+// ============================================================
+// CARD FLOW CONTROLLER
+// ============================================================
+function showCFStep(sec,step){
+  const panels=document.querySelectorAll('#sec-'+sec+' .cf-panel');
+  const steps=document.querySelectorAll('#sec-'+sec+' .cf-step');
+  panels.forEach((p,i)=>{p.classList.toggle('active',i===step-1);});
+  steps.forEach((s,i)=>{
+    s.classList.remove('active','done');
+    if(i===step-1)s.classList.add('active');
+    else if(i<step-1)s.classList.add('done');
+  });
+}
+
+// ============================================================
+// SECTION 2: FREQUENCY DISCOVERY
+// ============================================================
+function initSection2(){/* already interactive via onTextSelect */}
+function onTextSelect(){
+  const idx=parseInt(document.getElementById('textSelect').value);
+  if(isNaN(idx))return;
+  const text=SAMPLE_TEXTS[idx].text;
+  document.getElementById('textContent').textContent=text;
+  document.getElementById('textDisplay').style.display='block';
+  document.getElementById('countBtn').disabled=false;
+  document.getElementById('freqChart').style.display='none';
+  State.m1.overlayOn=false;
+  document.getElementById('overlayStatus').textContent='';
+}
+function countLetters(){
+  const idx=parseInt(document.getElementById('textSelect').value);
+  const text=SAMPLE_TEXTS[idx].text;
+  const{counts,total,freq}=countFrequency(text);
+  State.m1.currentFreq=freq;
+  State.m1.textsExplored++;
+  const sorted=sortByFrequency(freq);
+  const container=document.getElementById('barContainer');
+  container.innerHTML='';
+  const maxPct=sorted[0]?.pct||1;
+  const showCount=State.m1.expanded?sorted.length:Math.min(10,sorted.length);
+  sorted.forEach((item,i)=>{
+    const row=document.createElement('div');
+    row.className='bar-row';
+    row.style.display=i<showCount?'flex':'none';
+    row.dataset.idx=i;
+    row.innerHTML=`<span class="bar-label">${item.letter}</span><div class="bar-track"><div class="bar-fill" style="width:0%"></div><div class="bar-fill overlay" id="overlay-${item.letter}" style="width:0%;display:none"></div></div><span class="bar-pct">${item.pct.toFixed(1)}%</span><span class="bar-count">${counts[item.letter]||0}</span>`;
+    container.appendChild(row);
+    setTimeout(()=>{row.querySelector('.bar-fill').style.width=(item.pct/maxPct*100)+'%';},i*50);
+  });
+  if(sorted.length>10)document.getElementById('expandArea').style.display='block';
+  document.getElementById('totalCount').textContent='총 '+total+'자';
+  document.getElementById('freqChart').style.display='block';
+}
+function toggleExpand(){
+  State.m1.expanded=!State.m1.expanded;
+  document.querySelectorAll('#barContainer .bar-row').forEach((r,i)=>{r.style.display=(!State.m1.expanded&&i>=10)?'none':'flex';});
+  document.querySelector('#expandArea .expand-btn').textContent=State.m1.expanded?'▲ 접기':'▼ 나머지 글자 보기';
+}
+function toggleOverlay(){
+  State.m1.overlayOn=!State.m1.overlayOn;
+  State.m1.overlayUsed=true;
+  const sorted=State.m1.currentFreq?sortByFrequency(State.m1.currentFreq):[];
+  const maxPct=sorted[0]?.pct||1;
+  const maxStd=Math.max(...Object.values(ENGLISH_FREQ));
+  const scale=maxPct/maxStd;
+  sorted.forEach(item=>{
+    const el=document.getElementById('overlay-'+item.letter);
+    if(el){const stdPct=ENGLISH_FREQ[item.letter]||0;el.style.display=State.m1.overlayOn?'block':'none';el.style.width=(stdPct*scale/maxPct*100)+'%';}
+  });
+  document.getElementById('overlayStatus').textContent=State.m1.overlayOn?'파란 점선 = 표준 영어 빈도':'';
+}
+
+// ============================================================
+// SECTION 3: CAESAR SLIDER
+// ============================================================
+function initSection3(){
+  const ch=CAESAR_CHALLENGES[0];
+  State.m2.shift=0;
+  document.getElementById('m2CipherDisplay').textContent=ch.ciphertext;
+  buildVerticalCharts('cipherBars','standardBars',ch.ciphertext);
+  setupDrag('cipherChartArea','cipherBars',s=>{State.m2.shift=s;updateM2Display();},()=>State.m2.shift);
+  updateM2Display();
+}
+function buildVerticalCharts(cipherId,stdId,ciphertext){
+  const{freq}=countFrequency(ciphertext);
+  const maxCipher=Math.max(...Object.values(freq),1);
+  const maxStd=Math.max(...Object.values(ENGLISH_FREQ));
+  const cipherEl=document.getElementById(cipherId);
+  const stdEl=document.getElementById(stdId);
+  cipherEl.innerHTML='';stdEl.innerHTML='';
+  for(let i=0;i<26;i++){
+    const letter=String.fromCharCode(65+i);
+    const cPct=freq[letter]||0;const sPct=ENGLISH_FREQ[letter]||0;
+    const cBar=document.createElement('div');cBar.className='vchart-bar';
+    cBar.innerHTML=`<div class="vbar-fill" style="height:${(cPct/maxCipher*100)}%"></div><div class="vbar-label">${letter}</div>`;
+    cipherEl.appendChild(cBar);
+    const sBar=document.createElement('div');sBar.className='vchart-bar';
+    sBar.innerHTML=`<div class="vbar-fill" style="height:${(sPct/maxStd*100)}%"></div><div class="vbar-label">${letter}</div>`;
+    stdEl.appendChild(sBar);
+  }
+}
+function setupDrag(areaId,barsId,onShift,getShift){
+  const area=document.getElementById(areaId);
+  const bars=document.getElementById(barsId);
+  let startX=0,dragging=false;
+  area.addEventListener('pointerdown',e=>{dragging=true;startX=e.clientX;area.setPointerCapture(e.pointerId);});
+  area.addEventListener('pointermove',e=>{
+    if(!dragging)return;const dx=e.clientX-startX;
+    const barW=(bars.children[0]?.offsetWidth||18)+2;
+    if(Math.abs(dx)>=barW){const steps=Math.round(dx/barW);let ns=((getShift()-steps)%26+26)%26;startX=e.clientX;onShift(ns);}
+  });
+  area.addEventListener('pointerup',()=>{dragging=false;});
+  area.addEventListener('pointercancel',()=>{dragging=false;});
+}
+function changeShift(delta){State.m2.shift=((State.m2.shift+delta)%26+26)%26;updateM2Display();}
+function updateM2Display(){
+  const shift=State.m2.shift;const ch=CAESAR_CHALLENGES[0];
+  document.getElementById('shiftDisplay').textContent=shift;
+  // Wrap-around: rotate cipher bars (mod 26 순환)
+  const{freq}=countFrequency(ch.ciphertext);
+  const maxCipher=Math.max(...Object.values(freq),1);
+  const barsEl=document.getElementById('cipherBars');
+  for(let i=0;i<26;i++){
+    const srcIdx=(i+shift)%26;
+    const srcLetter=String.fromCharCode(65+srcIdx);
+    const pct=freq[srcLetter]||0;
+    const bar=barsEl.children[i];
+    if(bar){bar.querySelector('.vbar-fill').style.height=(pct/maxCipher*100)+'%';bar.querySelector('.vbar-label').textContent=srcLetter;}
+  }
+  barsEl.style.transform='none';
+  const match=calcSliderMatch(freq,shift);
+  document.getElementById('matchPct').textContent=match;
+  const fill=document.getElementById('matchFill');
+  fill.style.width=match+'%';
+  fill.style.background=match>80?'#10b981':match>50?'#f59e0b':'#f43f5e';
+  document.getElementById('m2Preview').textContent=caesarDecrypt(ch.ciphertext,shift);
+}
+function calcSliderMatch(cipherFreq,shift){
+  let overlap=0;
+  for(let i=0;i<26;i++){const cl=String.fromCharCode(65+((i+shift)%26));const sl=String.fromCharCode(65+i);overlap+=Math.min(cipherFreq[cl]||0,ENGLISH_FREQ[sl]||0);}
+  return Math.round(overlap);
+}
+function checkCaesar(){
+  const ch=CAESAR_CHALLENGES[0];
+  if(State.m2.shift===ch.key){toast('정답! 키 = '+ch.key);}
+  else{toast('아직 아닙니다. 그래프를 더 밀어보세요!');}
+}
+
+// ============================================================
+// SECTION 4: SUBSTITUTION DASHBOARD
+// ============================================================
+function initSection4(){
+  renderCipherDisplay();
+  const{freq,counts}=countFrequency(SUBSTITUTION_CIPHERTEXT);
+  const sorted=sortByFrequency(freq);
+  const maxPct=sorted[0]?.pct||1;
+  const freqEl=document.getElementById('m3FreqBars');
+  freqEl.innerHTML='';
+  sorted.forEach(item=>{
+    const row=document.createElement('div');row.className='bar-row';
+    row.onclick=()=>highlightCipherLetter(item.letter);
+    row.innerHTML=`<span class="bar-label">${item.letter}</span><div class="bar-track"><div class="bar-fill" style="width:${(item.pct/maxPct*100)}%"></div></div><span class="bar-pct">${item.pct.toFixed(1)}%</span>`;
+    freqEl.appendChild(row);
+  });
+  buildMappingGrid(sorted);
+  updateM3Preview();
+}
+function renderCipherDisplay(){
+  const el=document.getElementById('m3CipherDisplay');el.innerHTML='';
+  for(const c of SUBSTITUTION_CIPHERTEXT){
+    if(c===' '){el.appendChild(document.createTextNode(' '));}
+    else{const span=document.createElement('span');span.className='letter';span.textContent=c;span.dataset.letter=c;span.onclick=()=>highlightCipherLetter(c);el.appendChild(span);}
+  }
+}
+function highlightCipherLetter(letter){
+  State.m3.highlightLetter=letter;
+  document.querySelectorAll('#m3CipherDisplay .letter').forEach(span=>{span.classList.toggle('highlight',span.dataset.letter===letter);});
+}
+function buildMappingGrid(sorted){
+  const grid=document.getElementById('mappingGrid');grid.innerHTML='';
+  sorted.forEach(item=>{
+    const div=document.createElement('div');div.className='mapping-item';div.id='map-'+item.letter;
+    const savedVal=State.m3.mapping[item.letter]||'';
+    div.innerHTML=`<span class="cipher-letter">${item.letter}</span><span class="arrow">&rarr;</span><input type="text" maxlength="1" data-cipher="${item.letter}" value="${savedVal}" oninput="onMappingInput(this)" onfocus="highlightCipherLetter('${item.letter}')">`;
+    grid.appendChild(div);
+  });
+  updateMappingCount();
+}
+function onMappingInput(input){
+  const val=input.value.toUpperCase();input.value=val;const cipher=input.dataset.cipher;
+  if(val&&val>='A'&&val<='Z'){
+    for(const[k,v]of Object.entries(State.m3.mapping)){if(v===val&&k!==cipher){delete State.m3.mapping[k];const pi=document.querySelector('input[data-cipher="'+k+'"]');if(pi)pi.value='';toast(k+'→'+val+' 대응이 해제되었습니다');}}
+    State.m3.mapping[cipher]=val;
+  }else{delete State.m3.mapping[cipher];}
+  updateMappingCount();updateM3Preview();
+}
+function updateMappingCount(){document.getElementById('mappingCount').textContent=Object.keys(State.m3.mapping).length+'/26';}
+function updateM3Preview(){
+  const el=document.getElementById('m3Preview');el.innerHTML='';const mapping=State.m3.mapping;
+  for(const c of SUBSTITUTION_CIPHERTEXT){
+    if(c===' '){el.appendChild(document.createTextNode(' '));}
+    else{const span=document.createElement('span');if(mapping[c]){span.className='known';span.textContent=mapping[c];}else{span.className='unknown';span.textContent='\u00B7';}el.appendChild(span);}
+  }
+}
+function toolSingleLetter(){
+  const words=SUBSTITUTION_CIPHERTEXT.split(' ');
+  const singles=[...new Set(words.filter(w=>w.length===1))];
+  showPopover('🔤 한 글자 단어 발견!','한 글자 단어: <strong>'+singles.join(', ')+'</strong><br><br>영어에서 한 글자 단어는 <strong>I</strong> 또는 <strong>A</strong>일 확률이 매우 높습니다!');
+}
+function toolFreqPattern(){
+  const words=SUBSTITUTION_CIPHERTEXT.split(' ');const freq2={},freq3={};
+  words.forEach(w=>{if(w.length===2)freq2[w]=(freq2[w]||0)+1;if(w.length===3)freq3[w]=(freq3[w]||0)+1;});
+  const top3=Object.entries(freq3).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const top2=Object.entries(freq2).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  let html='<strong>3글자 패턴:</strong><br>';top3.forEach(([w,c])=>html+=w+' ('+c+'회) ');
+  html+='<br><br><strong>2글자 패턴:</strong><br>';top2.forEach(([w,c])=>html+=w+' ('+c+'회) ');
+  html+='<br><br>영어에서 가장 흔한 3글자 단어: <strong>THE, AND, FOR</strong>';
+  showPopover('📊 빈출 패턴',html);
+}
+function toolAutoE(){
+  const{freq}=countFrequency(SUBSTITUTION_CIPHERTEXT);const sorted=sortByFrequency(freq);const topLetter=sorted[0].letter;
+  State.m3.mapping[topLetter]='E';const input=document.querySelector('input[data-cipher="'+topLetter+'"]');if(input)input.value='E';
+  updateMappingCount();updateM3Preview();toast(topLetter+' → E 자동 대응!');
+}
+function showM3Hint(){
+  const idx=State.m3.hintIndex;if(idx>=M3_HINTS.length){toast('더 이상 힌트가 없습니다');return;}
+  const box=document.getElementById('m3HintBox');box.textContent='💡 '+M3_HINTS[idx];box.classList.add('visible');State.m3.hintIndex++;
+}
+function resetMapping(){
+  State.m3.mapping={};document.querySelectorAll('.mapping-item input').forEach(inp=>inp.value='');
+  document.querySelectorAll('.mapping-item').forEach(m=>{m.classList.remove('correct','wrong');});
+  updateMappingCount();updateM3Preview();toast('대응표가 초기화되었습니다');
+}
+function checkSubstitution(){
+  const count=Object.keys(State.m3.mapping).length;
+  if(count<5){toast('대응을 먼저 더 채워주세요!');return;}
+  let correct=0,total=0;
+  for(const[cipher,plain]of Object.entries(State.m3.mapping)){
+    total++;const answer=SUBSTITUTION_DECRYPT[cipher];const item=document.getElementById('map-'+cipher);
+    if(plain===answer){correct++;item?.classList.add('correct');item?.classList.remove('wrong');}
+    else{item?.classList.add('wrong');item?.classList.remove('correct');}
+  }
+  toast(correct+'/'+total+' 맞았습니다!');
+  if(correct>=15||total>=20){
+    setTimeout(()=>{
+      for(const[cipher,plain]of Object.entries(SUBSTITUTION_DECRYPT)){
+        State.m3.mapping[cipher]=plain;const input=document.querySelector('input[data-cipher="'+cipher+'"]');if(input)input.value=plain;
+        const item=document.getElementById('map-'+cipher);item?.classList.add('correct');item?.classList.remove('wrong');
+      }
+      updateM3Preview();updateMappingCount();
+    },1000);
+  }
+}
+
+// ============================================================
+// SECTION 5: TEACHER DEMO (AFFINE)
+// ============================================================
+function initSection5(){
+  const cipher=affineEncrypt(AFFINE_DEMO.plaintext,AFFINE_DEMO.a,AFFINE_DEMO.b);
+  document.getElementById('tdCipher').textContent=cipher;
+  State.td={selectedLetters:[],step:0,a:null,b:null};
+  const{freq}=countFrequency(cipher);const sorted=sortByFrequency(freq);const maxPct=sorted[0]?.pct||1;
+  const freqEl=document.getElementById('tdFreqBars');freqEl.innerHTML='';
+  sorted.forEach(item=>{
+    const row=document.createElement('div');row.className='bar-row';row.id='td-bar-'+item.letter;row.style.cursor='pointer';
+    row.onclick=()=>selectTeacherLetter(item.letter);
+    row.innerHTML=`<span class="bar-label">${item.letter}</span><div class="bar-track"><div class="bar-fill" style="width:${(item.pct/maxPct*100)}%"></div></div><span class="bar-pct">${item.pct.toFixed(1)}%</span>`;
+    freqEl.appendChild(row);
+  });
+  const stepNav=document.getElementById('tdStepNav');stepNav.innerHTML='';
+  for(let i=1;i<=7;i++){const btn=document.createElement('button');btn.className='step-btn';btn.textContent=i;btn.onclick=()=>showTeacherStep(i);stepNav.appendChild(btn);}
+  document.getElementById('tdStepContent').innerHTML='왼쪽 빈도 차트에서 상위 2글자를 클릭하세요.';
+  document.getElementById('tdPreview').textContent='아직 풀이 전입니다...';
+  document.getElementById('tdSelected').textContent='선택: 없음';
+}
+function selectTeacherLetter(letter){
+  const sel=State.td.selectedLetters;
+  if(sel.includes(letter))sel.splice(sel.indexOf(letter),1);
+  else if(sel.length<2)sel.push(letter);
+  else{sel.shift();sel.push(letter);}
+  document.querySelectorAll('#tdFreqBars .bar-row').forEach(r=>{r.style.background='';});
+  sel.forEach(l=>{const r=document.getElementById('td-bar-'+l);if(r)r.style.background='rgba(244,63,94,.08)';});
+  document.getElementById('tdSelected').textContent=sel.length===0?'선택: 없음':sel.length===1?'선택: '+sel[0]:'선택: '+sel[0]+', '+sel[1];
+  if(sel.length===2){State.td.step=1;showTeacherStep(1);}
+}
+function showTeacherStep(step){
+  State.td.step=step;const sel=State.td.selectedLetters;
+  if(sel.length<2){document.getElementById('tdStepContent').innerHTML='먼저 빈도 차트에서 2글자를 선택하세요.';return;}
+  const c1=sel[0].charCodeAt(0)-65,c2=sel[1].charCodeAt(0)-65;
+  const a=AFFINE_DEMO.a,b=AFFINE_DEMO.b;
+  document.querySelectorAll('.step-btn').forEach((btn,i)=>{btn.className='step-btn'+(i+1===step?' active':(i+1<step?' done':''));});
+  const content=document.getElementById('tdStepContent');
+  switch(step){
+    case 1:content.innerHTML='<strong>Step 1: 빈도 상위 2글자 선택</strong><br><br>암호문에서 가장 많은 글자: <span class="math">'+sel[0]+'</span> (='+c1+'), <span class="math">'+sel[1]+'</span> (='+c2+')<br><br>이 둘이 영어에서 가장 많은 E, T에 대응한다고 <strong>가정</strong>합니다.';break;
+    case 2:content.innerHTML='<strong>Step 2: E(=4), T(=19) 가정</strong><br><br><span class="math">'+sel[0]+'</span>(='+c1+') → <span class="math">E</span>(=4)<br><span class="math">'+sel[1]+'</span>(='+c2+') → <span class="math">T</span>(=19)';break;
+    case 3:content.innerHTML='<strong>Step 3: 연립방정식 세우기</strong><br><br>E(x) = (ax + b) mod 26 이므로:<br><br>식 1: <span class="math">4a + b ≡ '+c1+' (mod 26)</span><br>식 2: <span class="math">19a + b ≡ '+c2+' (mod 26)</span>';break;
+    case 4:{const diff=((c2-c1)%26+26)%26;content.innerHTML='<strong>Step 4: 두 식 빼기</strong><br><br>식2 - 식1:<br><span class="math">(19-4)a ≡ '+c2+' - '+c1+' (mod 26)</span><br><span class="math">15a ≡ '+diff+' (mod 26)</span>';break;}
+    case 5:{const diff=((c2-c1)%26+26)%26;const inv15=modInverse(15,26);const solvedA=inv15?((inv15*diff)%26+26)%26:'?';State.td.a=solvedA;content.innerHTML='<strong>Step 5: a 계산</strong><br><br>15의 역원 (mod 26) = <span class="math">'+inv15+'</span><br>(15 × '+inv15+' = '+(15*inv15)+' ≡ 1 mod 26)<br><br>양변에 '+inv15+' 곱하기:<br><span class="math">a ≡ '+inv15+' × '+diff+' ≡ '+solvedA+' (mod 26)</span>';break;}
+    case 6:{const solvedA=State.td.a;const solvedB=((c1-4*solvedA)%26+26)%26;State.td.b=solvedB;content.innerHTML='<strong>Step 6: b 계산</strong><br><br>식1에 a='+solvedA+' 대입:<br><span class="math">4 × '+solvedA+' + b ≡ '+c1+' (mod 26)</span><br><span class="math">'+(4*solvedA)+' + b ≡ '+c1+' (mod 26)</span><br><span class="math">b ≡ '+c1+' - '+(4*solvedA)+' ≡ '+solvedB+' (mod 26)</span>';break;}
+    case 7:{const solvedA=State.td.a;const solvedB=State.td.b;const cipher=affineEncrypt(AFFINE_DEMO.plaintext,AFFINE_DEMO.a,AFFINE_DEMO.b);const decrypted=affineDecrypt(cipher,solvedA,solvedB);document.getElementById('tdPreview').textContent=decrypted;content.innerHTML='<strong>Step 7: 전체 복호화</strong><br><br>키: <span class="math">a = '+solvedA+', b = '+solvedB+'</span><br>복호화 공식: <span class="math">D(y) = '+modInverse(solvedA,26)+' × (y - '+solvedB+') mod 26</span><br><br>'+(decrypted===AFFINE_DEMO.plaintext?'<strong>성공!</strong> 312개 키를 가진 아핀 암호가 빈도 2글자로 풀렸습니다!':'가정이 맞지 않을 수 있습니다. 다른 글자로 재시도해보세요.');break;}
+  }
+}
+
+// ============================================================
+// SECTION 8: COMPLETION
+// ============================================================
+function initSection8(){
+  const totalXP=State.xp;
+  document.getElementById('finalXP').textContent=totalXP;
+  // Stars based on completion
+  const pct=State.completedSections.size/TOTAL_SECTIONS;
+  const stars=pct>=0.875?3:pct>=0.5?2:1;
+  document.getElementById('starDisplay').textContent='⭐'.repeat(stars);
+  // Discovery notes
+  const notes=document.getElementById('discoveryNotes');
+  if(State.discoveryNotes.length===0)notes.textContent='아직 발견 노트가 없습니다.';
+  else notes.innerHTML=State.discoveryNotes.map((n,i)=>'<div style="padding:6px 0;border-bottom:1px solid var(--border)">'+(i+1)+'. '+n+'</div>').join('');
+  // Star rating
+  buildStarRating();
+  // Confetti
+  launchConfetti();
+}
+function buildStarRating(){
+  const container=document.getElementById('starRating');container.innerHTML='';
+  for(let i=1;i<=5;i++){
+    const span=document.createElement('span');
+    span.textContent=i<=State.starRating?'★':'☆';
+    span.style.color=i<=State.starRating?'var(--theme)':'var(--ink3)';
+    span.style.cursor='pointer';span.style.transition='transform .15s';
+    span.onmouseenter=()=>{span.style.transform='scale(1.2)';};
+    span.onmouseleave=()=>{span.style.transform='scale(1)';};
+    span.onclick=()=>{State.starRating=i;buildStarRating();toast(i+'점으로 평가했습니다!');autoSave();};
+    container.appendChild(span);
+  }
+}
+function copyNotes(){
+  const text=State.discoveryNotes.map((n,i)=>(i+1)+'. '+n).join('\n');
+  navigator.clipboard.writeText(text).then(()=>toast('복사 완료!')).catch(()=>toast('복사 실패'));
+}
+function launchConfetti(){
+  const container=document.getElementById('confettiContainer');container.innerHTML='';
+  const colors=['#f43f5e','#10b981','#f59e0b','#2563eb','#7c3aed','#ec4899'];
+  for(let i=0;i<60;i++){
+    const piece=document.createElement('div');piece.className='confetti-piece';
+    piece.style.left=Math.random()*100+'%';
+    piece.style.top=-10+'px';
+    piece.style.background=colors[Math.floor(Math.random()*colors.length)];
+    piece.style.width=(6+Math.random()*8)+'px';
+    piece.style.height=(6+Math.random()*8)+'px';
+    piece.style.borderRadius=Math.random()>0.5?'50%':'2px';
+    piece.style.animationDelay=(Math.random()*2)+'s';
+    piece.style.animationDuration=(2+Math.random()*2)+'s';
+    container.appendChild(piece);
+  }
+  setTimeout(()=>{container.innerHTML='';},5000);
+}
+
+// ============================================================
+// ALPHA TABLE
+// ============================================================
+function buildAlphaTable(){
+  const t=document.getElementById('alphaTable');if(!t)return;
+  let h='';
+  // Row 1: A-M (letters)
+  for(let i=0;i<13;i++)h+='<div class="letter">'+String.fromCharCode(65+i)+'</div>';
+  // Row 2: 0-12 (numbers)
+  for(let i=0;i<13;i++)h+='<div class="number">'+i+'</div>';
+  // Row 3: N-Z (letters)
+  for(let i=13;i<26;i++)h+='<div class="letter">'+String.fromCharCode(65+i)+'</div>';
+  // Row 4: 13-25 (numbers)
+  for(let i=13;i<26;i++)h+='<div class="number">'+i+'</div>';
+  t.innerHTML=h;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+// ============================================================
+// DATA-ANSWER INLINE VALIDATION
+// ============================================================
+function initDataAnswerValidation(){
+  document.querySelectorAll('[data-answer]').forEach(input=>{
+    input.addEventListener('blur',function(){
+      const answer=this.dataset.answer.trim();
+      const value=this.value.trim().toUpperCase();
+      if(value===''){this.style.borderColor='';this.style.background='';return;}
+      if(value===answer.toUpperCase()){
+        this.style.borderColor='#10b981';this.style.background='#ecfdf5';
+      }else{
+        this.style.borderColor='#f43f5e';this.style.background='#fff1f2';
+      }
+    });
+  });
+}
+
+(function init(){
+  autoLoad();
+  buildAlphaTable();
+  buildNav();
+  initDataAnswerValidation();
+  // Show current section
+  goToSection(State.currentSection);
+  // Update XP display
+  document.getElementById('xpBadge').textContent=State.xp+' XP';
+})();
+</script>
+</body>
+</html>
