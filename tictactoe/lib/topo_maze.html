@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>위상 미로</title>
+<style>
+:root { --bg:#0F172A; --panel:#1E293B; --text:#E2E8F0; --muted:#94A3B8;
+  --border:#334155; --accent:#38BDF8; --good:#34D399; --warm:#FBBF24; --danger:#F87171; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { min-height:100%; }
+body { font-family:'맑은 고딕','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  background:linear-gradient(180deg, #0F172A 0%, #1E1B4B 100%);
+  color:var(--text); min-height:100vh; padding:14px; }
+.container { max-width:880px; margin:0 auto; }
+.topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px; }
+.title { font-size:20px; font-weight:800; color:var(--accent); }
+.back { color:var(--muted); text-decoration:none; font-size:14px; }
+.panel { background:var(--panel); border:1.5px solid var(--border); border-radius:14px; padding:14px; }
+.stage-grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; margin:10px 0; }
+.stage-btn { padding:8px 4px; background:#334155; color:var(--muted); border:none; border-radius:6px; font-size:12px; cursor:pointer; }
+.stage-btn.unlocked { background:#1E40AF; color:#E2E8F0; }
+.stage-btn.cleared { background:var(--good); color:#0F172A; font-weight:700; }
+.stage-btn.active { background:var(--accent); color:#0F172A; font-weight:700; border:2px solid var(--accent); }
+.stage-btn:disabled { cursor:not-allowed; opacity:0.4; }
+.space-label { display:inline-block; padding:3px 10px; border-radius:8px; font-size:12px; font-weight:700; margin-right:6px; }
+.space-label.cylinder { background:rgba(52,211,153,0.2); color:var(--good); }
+.space-label.torus { background:rgba(251,191,36,0.2); color:var(--warm); }
+.space-label.mobius { background:rgba(248,113,113,0.2); color:var(--danger); }
+.canvas-wrap { display:flex; justify-content:center; margin:10px 0; }
+canvas { background:#0F172A; border-radius:8px; touch-action:none; max-width:100%; }
+.controls { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; align-items:center; }
+.btn { background:var(--accent); color:#0F172A; border:none; border-radius:8px; padding:8px 16px; font-weight:700; cursor:pointer; font-size:13px; }
+.btn.warm { background:var(--warm); }
+.btn.outline { background:transparent; color:var(--accent); border:2px solid var(--accent); }
+.info { background:rgba(15,23,42,0.7); border-left:3px solid var(--accent); padding:10px 14px; border-radius:6px; font-size:13px; margin:8px 0; line-height:1.5; }
+.hint-call { background:rgba(251,191,36,0.2); border-left:3px solid var(--warm); padding:10px 14px; border-radius:6px; font-size:13px; margin:8px 0; }
+.hint-call.active { animation:pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity:1; } 50% { opacity:0.6; } }
+.dpad { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; max-width:200px; margin:10px auto; }
+.dpad-btn { background:#334155; color:var(--text); border:none; border-radius:10px; padding:14px 0; font-size:20px; cursor:pointer; user-select:none; touch-action:manipulation; }
+.dpad-btn:active { background:var(--accent); color:#0F172A; }
+.dpad-empty { visibility:hidden; }
+.stats { font-size:13px; color:var(--muted); display:flex; gap:14px; flex-wrap:wrap; }
+.cleared-banner { background:linear-gradient(135deg, #34D399, #10B981); color:#0F172A; padding:14px; border-radius:10px; text-align:center; font-weight:800; font-size:16px; margin:10px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <div class="title">🧩 위상 미로</div>
+    <a class="back" href="../session4.html">← 돌아가기</a>
+  </div>
+
+  <div class="panel">
+    <div style="margin-bottom:8px;">
+      <span class="space-label cylinder">🥫 원기둥 1~5</span>
+      <span class="space-label torus">🍩 토러스 6~10</span>
+      <span class="space-label mobius">♾️ 뫼비우스 11~15</span>
+    </div>
+    <div class="stage-grid" id="stage-grid"></div>
+
+    <div class="info" id="stage-info">스테이지를 선택하세요.</div>
+
+    <div class="canvas-wrap">
+      <canvas id="maze" width="600" height="600"></canvas>
+    </div>
+
+    <div class="hint-call" id="hint-call">
+      💡 먼저 <b>평면 모드</b>(경계가 벽)로 시도해 보세요. 막다른 길이라면 <b>공간을 활성화</b>해 경계를 넘어 보세요!
+      <button class="btn warm" id="activate-space" style="margin-left:10px;">⚡ 공간 활성화</button>
+    </div>
+
+    <div class="controls">
+      <span class="stats">
+        <span id="stat-moves">이동: 0회</span>
+        <span id="stat-wraps">wrap: 0회</span>
+        <span id="stat-time">시간: 0s</span>
+      </span>
+      <button class="btn outline" id="restart" style="margin-left:auto;">↺ 재시작</button>
+    </div>
+
+    <div class="dpad">
+      <div class="dpad-empty"></div>
+      <button class="dpad-btn" data-dir="up">↑</button>
+      <div class="dpad-empty"></div>
+      <button class="dpad-btn" data-dir="left">←</button>
+      <div class="dpad-empty"></div>
+      <button class="dpad-btn" data-dir="right">→</button>
+      <div class="dpad-empty"></div>
+      <button class="dpad-btn" data-dir="down">↓</button>
+      <div class="dpad-empty"></div>
+    </div>
+
+    <div class="info">
+      💡 화살표 키, 터치 드래그, 또는 위 버튼으로 이동합니다. <b>평면 모드로 먼저 시도</b>해 보고, 막다른 길이라면 공간 활성화 버튼을 눌러보세요!
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ───── 임베디드 미로 데이터 ─────
+const MAZE_DATA = {"cylinder_1":{"rows":7,"cols":7,"walls":[[[0,1],[1,0],[0,0],[0,1],[0,1],[0,1],[1,0]],[[1,0],[1,0],[0,0],[1,0],[0,0],[0,1],[1,1]],[[1,1],[1,0],[1,0],[1,0],[0,1],[1,0],[0,0]],[[1,0],[1,0],[1,1],[1,0],[1,0],[1,0],[0,0]],[[1,0],[0,1],[0,1],[1,1],[0,0],[1,1],[1,0]],[[0,1],[0,1],[1,0],[0,0],[1,1],[0,0],[1,1]],[[0,1],[1,1],[0,1],[1,1],[0,1],[0,1],[0,1]]],"start":[0,0],"end":[6,6],"space":"cylinder","requiredWraps":1,"solutionLength":39,"solutionWraps":1,"plainReachable":false},"cylinder_2":{"rows":9,"cols":9,"walls":[[[1,1],[0,0],[1,0],[1,0],[0,0],[1,0],[0,0],[1,0],[0,0]],[[0,0],[1,0],[1,0],[0,1],[1,0],[1,0],[1,0],[0,1],[1,1]],[[1,1],[1,0],[0,1],[1,0],[1,1],[1,0],[1,0],[0,1],[0,1]],[[0,1],[1,1],[1,0],[0,1],[0,1],[1,0],[1,0],[0,0],[0,1]],[[0,0],[0,0],[0,1],[0,1],[1,1],[1,0],[0,1],[1,1],[1,0]],[[1,0],[0,1],[0,1],[0,1],[0,1],[1,1],[0,0],[0,1],[1,0]],[[0,1],[1,0],[0,0],[0,1],[1,1],[0,0],[0,1],[1,0],[1,1]],[[1,0],[1,0],[1,0],[0,0],[1,0],[1,0],[1,0],[1,0],[0,0]],[[0,1],[1,1],[0,1],[1,1],[0,1],[0,1],[1,1],[0,1],[1,1]]],"start":[0,0],"end":[8,8],"space":"cylinder","requiredWraps":1,"solutionLength":41,"solutionWraps":3,"plainReachable":false},"cylinder_3":{"rows":11,"cols":11,"walls":[[[1,0],[0,0],[0,0],[0,1],[0,1],[1,1],[0,0],[0,0],[0,1],[1,0],[1,0]],[[1,0],[1,1],[0,1],[1,0],[0,0],[0,1],[1,1],[1,0],[0,1],[0,1],[1,1]],[[1,1],[0,0],[0,1],[1,0],[0,1],[1,0],[0,0],[1,1],[0,0],[0,1],[0,1]],[[0,1],[1,0],[0,1],[0,1],[1,0],[1,0],[0,1],[1,0],[1,0],[0,0],[0,1]],[[1,0],[1,0],[0,0],[1,0],[1,1],[1,0],[0,0],[1,1],[1,0],[1,0],[0,0]],[[1,0],[1,1],[1,0],[0,1],[0,1],[1,1],[0,1],[1,0],[1,0],[0,0],[1,1]],[[1,0],[0,0],[1,1],[0,0],[0,1],[0,0],[1,1],[0,1],[1,1],[1,0],[0,0]],[[1,1],[0,1],[1,0],[0,1],[1,0],[0,1],[0,1],[0,1],[0,1],[1,1],[1,0]],[[0,1],[0,1],[1,1],[1,0],[1,0],[0,0],[0,1],[0,0],[0,1],[1,0],[0,1]],[[1,0],[0,1],[0,0],[1,0],[1,0],[0,1],[1,1],[0,1],[1,0],[1,0],[0,0]],[[0,1],[0,1],[1,1],[1,1],[0,1],[0,1],[0,1],[0,1],[1,1],[0,1],[1,1]]],"start":[0,0],"end":[10,10],"space":"cylinder","requiredWraps":2,"solutionLength":76,"solutionWraps":4,"plainReachable":false},"cylinder_4":{"rows":13,"cols":13,"walls":[[[1,1],[0,0],[0,1],[1,0],[1,0],[0,0],[0,1],[0,0],[1,0],[0,0],[0,1],[0,1],[0,1]],[[1,0],[0,1],[1,0],[0,1],[1,1],[1,0],[0,0],[1,1],[1,1],[1,0],[0,0],[1,0],[0,0]],[[0,1],[1,0],[0,1],[0,0],[0,1],[1,1],[1,0],[0,0],[1,0],[0,1],[1,1],[1,0],[1,0]],[[1,0],[0,1],[1,0],[0,1],[1,0],[1,0],[0,1],[1,1],[0,0],[0,1],[1,0],[1,0],[0,1]],[[0,1],[1,0],[0,1],[1,0],[0,0],[1,1],[0,0],[0,1],[1,1],[0,0],[1,1],[0,1],[1,0]],[[0,0],[1,1],[0,0],[1,1],[1,1],[0,0],[1,0],[0,1],[0,1],[1,1],[0,0],[0,1],[1,1]],[[1,0],[1,0],[1,0],[0,0],[0,1],[1,0],[1,1],[0,0],[0,1],[0,1],[1,1],[1,0],[0,0]],[[1,0],[1,0],[0,1],[1,1],[1,0],[1,0],[0,0],[1,1],[0,1],[0,1],[0,1],[0,1],[1,0]],[[1,0],[1,0],[0,0],[0,1],[0,1],[1,1],[0,1],[0,1],[0,1],[0,1],[0,1],[1,0],[1,1]],[[1,1],[1,0],[1,0],[0,0],[1,1],[0,0],[0,1],[0,0],[1,1],[0,0],[1,0],[0,1],[0,1]],[[0,0],[0,1],[1,1],[0,1],[1,0],[0,1],[1,0],[0,1],[0,1],[1,1],[0,0],[0,1],[1,1]],[[1,1],[0,0],[0,0],[0,1],[0,1],[1,1],[1,0],[0,1],[0,1],[1,0],[1,0],[0,0],[0,1]],[[0,1],[1,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[1,1],[0,1],[1,1],[0,1]]],"start":[0,0],"end":[12,12],"space":"cylinder","requiredWraps":2,"solutionLength":94,"solutionWraps":6,"plainReachable":false},"cylinder_5":{"rows":15,"cols":15,"walls":[[[0,1],[1,0],[0,0],[1,0],[0,1],[0,0],[0,0],[0,1],[0,1],[1,1],[0,0],[0,0],[0,1],[1,0],[1,0]],[[1,1],[0,1],[1,1],[1,0],[0,0],[1,1],[1,1],[0,0],[0,1],[0,1],[1,1],[1,0],[0,1],[0,1],[0,1]],[[0,1],[0,1],[0,1],[1,1],[0,1],[1,0],[0,0],[1,1],[0,0],[1,1],[0,0],[1,0],[0,0],[1,0],[0,0]],[[0,1],[0,1],[0,1],[0,0],[1,0],[0,1],[1,0],[0,1],[0,1],[1,0],[1,0],[1,1],[1,0],[1,0],[1,0]],[[0,1],[0,1],[0,1],[1,1],[0,1],[1,0],[0,1],[0,1],[1,0],[1,0],[0,1],[0,1],[1,1],[1,0],[0,1]],[[0,1],[0,1],[0,1],[0,1],[0,1],[1,1],[1,0],[0,0],[1,1],[0,1],[0,1],[1,0],[0,0],[1,1],[0,0]],[[1,0],[0,0],[0,0],[0,1],[0,0],[1,1],[0,0],[1,1],[0,0],[0,1],[0,1],[1,0],[0,1],[0,1],[1,1]],[[0,1],[1,1],[1,0],[1,0],[1,0],[0,0],[1,1],[0,1],[1,0],[0,0],[1,0],[0,1],[1,0],[0,1],[0,1]],[[1,0],[0,0],[1,1],[0,0],[1,1],[0,1],[0,1],[1,0],[1,0],[1,0],[0,0],[1,1],[0,1],[1,0],[0,0]],[[1,0],[1,0],[1,0],[1,0],[0,0],[1,0],[1,0],[0,1],[1,1],[1,0],[1,0],[0,0],[1,0],[0,1],[1,1]],[[1,0],[1,0],[0,1],[0,1],[1,1],[0,1],[0,1],[1,0],[0,0],[1,1],[0,1],[1,1],[1,0],[0,0],[1,0]],[[1,1],[0,0],[0,1],[0,1],[1,0],[0,0],[1,1],[1,0],[1,0],[0,1],[0,1],[1,0],[0,1],[1,1],[0,1]],[[1,1],[0,1],[1,0],[0,0],[1,1],[0,1],[0,1],[1,1],[0,1],[0,1],[1,0],[0,0],[1,0],[0,0],[0,0]],[[0,0],[0,1],[1,1],[0,1],[0,1],[0,1],[1,0],[0,0],[0,0],[1,1],[1,0],[1,0],[1,1],[1,0],[1,0]],[[0,1],[0,1],[0,1],[0,1],[0,1],[1,1],[0,1],[1,1],[0,1],[0,1],[1,1],[0,1],[0,1],[1,1],[0,1]]],"start":[0,0],"end":[14,14],"space":"cylinder","requiredWraps":3,"solutionLength":132,"solutionWraps":6,"plainReachable":false},"torus_1":{"rows":7,"cols":7,"walls":[[[0,1],[1,0],[0,1],[1,1],[0,0],[0,1],[1,1]],[[0,1],[1,1],[0,0],[1,0],[1,0],[0,0],[0,1]],[[0,1],[0,1],[1,1],[0,1],[1,1],[1,0],[0,0]],[[0,1],[0,1],[0,0],[0,1],[1,1],[1,0],[0,0]],[[0,0],[1,0],[1,0],[0,0],[0,1],[1,1],[1,1]],[[1,1],[1,0],[1,1],[0,1],[0,1],[0,1],[0,1]],[[1,1],[0,1],[1,0],[0,0],[0,1],[1,0],[0,0]]],"start":[0,0],"end":[6,6],"space":"torus","requiredWraps":1,"solutionLength":28,"solutionWraps":6,"plainReachable":false},"torus_2":{"rows":9,"cols":9,"walls":[[[1,1],[1,0],[0,1],[1,0],[0,1],[1,0],[0,1],[1,0],[0,1]],[[1,0],[0,1],[1,0],[0,0],[0,1],[0,1],[1,1],[1,0],[0,0]],[[0,1],[0,1],[1,1],[1,1],[0,0],[1,0],[0,0],[1,1],[1,0]],[[0,1],[0,1],[0,1],[1,0],[1,0],[0,1],[1,1],[1,0],[0,1]],[[0,0],[0,1],[1,1],[1,0],[1,0],[0,1],[0,0],[0,1],[0,1]],[[1,0],[0,0],[0,1],[1,1],[1,0],[0,0],[1,1],[0,0],[1,0]],[[1,0],[0,1],[0,1],[0,1],[1,1],[0,1],[1,0],[1,0],[1,1]],[[0,0],[0,1],[1,1],[0,0],[0,1],[0,0],[1,1],[0,1],[0,1]],[[1,1],[0,0],[1,0],[0,1],[1,0],[1,1],[0,0],[0,1],[1,0]]],"start":[0,0],"end":[8,8],"space":"torus","requiredWraps":2,"solutionLength":2,"solutionWraps":2,"plainReachable":false},"torus_3":{"rows":11,"cols":11,"walls":[[[1,1],[0,0],[0,1],[1,0],[1,1],[0,0],[0,1],[0,1],[1,0],[1,0],[0,1]],[[1,1],[1,0],[1,0],[0,1],[0,1],[1,1],[0,0],[1,0],[1,0],[0,0],[0,0]],[[1,0],[0,1],[0,0],[1,1],[0,0],[1,0],[1,0],[0,1],[1,1],[1,1],[0,1]],[[0,1],[1,1],[1,0],[0,0],[1,1],[0,1],[1,1],[0,0],[0,1],[1,0],[0,0]],[[0,0],[0,1],[1,1],[0,1],[1,0],[0,1],[0,0],[1,1],[0,1],[0,1],[1,1]],[[1,1],[0,0],[0,0],[1,1],[0,1],[1,0],[0,0],[0,1],[0,1],[0,1],[0,1]],[[0,0],[1,1],[1,1],[0,0],[0,1],[1,1],[0,1],[0,1],[0,0],[0,1],[0,1]],[[1,0],[0,0],[0,1],[1,1],[0,0],[1,0],[0,0],[0,1],[1,1],[0,0],[1,0]],[[1,1],[0,1],[0,1],[1,0],[1,0],[1,1],[0,0],[0,1],[1,1],[1,0],[1,0]],[[1,0],[0,0],[1,0],[1,0],[1,0],[0,0],[1,1],[0,0],[0,1],[1,1],[0,1]],[[0,1],[1,1],[0,1],[1,1],[0,0],[0,1],[1,1],[0,1],[0,1],[0,1],[1,0]]],"start":[0,0],"end":[10,10],"space":"torus","requiredWraps":2,"solutionLength":2,"solutionWraps":2,"plainReachable":false},"torus_4":{"rows":13,"cols":13,"walls":[[[1,1],[1,0],[1,0],[0,0],[1,0],[0,0],[0,1],[0,1],[1,0],[1,0],[0,1],[1,1],[0,0]],[[0,1],[0,1],[0,1],[1,1],[0,1],[1,1],[1,0],[0,0],[1,1],[0,1],[0,0],[1,0],[1,0]],[[1,0],[0,0],[0,1],[0,1],[0,1],[1,0],[0,1],[0,1],[0,1],[1,0],[1,1],[1,0],[0,1]],[[0,1],[1,1],[0,1],[0,0],[1,1],[0,1],[1,0],[0,0],[1,0],[0,1],[1,0],[0,0],[1,0]],[[0,0],[1,0],[0,0],[1,1],[0,0],[1,0],[1,0],[1,0],[1,0],[1,0],[1,0],[1,0],[1,0]],[[1,1],[0,1],[1,1],[0,0],[1,1],[0,1],[1,1],[1,0],[0,1],[1,1],[0,1],[1,0],[0,1]],[[0,1],[0,1],[0,1],[1,1],[0,1],[0,1],[1,0],[0,0],[0,1],[0,1],[0,1],[1,1],[0,0]],[[0,1],[0,0],[0,1],[0,1],[0,0],[0,1],[1,1],[1,0],[0,0],[0,1],[0,1],[1,0],[1,0]],[[1,0],[0,0],[1,0],[0,1],[1,1],[0,0],[0,1],[0,1],[1,1],[0,0],[1,0],[1,1],[0,1]],[[1,0],[1,0],[0,1],[0,1],[1,0],[1,0],[0,0],[0,1],[0,1],[1,1],[0,1],[0,0],[1,1]],[[1,1],[1,1],[0,0],[0,1],[1,0],[1,0],[0,1],[0,1],[1,0],[0,0],[1,0],[0,1],[0,1]],[[0,1],[1,0],[0,1],[1,0],[1,1],[1,0],[0,0],[0,1],[1,1],[1,0],[1,0],[0,0],[0,1]],[[0,1],[0,1],[1,0],[0,1],[0,1],[1,1],[0,1],[0,1],[0,1],[1,1],[1,0],[1,0],[0,1]]],"start":[0,0],"end":[12,12],"space":"torus","requiredWraps":3,"solutionLength":65,"solutionWraps":9,"plainReachable":false},"torus_5":{"rows":15,"cols":15,"walls":[[[1,1],[0,1],[0,1],[1,0],[1,0],[0,1],[1,1],[0,1],[1,0],[0,0],[1,0],[1,0],[0,1],[1,0],[0,0]],[[1,0],[0,0],[0,1],[1,1],[0,1],[0,1],[0,1],[0,0],[1,0],[1,0],[0,1],[1,1],[0,0],[1,1],[1,0]],[[1,0],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[1,1],[1,0],[0,1],[1,0],[0,1],[1,1],[0,0],[1,1]],[[0,0],[0,0],[0,1],[1,0],[0,0],[0,1],[0,1],[1,0],[1,0],[0,0],[1,1],[0,0],[0,1],[1,1],[1,0]],[[1,0],[1,0],[0,1],[1,1],[0,1],[1,0],[1,0],[0,1],[1,1],[0,1],[1,0],[1,0],[0,0],[0,1],[1,0]],[[1,1],[0,1],[0,1],[0,0],[1,1],[0,1],[1,0],[0,1],[0,0],[1,0],[0,1],[1,1],[0,1],[1,0],[0,1]],[[1,0],[0,0],[1,0],[0,1],[0,0],[1,1],[0,1],[1,0],[1,0],[1,1],[0,0],[0,1],[0,1],[1,1],[0,0]],[[1,0],[1,0],[1,0],[0,0],[1,1],[0,0],[0,1],[1,1],[0,1],[0,1],[0,1],[1,0],[0,0],[0,1],[1,1]],[[0,1],[1,1],[1,0],[0,1],[0,1],[0,1],[1,1],[0,0],[0,1],[0,1],[1,0],[0,1],[1,1],[0,1],[1,0]],[[0,0],[0,1],[0,1],[1,1],[0,0],[0,1],[0,1],[1,1],[0,0],[1,0],[0,1],[0,1],[0,1],[1,0],[1,0]],[[1,0],[0,0],[0,1],[0,1],[1,0],[0,0],[0,1],[0,1],[1,1],[0,1],[0,1],[1,0],[0,0],[1,1],[0,1]],[[1,1],[1,0],[0,0],[1,0],[1,0],[1,0],[0,0],[0,1],[0,1],[1,0],[0,0],[1,1],[0,1],[0,1],[1,0]],[[0,0],[1,1],[1,1],[0,1],[1,1],[1,0],[0,1],[0,1],[1,0],[1,0],[1,0],[0,0],[0,0],[1,1],[1,0]],[[0,1],[0,1],[0,1],[0,1],[1,0],[0,1],[0,1],[1,0],[1,0],[0,1],[1,1],[1,1],[0,0],[1,0],[1,0]],[[0,1],[1,0],[0,1],[1,0],[0,1],[1,0],[0,0],[1,1],[0,1],[0,1],[0,1],[1,0],[1,0],[0,1],[0,1]]],"start":[0,0],"end":[14,14],"space":"torus","requiredWraps":4,"solutionLength":92,"solutionWraps":4,"plainReachable":false},"mobius_1":{"rows":7,"cols":7,"walls":[[[1,0],[1,0],[0,0],[0,1],[0,0],[0,1],[0,1]],[[1,0],[1,0],[0,1],[1,0],[1,1],[0,0],[0,1]],[[1,0],[0,0],[1,0],[0,1],[1,0],[0,1],[1,0]],[[1,0],[1,0],[0,1],[1,0],[1,0],[0,0],[1,1]],[[1,0],[1,0],[0,1],[1,1],[1,0],[1,0],[1,0]],[[1,1],[0,1],[1,0],[0,0],[1,1],[0,1],[1,0]],[[0,1],[0,1],[1,1],[0,1],[0,1],[0,1],[1,1]]],"start":[0,0],"end":[6,6],"space":"mobius","requiredWraps":1,"solutionLength":15,"solutionWraps":1,"plainReachable":false},"mobius_2":{"rows":9,"cols":9,"walls":[[[1,0],[0,1],[0,1],[0,0],[0,1],[0,1],[1,1],[0,0],[0,1]],[[1,0],[0,0],[0,1],[1,1],[0,0],[0,1],[1,0],[1,0],[0,0]],[[1,1],[0,0],[0,1],[0,1],[1,1],[1,0],[1,0],[1,0],[1,0]],[[1,0],[0,1],[1,0],[0,1],[0,1],[1,0],[0,1],[1,1],[0,1]],[[0,1],[1,1],[0,1],[0,1],[1,0],[0,0],[0,1],[0,1],[0,1]],[[0,1],[0,1],[1,0],[0,1],[0,1],[1,1],[0,0],[0,1],[1,0]],[[0,1],[1,0],[0,1],[0,1],[0,1],[1,0],[0,1],[1,0],[0,1]],[[1,0],[0,0],[1,0],[0,1],[1,0],[1,0],[0,0],[1,1],[1,0]],[[0,1],[1,1],[0,1],[0,1],[1,1],[0,1],[0,1],[0,1],[1,1]]],"start":[0,0],"end":[8,8],"space":"mobius","requiredWraps":1,"solutionLength":13,"solutionWraps":1,"plainReachable":false},"mobius_3":{"rows":11,"cols":11,"walls":[[[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[1,0],[0,1],[1,0],[0,0],[0,1]],[[1,0],[0,0],[0,1],[0,1],[0,0],[1,0],[0,1],[1,0],[0,0],[1,1],[0,0]],[[1,0],[1,0],[0,0],[0,1],[1,1],[0,0],[1,1],[1,0],[0,0],[1,1],[1,0]],[[1,1],[1,0],[0,1],[1,0],[0,1],[1,1],[0,0],[1,1],[1,0],[0,0],[1,1]],[[0,0],[1,1],[0,0],[1,0],[0,0],[0,1],[1,1],[1,0],[1,0],[0,1],[0,1]],[[1,0],[0,0],[1,1],[1,0],[1,0],[0,1],[0,1],[1,0],[1,0],[0,0],[1,0]],[[1,1],[0,1],[1,0],[1,1],[0,1],[1,0],[0,0],[1,1],[1,0],[1,1],[1,0]],[[0,0],[1,0],[1,0],[0,0],[0,1],[1,1],[0,0],[1,0],[0,1],[1,0],[0,0]],[[1,0],[1,0],[0,1],[1,1],[0,0],[1,0],[1,0],[0,0],[1,1],[1,0],[1,0]],[[1,1],[1,0],[0,0],[1,0],[1,0],[1,0],[1,0],[1,0],[0,0],[1,1],[1,0]],[[0,1],[1,1],[1,1],[0,1],[1,1],[0,1],[1,1],[0,1],[0,1],[0,1],[1,1]]],"start":[0,0],"end":[10,10],"space":"mobius","requiredWraps":2,"solutionLength":75,"solutionWraps":3,"plainReachable":false},"mobius_4":{"rows":13,"cols":13,"walls":[[[0,1],[0,1],[0,1],[1,0],[0,0],[0,0],[1,0],[0,1],[0,0],[1,0],[1,0],[0,0],[1,0]],[[0,1],[0,1],[0,1],[1,1],[1,1],[1,0],[0,1],[0,1],[1,1],[1,0],[0,1],[1,1],[0,0]],[[0,1],[0,1],[1,0],[0,1],[0,0],[1,1],[1,0],[0,0],[1,0],[0,1],[0,1],[1,0],[1,0]],[[0,1],[1,0],[0,1],[0,1],[1,1],[0,0],[0,1],[1,1],[0,0],[1,1],[0,0],[1,1],[1,0]],[[0,0],[1,1],[0,0],[0,1],[1,0],[1,0],[0,0],[0,1],[1,1],[0,0],[1,1],[1,0],[1,0]],[[1,0],[0,0],[1,1],[1,0],[0,1],[1,1],[0,1],[0,1],[0,1],[1,1],[0,1],[0,1],[0,1]],[[1,0],[1,0],[0,0],[0,1],[1,1],[0,0],[0,1],[0,1],[0,0],[0,1],[0,1],[1,0],[1,0]],[[1,0],[1,0],[0,0],[0,1],[0,1],[0,1],[0,1],[1,1],[0,1],[1,0],[0,0],[1,1],[1,0]],[[1,1],[1,0],[1,0],[0,0],[0,1],[0,1],[0,1],[0,1],[0,1],[1,1],[1,0],[0,0],[1,1]],[[0,0],[1,1],[1,0],[1,0],[0,1],[0,0],[1,1],[0,0],[1,0],[0,0],[1,1],[0,0],[0,1]],[[0,1],[1,0],[1,1],[1,0],[0,0],[1,0],[0,0],[1,1],[0,1],[1,1],[0,0],[1,1],[0,0]],[[1,0],[0,1],[0,1],[1,1],[1,0],[1,1],[1,0],[0,0],[1,1],[0,0],[1,1],[1,0],[0,1]],[[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[1,1],[0,1],[0,1],[0,1],[0,1],[0,1],[1,1]]],"start":[0,0],"end":[12,12],"space":"mobius","requiredWraps":3,"solutionLength":121,"solutionWraps":5,"plainReachable":false},"mobius_5":{"rows":15,"cols":15,"walls":[[[1,0],[0,0],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[1,0],[0,0],[0,0],[1,1],[0,0],[0,1],[0,1]],[[1,0],[1,0],[0,1],[0,1],[0,0],[0,1],[1,0],[0,0],[1,1],[1,0],[0,1],[0,1],[1,1],[0,0],[0,1]],[[1,1],[0,1],[0,1],[1,0],[1,0],[0,1],[1,1],[1,0],[0,0],[1,1],[0,1],[0,0],[1,0],[0,1],[1,0]],[[0,0],[0,1],[0,1],[1,1],[0,1],[0,1],[0,1],[1,1],[1,0],[0,0],[0,1],[1,1],[1,0],[0,0],[1,1]],[[1,1],[0,0],[0,1],[1,0],[0,0],[0,1],[0,1],[1,0],[0,1],[1,1],[0,0],[0,1],[1,1],[0,1],[0,1]],[[0,1],[1,1],[1,0],[0,1],[1,1],[0,0],[1,0],[0,1],[1,0],[0,1],[0,1],[0,1],[1,0],[0,0],[1,0]],[[0,0],[0,1],[0,1],[0,1],[1,0],[1,0],[0,0],[1,0],[0,1],[1,0],[1,0],[0,0],[1,1],[1,0],[0,1]],[[0,1],[1,0],[0,1],[1,0],[1,0],[1,1],[1,0],[1,1],[0,0],[1,1],[0,0],[1,1],[1,0],[1,0],[0,1]],[[1,0],[0,1],[1,0],[1,0],[0,1],[1,0],[0,0],[1,0],[1,0],[0,1],[0,1],[0,1],[1,0],[0,1],[1,0]],[[1,0],[0,0],[1,1],[0,0],[1,0],[1,0],[1,1],[1,0],[0,1],[0,1],[1,0],[0,0],[1,1],[1,0],[0,1]],[[1,1],[0,1],[1,0],[1,0],[1,1],[0,1],[0,1],[1,0],[0,1],[1,0],[1,0],[0,1],[1,0],[0,1],[0,0]],[[0,0],[0,0],[1,1],[0,1],[0,1],[0,0],[1,1],[0,1],[0,1],[1,0],[1,0],[0,1],[0,1],[0,1],[1,1]],[[1,1],[0,0],[0,1],[0,1],[1,0],[0,1],[0,0],[0,0],[1,1],[1,0],[0,1],[1,0],[0,0],[0,1],[0,1]],[[1,0],[1,1],[0,0],[1,0],[0,1],[1,0],[1,0],[0,1],[1,0],[0,1],[1,0],[0,1],[1,1],[0,0],[1,0]],[[0,1],[0,1],[1,1],[0,1],[0,1],[1,1],[0,1],[1,1],[0,1],[0,1],[0,1],[0,1],[0,1],[1,1],[1,1]]],"start":[0,0],"end":[14,14],"space":"mobius","requiredWraps":3,"solutionLength":101,"solutionWraps":5,"plainReachable":false}};
+
+const STAGES = [
+  ...Array.from({length:5}, (_, i) => `cylinder_${i+1}`),
+  ...Array.from({length:5}, (_, i) => `torus_${i+1}`),
+  ...Array.from({length:5}, (_, i) => `mobius_${i+1}`),
+];
+
+// ───── 상태 ─────
+const state = {
+  stageIdx: 0,
+  stage: null,
+  pos: [0, 0],
+  spaceActive: false, // false면 평면 모드 (wrap 막힘), true면 해당 공간 wrap 작동
+  moves: 0,
+  wraps: 0,
+  startTime: null,
+  hintShown: false,
+};
+
+// ───── DOM 초기화 ─────
+const canvas = document.getElementById('maze');
+const ctx = canvas.getContext('2d');
+const stageGrid = document.getElementById('stage-grid');
+STAGES.forEach((key, idx) => {
+  const btn = document.createElement('button');
+  btn.className = 'stage-btn';
+  btn.dataset.idx = idx;
+  btn.textContent = (idx + 1);
+  btn.addEventListener('click', () => selectStage(idx));
+  stageGrid.appendChild(btn);
+});
+
+function updateStageButtons() {
+  document.querySelectorAll('.stage-btn').forEach((btn, idx) => {
+    btn.classList.remove('unlocked', 'cleared', 'active');
+    const key = STAGES[idx];
+    const cleared = localStorage.getItem('topo_maze_cleared_' + (idx+1)) === '1';
+    const unlocked = idx === 0 || localStorage.getItem('topo_maze_cleared_' + idx) === '1';
+    btn.disabled = !unlocked;
+    if (cleared) btn.classList.add('cleared');
+    else if (unlocked) btn.classList.add('unlocked');
+    if (idx === state.stageIdx) btn.classList.add('active');
+  });
+}
+
+function selectStage(idx) {
+  state.stageIdx = idx;
+  const key = STAGES[idx];
+  state.stage = MAZE_DATA[key];
+  if (!state.stage) { console.error('Stage not found:', key); return; }
+  state.pos = [...state.stage.start];
+  state.spaceActive = false;
+  state.moves = 0;
+  state.wraps = 0;
+  state.startTime = Date.now();
+  // 공간 활성화 안내는 시작부터 표시 (사용자가 언제든 누를 수 있도록)
+  const hc = document.getElementById('hint-call');
+  hc.style.display = 'block';
+  hc.classList.remove('active');
+  hc.innerHTML = '💡 먼저 <b>평면 모드</b>(경계가 벽)로 시도해 보세요. 막다른 길이라면 <b>공간을 활성화</b>해 경계를 넘어 보세요!  <button class="btn warm" id="activate-space" style="margin-left:10px;">⚡ 공간 활성화</button>';
+  // 버튼이 새로 생성되었으므로 핸들러를 다시 부착
+  document.getElementById('activate-space').addEventListener('click', activateSpace);
+  document.getElementById('stage-info').innerHTML =
+    `<b>스테이지 ${idx+1} — ${state.stage.space}</b>: ${state.stage.rows}×${state.stage.cols} 격자. <span class="space-label ${state.stage.space}">평면 먼저 시도</span>`;
+  localStorage.setItem('topo_maze_stage', String(idx + 1));
+  document.querySelector('.cleared-banner')?.remove();
+  updateStageButtons();
+  render();
+}
+
+function activateSpace() {
+  state.spaceActive = true;
+  const hc = document.getElementById('hint-call');
+  hc.innerHTML = `✅ <b>${state.stage.space} 공간이 활성화되었습니다!</b> 화살표가 가리키는 경계를 넘어가 보세요.`;
+  hc.style.background = 'rgba(52,211,153,0.2)';
+  hc.style.borderLeftColor = 'var(--good)';
+  document.getElementById('stage-info').innerHTML =
+    `<b>스테이지 ${state.stageIdx+1} — ${state.stage.space} 활성화!</b> 경계를 넘어갈 수 있습니다.`;
+  render();
+}
+
+// 초기 페이지 로드 시 정적 HTML의 activate-space 버튼에도 핸들러 부착
+document.getElementById('activate-space').addEventListener('click', activateSpace);
+
+// ───── 이동 ─────
+function canMove(r, c, dir) {
+  // walls[r][c] = [right, down]
+  const w = state.stage.walls;
+  const rows = state.stage.rows, cols = state.stage.cols;
+  if (dir === 'right') {
+    if (c === cols - 1) return null; // boundary
+    return w[r][c][0] === 0 ? [r, c+1, false] : null;
+  }
+  if (dir === 'left') {
+    if (c === 0) return null;
+    return w[r][c-1][0] === 0 ? [r, c-1, false] : null;
+  }
+  if (dir === 'down') {
+    if (r === rows - 1) return null;
+    return w[r][c][1] === 0 ? [r+1, c, false] : null;
+  }
+  if (dir === 'up') {
+    if (r === 0) return null;
+    return w[r-1][c][1] === 0 ? [r-1, c, false] : null;
+  }
+}
+function tryWrap(r, c, dir) {
+  // Only if space is active
+  if (!state.spaceActive) return null;
+  const rows = state.stage.rows, cols = state.stage.cols;
+  const sp = state.stage.space;
+  if (dir === 'right' && c === cols - 1) {
+    if (sp === 'cylinder' || sp === 'torus') return [r, 0, true];
+    if (sp === 'mobius') return [rows-1-r, 0, true];
+  }
+  if (dir === 'left' && c === 0) {
+    if (sp === 'cylinder' || sp === 'torus') return [r, cols-1, true];
+    if (sp === 'mobius') return [rows-1-r, cols-1, true];
+  }
+  if (dir === 'down' && r === rows - 1) {
+    if (sp === 'torus') return [0, c, true];
+  }
+  if (dir === 'up' && r === 0) {
+    if (sp === 'torus') return [rows-1, c, true];
+  }
+  return null;
+}
+function move(dir) {
+  if (!state.stage) return;
+  const [r, c] = state.pos;
+  let res = canMove(r, c, dir);
+  if (!res) {
+    res = tryWrap(r, c, dir);
+    if (!res) return;
+  }
+  state.pos = [res[0], res[1]];
+  state.moves++;
+  if (res[2]) state.wraps++;
+  updateStats();
+  if (state.pos[0] === state.stage.end[0] && state.pos[1] === state.stage.end[1]) {
+    clearStage();
+  }
+  render();
+}
+function updateStats() {
+  document.getElementById('stat-moves').textContent = `이동: ${state.moves}회`;
+  document.getElementById('stat-wraps').textContent = `wrap: ${state.wraps}회`;
+  document.getElementById('stat-time').textContent = `시간: ${Math.floor((Date.now()-state.startTime)/1000)}s`;
+}
+setInterval(() => { if (state.stage) updateStats(); }, 500);
+
+function clearStage() {
+  const num = state.stageIdx + 1;
+  localStorage.setItem('topo_maze_cleared_' + num, '1');
+  const banner = document.createElement('div');
+  banner.className = 'cleared-banner';
+  banner.innerHTML = `🎉 스테이지 ${num} 클리어! ${state.moves}이동, ${state.wraps}wrap, ${Math.floor((Date.now()-state.startTime)/1000)}s`;
+  document.querySelector('.panel').insertBefore(banner, document.querySelector('.canvas-wrap'));
+  updateStageButtons();
+}
+
+// ───── 입력 ─────
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowUp') { move('up'); e.preventDefault(); }
+  else if (e.key === 'ArrowDown') { move('down'); e.preventDefault(); }
+  else if (e.key === 'ArrowLeft') { move('left'); e.preventDefault(); }
+  else if (e.key === 'ArrowRight') { move('right'); e.preventDefault(); }
+});
+document.querySelectorAll('.dpad-btn').forEach(b => b.addEventListener('click', () => move(b.dataset.dir)));
+document.getElementById('restart').addEventListener('click', () => selectStage(state.stageIdx));
+
+// Touch swipe on canvas
+let touchStart = null;
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length !== 1) return;
+  touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+}, { passive: true });
+canvas.addEventListener('touchend', e => {
+  if (!touchStart) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStart.x;
+  const dy = t.clientY - touchStart.y;
+  if (Math.abs(dx) + Math.abs(dy) < 30) { touchStart = null; return; }
+  if (Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 'right' : 'left');
+  else move(dy > 0 ? 'down' : 'up');
+  touchStart = null;
+});
+
+// ───── 렌더링 ─────
+function render() {
+  ctx.fillStyle = '#0F172A';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  if (!state.stage) return;
+  const { rows, cols, walls, start, end } = state.stage;
+  const cellW = Math.min(canvas.width / cols, canvas.height / rows);
+  const offX = (canvas.width - cellW * cols) / 2;
+  const offY = (canvas.height - cellW * rows) / 2;
+
+  // Background cells
+  ctx.fillStyle = '#1E293B';
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    ctx.fillRect(offX + c*cellW, offY + r*cellW, cellW, cellW);
+  }
+
+  // Walls
+  ctx.strokeStyle = '#94A3B8'; ctx.lineWidth = 2;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const [right, down] = walls[r][c];
+    if (right && c < cols-1) {
+      ctx.beginPath();
+      ctx.moveTo(offX + (c+1)*cellW, offY + r*cellW);
+      ctx.lineTo(offX + (c+1)*cellW, offY + (r+1)*cellW);
+      ctx.stroke();
+    }
+    if (down && r < rows-1) {
+      ctx.beginPath();
+      ctx.moveTo(offX + c*cellW, offY + (r+1)*cellW);
+      ctx.lineTo(offX + (c+1)*cellW, offY + (r+1)*cellW);
+      ctx.stroke();
+    }
+  }
+
+  // Outer border (with space-active indication)
+  const sp = state.stage.space;
+  ctx.lineWidth = 4;
+  // Left/right
+  ctx.strokeStyle = state.spaceActive ? (sp === 'mobius' ? '#F87171' : '#34D399') : '#94A3B8';
+  ctx.beginPath(); ctx.moveTo(offX, offY); ctx.lineTo(offX, offY + rows*cellW); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(offX + cols*cellW, offY); ctx.lineTo(offX + cols*cellW, offY + rows*cellW); ctx.stroke();
+  // Top/bottom
+  ctx.strokeStyle = (state.spaceActive && sp === 'torus') ? '#34D399' : '#94A3B8';
+  ctx.beginPath(); ctx.moveTo(offX, offY); ctx.lineTo(offX + cols*cellW, offY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(offX, offY + rows*cellW); ctx.lineTo(offX + cols*cellW, offY + rows*cellW); ctx.stroke();
+
+  // Arrows when space active
+  if (state.spaceActive) {
+    ctx.fillStyle = (sp === 'mobius') ? '#F87171' : '#34D399';
+    const ay = offY + rows*cellW/2;
+    if (sp === 'mobius') {
+      drawArrow(offX, ay, 0, -1); drawArrow(offX + cols*cellW, ay, 0, 1);
+    } else {
+      drawArrow(offX, ay, 0, -1); drawArrow(offX + cols*cellW, ay, 0, -1);
+    }
+    if (sp === 'torus') {
+      const ax = offX + cols*cellW/2;
+      ctx.fillStyle = '#34D399';
+      drawArrow(ax, offY, 1, 0); drawArrow(ax, offY + rows*cellW, 1, 0);
+    }
+  }
+
+  // Start
+  ctx.fillStyle = '#34D399';
+  ctx.fillRect(offX + start[1]*cellW + 4, offY + start[0]*cellW + 4, cellW-8, cellW-8);
+
+  // End
+  ctx.fillStyle = '#FBBF24';
+  ctx.fillRect(offX + end[1]*cellW + 4, offY + end[0]*cellW + 4, cellW-8, cellW-8);
+  ctx.fillStyle = '#0F172A'; ctx.font = `${Math.floor(cellW*0.5)}px sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('🏁', offX + end[1]*cellW + cellW/2, offY + end[0]*cellW + cellW/2);
+
+  // Player
+  ctx.fillStyle = '#60A5FA';
+  ctx.beginPath();
+  ctx.arc(offX + state.pos[1]*cellW + cellW/2, offY + state.pos[0]*cellW + cellW/2, cellW*0.35, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#1E40AF'; ctx.lineWidth = 2; ctx.stroke();
+}
+
+function drawArrow(x, y, dx, dy) {
+  const s = 8;
+  ctx.beginPath();
+  if (dx === 0 && dy === -1) { ctx.moveTo(x, y - s); ctx.lineTo(x - s, y + s); ctx.lineTo(x + s, y + s); }
+  else if (dx === 0 && dy === 1) { ctx.moveTo(x, y + s); ctx.lineTo(x - s, y - s); ctx.lineTo(x + s, y - s); }
+  else if (dx === 1 && dy === 0) { ctx.moveTo(x + s, y); ctx.lineTo(x - s, y - s); ctx.lineTo(x - s, y + s); }
+  else { ctx.moveTo(x - s, y); ctx.lineTo(x + s, y - s); ctx.lineTo(x + s, y + s); }
+  ctx.closePath(); ctx.fill();
+}
+
+// ───── 초기화 ─────
+updateStageButtons();
+const lastIdx = Math.max(0, Math.min(14, parseInt(localStorage.getItem('topo_maze_stage') || '1') - 1));
+selectStage(lastIdx);
+</script>
+</body>
+</html>

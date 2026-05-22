@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D 위상 틱택토 — 게임</title>
+<style>
+  :root { --bg:#F8F9FA; --text:#1F2933; --muted:#6B7280; --border:#D1D5DB; --accent:#2E86C1;
+          --x-color:#E74C3C; --o-color:#3498DB; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; overflow:hidden; }
+  body { font-family:'맑은 고딕','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+         background:var(--bg); color:var(--text); }
+  #canvas-host { position:absolute; inset:0; }
+  canvas { display:block; }
+  .topbar { position:absolute; left:14px; top:14px; right:14px;
+            display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
+            pointer-events:none; }
+  .info, .controls {
+    background:rgba(255,255,255,0.95); border:1px solid var(--border); border-radius:10px;
+    padding:10px 12px; font-size:13px; line-height:1.55;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08); pointer-events:auto;
+  }
+  .info { max-width:260px; }
+  .info h2 { font-size:15px; margin-bottom:4px; color:var(--accent); }
+  .info p { margin:2px 0; color:var(--muted); }
+  .info b { color:var(--text); }
+  .status { display:inline-block; padding:4px 12px; border-radius:6px;
+            font-weight:700; background:#F3F4F6; margin-top:4px; }
+  .status.x { color:var(--x-color); }
+  .status.o { color:var(--o-color); }
+  .status.win { background:#FEF3C7; }
+  .controls { display:flex; gap:8px; }
+  .btn {
+    background:#FFF; border:1px solid var(--border); border-radius:8px;
+    padding:7px 13px; font-size:13px; cursor:pointer;
+  }
+  .btn.primary { background:var(--accent); color:#FFF; border-color:var(--accent); }
+  .btn:hover { background:#EFF6FF; }
+  .btn.primary:hover { background:#1B6FA8; }
+  .selector { position:absolute; inset:0; display:flex; flex-direction:column;
+              justify-content:center; align-items:center; background:var(--bg); }
+  .selector h1 { margin-bottom:6px; color:var(--accent); font-size:22px; }
+  .selector .sub { color:var(--muted); margin-bottom:18px; font-size:14px; }
+  .cards { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
+  .card {
+    background:#FFF; border:2px solid var(--border); border-radius:14px;
+    padding:22px 28px; cursor:pointer; min-width:170px; text-align:center;
+  }
+  .card:hover { border-color:var(--accent); background:#EFF6FF; transform:translateY(-2px); }
+  .card .icon { font-size:36px; }
+  .card .name { font-weight:700; margin-top:6px; font-size:15px; }
+  .card .desc { font-size:12px; color:var(--muted); margin-top:4px; }
+  .notice { margin-top:20px; padding:10px 14px; background:#FEF3C7;
+            border-radius:8px; color:#92400E; font-size:13px; }
+</style>
+</head>
+<body>
+  <div id="canvas-host"></div>
+
+  <div id="selector" class="selector">
+    <h1>3D 위상 틱택토</h1>
+    <div class="sub">원기둥·토러스·뫼비우스 표면 위에서 직접 두어 봅니다.</div>
+    <div class="cards">
+      <div class="card" data-mode="cylinder">
+        <div class="icon">🥫</div><div class="name">원기둥</div>
+        <div class="desc">좌우만 같은 방향 이어붙임</div>
+      </div>
+      <div class="card" data-mode="torus">
+        <div class="icon">🍩</div><div class="name">토러스</div>
+        <div class="desc">좌우 + 상하 이어붙임</div>
+      </div>
+      <div class="card" data-mode="mobius">
+        <div class="icon">♾️</div><div class="name">뫼비우스</div>
+        <div class="desc">좌우 반대 방향 (거울상)</div>
+      </div>
+    </div>
+    <div id="notice" class="notice" style="display:none;"></div>
+  </div>
+
+  <div class="topbar" style="display:none;" id="game-ui">
+    <div class="info">
+      <h2 id="mode-name">원기둥</h2>
+      <p>🖱️ 드래그: 회전 · 🔍 휠: 줌</p>
+      <p>👆 셀 클릭: 돌 두기</p>
+      <div class="status" id="status">X 차례</div>
+    </div>
+    <div class="controls">
+      <button class="btn primary" id="reset">↺ 다시 시작</button>
+      <button class="btn" id="back">← 선택</button>
+    </div>
+  </div>
+
+<script src="three.r128.min.js"></script>
+<script>
+"use strict";
+
+/* ═══════════════════════════════════════════════════════════
+ * 1. 핵심 — 2.15 ghost-tile 알고리즘 (분석기·2D 게임과 동일)
+ * ═══════════════════════════════════════════════════════════ */
+const N = 3;
+function flipVPerm(n) {
+  const a = new Array(n*n);
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) a[i*n+j] = (n-1-i)*n + j;
+  return a;
+}
+const FLIP_V = flipVPerm(N);
+
+function getGhosts(mode) {
+  switch (mode) {
+    case 'cylinder': return [{dr:0, dc:-1, perm:null}, {dr:0, dc:1, perm:null}];
+    case 'torus': return [
+      {dr:-1, dc:-1, perm:null}, {dr:-1, dc:0, perm:null}, {dr:-1, dc:1, perm:null},
+      {dr:0, dc:-1, perm:null},                            {dr:0, dc:1, perm:null},
+      {dr:1, dc:-1, perm:null}, {dr:1, dc:0, perm:null},   {dr:1, dc:1, perm:null},
+    ];
+    case 'mobius': return [{dr:0, dc:-1, perm:FLIP_V}, {dr:0, dc:1, perm:FLIP_V}];
+    default: return [];
+  }
+}
+const ENUM_DIRS = [{dy:0,dx:1}, {dy:1,dx:0}, {dy:1,dx:1}, {dy:-1,dx:1}];
+
+function computeWinLines(mode) {
+  const ghosts = getGhosts(mode);
+  const tiles = [{dr:0, dc:0, perm:null}, ...ghosts];
+  const look = new Map(); for (const t of tiles) look.set(`${t.dr},${t.dc}`, t);
+  const rs = tiles.map(t=>t.dr), cs = tiles.map(t=>t.dc);
+  const rMin=Math.min(...rs), rMax=Math.max(...rs), cMin=Math.min(...cs), cMax=Math.max(...cs);
+  const H=(rMax-rMin+1)*N, W=(cMax-cMin+1)*N;
+  const bR=(0-rMin)*N, bC=(0-cMin)*N;
+  function g2c(Y,X) {
+    if (Y<0||Y>=H||X<0||X>=W) return null;
+    const tr = Math.floor(Y/N)+rMin, tc = Math.floor(X/N)+cMin;
+    const t = look.get(`${tr},${tc}`); if (!t) return null;
+    const lo = (Y%N)*N + (X%N);
+    return t.perm ? t.perm.indexOf(lo) : lo;
+  }
+  const seen=new Set(), lines=[];
+  for (let r0=bR; r0<bR+N; r0++) for (let c0=bC; c0<bC+N; c0++) for (const d of ENUM_DIRS) {
+    const idx=[]; let ok=true;
+    for (let s=0; s<N; s++) {
+      const v = g2c(r0+s*d.dy, c0+s*d.dx);
+      if (v===null || v<0) { ok=false; break; }
+      idx.push(v);
+    }
+    if (!ok || new Set(idx).size !== N) continue;
+    const k = [...idx].sort((a,b)=>a-b).join(',');
+    if (seen.has(k)) continue;
+    seen.add(k); lines.push(idx);
+  }
+  return lines;
+}
+
+/* ═══════════════════════════════════════════════════════════
+ * 2. 게임 상태
+ * ═══════════════════════════════════════════════════════════ */
+const state = {
+  mode: null,
+  board: new Array(9).fill(null),
+  turn: 'X',
+  winLines: [],
+  winner: null,
+  winLine: null,
+};
+
+/* ═══════════════════════════════════════════════════════════
+ * 3. Three.js 장면
+ * ═══════════════════════════════════════════════════════════ */
+const host = document.getElementById('canvas-host');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xF8F9FA);
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio || 1);
+renderer.setSize(window.innerWidth, window.innerHeight);
+camera.aspect = window.innerWidth / window.innerHeight;
+camera.updateProjectionMatrix();
+host.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+const dl = new THREE.DirectionalLight(0xffffff, 0.55);
+dl.position.set(5, 6, 4); scene.add(dl);
+
+// 셀 메시 그룹 (raycaster 대상)
+const cellGroup = new THREE.Group();
+scene.add(cellGroup);
+// 돌 그룹
+const stoneGroup = new THREE.Group();
+scene.add(stoneGroup);
+
+// 모드별 매개변수와 셀 메쉬 생성
+const SURFACE = {
+  cylinder: { R: 3 / (2*Math.PI), H: 3 },
+  torus:    { R: 1.2, r: 0.45 },
+  mobius:   { R: 1.0, w: 0.32 },
+};
+
+function paramToWorld(mode, u, v) {
+  // u, v ∈ [0, 1]
+  if (mode === 'cylinder') {
+    const { R, H } = SURFACE.cylinder;
+    const a = u * Math.PI * 2;
+    return new THREE.Vector3(R*Math.cos(a), H/2 - v*H, R*Math.sin(a));
+  }
+  if (mode === 'torus') {
+    const { R, r } = SURFACE.torus;
+    const uu = u * Math.PI * 2;
+    const vv = v * Math.PI * 2;
+    const cu = Math.cos(uu), su = Math.sin(uu);
+    const cv = Math.cos(vv), sv = Math.sin(vv);
+    return new THREE.Vector3((R + r*cv) * cu, r*sv, (R + r*cv) * su);
+  }
+  if (mode === 'mobius') {
+    const { R, w } = SURFACE.mobius;
+    const uu = u * Math.PI * 2;
+    const vv = -w + v * (2*w);
+    const half = uu/2;
+    const cu = Math.cos(uu), su = Math.sin(uu);
+    const ch = Math.cos(half), sh = Math.sin(half);
+    const rad = R + vv * ch;
+    return new THREE.Vector3(rad*cu, rad*su, vv*sh);
+  }
+}
+
+/* 명시적으로 추적: 이전 mode의 surface mesh와 격자선만 제거하고
+   cellGroup·stoneGroup은 절대 scene에서 떼어내지 않는다. */
+let currentSurfaceMesh = null;
+let currentGridLines = null;
+
+function buildSurface(mode) {
+  // Clear previous cell/stone meshes (그룹은 유지)
+  while (cellGroup.children.length) cellGroup.remove(cellGroup.children[0]);
+  while (stoneGroup.children.length) stoneGroup.remove(stoneGroup.children[0]);
+  // Remove previous surface and grid lines
+  if (currentSurfaceMesh) { scene.remove(currentSurfaceMesh); currentSurfaceMesh = null; }
+  if (currentGridLines)  { scene.remove(currentGridLines);  currentGridLines = null; }
+
+  // ─── 모든 mode를 paramToWorld 기준으로 직접 생성 (셀과 표면이 100% 일치) ───
+  const uSeg = (mode === 'cylinder') ? 64 : 96;
+  const vSeg = (mode === 'cylinder') ? 8  : ((mode === 'mobius') ? 12 : 32);
+  const positions = [], indices = [];
+  for (let i = 0; i <= uSeg; i++) {
+    for (let j = 0; j <= vSeg; j++) {
+      const p = paramToWorld(mode, i/uSeg, j/vSeg);
+      positions.push(p.x, p.y, p.z);
+    }
+  }
+  for (let i = 0; i < uSeg; i++) {
+    for (let j = 0; j < vSeg; j++) {
+      const a = i*(vSeg+1) + j;
+      const b = a + (vSeg+1);
+      const c = a + 1;
+      const d = b + 1;
+      indices.push(a, b, c, b, d, c);
+    }
+  }
+  const surfGeom = new THREE.BufferGeometry();
+  surfGeom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  surfGeom.setIndex(indices);
+  surfGeom.computeVertexNormals();
+  const surfMat = new THREE.MeshPhongMaterial({
+    color: { cylinder:0x86C5E0, torus:0xE8A56B, mobius:0xA98BD9 }[mode],
+    side: THREE.DoubleSide, transparent: true, opacity: 0.6, shininess: 25
+  });
+  currentSurfaceMesh = new THREE.Mesh(surfGeom, surfMat);
+  scene.add(currentSurfaceMesh);
+
+  // ─── 격자선 (3×3 셀 경계) ───
+  const gridLineMat = new THREE.LineBasicMaterial({ color: 0x1F2933, linewidth: 1 });
+  const gridGroup = new THREE.Group();
+  const SEG_LINE = 48;
+  // u-방향 분할선 (col 경계: u = c/N for c=0..N)
+  for (let c = 0; c <= N; c++) {
+    const u = c / N;
+    const pts = [];
+    for (let j = 0; j <= SEG_LINE; j++) {
+      pts.push(paramToWorld(mode, u, j/SEG_LINE));
+    }
+    gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gridLineMat));
+  }
+  // v-방향 분할선 (row 경계: v = r/N for r=0..N)
+  for (let r = 0; r <= N; r++) {
+    const v = r / N;
+    const pts = [];
+    for (let i = 0; i <= SEG_LINE; i++) {
+      pts.push(paramToWorld(mode, i/SEG_LINE, v));
+    }
+    gridGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gridLineMat));
+  }
+  currentGridLines = gridGroup;
+  scene.add(currentGridLines);
+
+  // ─── 셀 quad (raycaster 대상, 같은 paramToWorld 사용) ───
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const cellQuad = buildCellQuad(mode, r, c);
+      cellQuad.userData.cellIdx = r * N + c;
+      cellGroup.add(cellQuad);
+    }
+  }
+
+  // Camera
+  let camPos;
+  if (mode === 'cylinder') camPos = new THREE.Vector3(3.5, 2.5, 4.5);
+  else if (mode === 'torus') camPos = new THREE.Vector3(3.8, 3.0, 3.8);
+  else camPos = new THREE.Vector3(2.6, 1.8, 2.6);
+  state._initCamRadius = camPos.length();
+  state._rotY = 0.5; state._rotX = 0.3; state._zoom = 1;
+  applyCamera();
+}
+
+function buildCellQuad(mode, row, col) {
+  // raycaster 전용 메쉬. paramToWorld로 셀 면을 정확히 따라가도록 SEG로 세분화.
+  const u0 = col / N, u1 = (col+1) / N;
+  const v0 = row / N, v1 = (row+1) / N;
+  const SEG = 8;
+  const pos = [];
+  const idx = [];
+  for (let i = 0; i <= SEG; i++) {
+    for (let j = 0; j <= SEG; j++) {
+      const uu = u0 + (u1-u0) * (i/SEG);
+      const vv = v0 + (v1-v0) * (j/SEG);
+      const p = paramToWorld(mode, uu, vv);
+      pos.push(p.x, p.y, p.z);
+    }
+  }
+  for (let i = 0; i < SEG; i++) {
+    for (let j = 0; j < SEG; j++) {
+      const a = i*(SEG+1) + j;
+      const b = a + (SEG+1);
+      const c = a + 1;
+      const d = b + 1;
+      idx.push(a, b, c, b, d, c);
+    }
+  }
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geom.setIndex(idx);
+  geom.computeVertexNormals();
+  // 거의 보이지 않지만 raycaster·hover 강조에 사용. 격자선은 surface와 함께 별도 그룹으로 렌더링.
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0xffffff, transparent: true, opacity: 0.001, side: THREE.DoubleSide,
+    depthWrite: false
+  });
+  return new THREE.Mesh(geom, mat);
+}
+
+// 표면 법선 근사: (u, v) 근처 점 두 개로 외적
+function surfaceNormal(mode, u, v) {
+  const eps = 1e-3;
+  const p = paramToWorld(mode, u, v);
+  const pu = paramToWorld(mode, u + eps, v).sub(p);
+  const pv = paramToWorld(mode, u, v + eps).sub(p);
+  const n = pu.cross(pv).normalize();
+  // 원점에서 멀어지는 방향으로 정렬 (mobius/torus처럼 양면이 있는 경우 대비)
+  if (n.dot(paramToWorld(mode, u, v)) < 0) n.multiplyScalar(-1);
+  return n;
+}
+
+function placeStoneMesh(idx) {
+  const stone = state.board[idx];
+  if (!stone) return;
+  const row = Math.floor(idx / N), col = idx % N;
+  const u = (col + 0.5) / N, v = (row + 0.5) / N;
+  const center = paramToWorld(state.mode, u, v);
+  const normal = surfaceNormal(state.mode, u, v);
+  // 표면 위로 살짝 띄움
+  center.add(normal.clone().multiplyScalar(0.06));
+  let mesh;
+  if (stone === 'X') {
+    const grp = new THREE.Group();
+    const mat = new THREE.MeshPhongMaterial({ color: 0xE74C3C, shininess: 40 });
+    const arm1 = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.07, 0.07), mat);
+    const arm2 = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.07, 0.07), mat);
+    arm1.rotation.z = Math.PI/4; arm2.rotation.z = -Math.PI/4;
+    grp.add(arm1); grp.add(arm2);
+    mesh = grp;
+  } else {
+    const mat = new THREE.MeshPhongMaterial({ color: 0x3498DB, shininess: 40 });
+    mesh = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.04, 12, 24), mat);
+  }
+  mesh.position.copy(center);
+  // 스톤을 표면 법선 방향으로 향하게 회전 (X 마크가 표면에 평평히 놓이도록)
+  const lookTarget = center.clone().add(normal);
+  mesh.lookAt(lookTarget);
+  mesh.userData.stoneIdx = idx;
+  stoneGroup.add(mesh);
+}
+
+function rebuildStones() {
+  while (stoneGroup.children.length) stoneGroup.remove(stoneGroup.children[0]);
+  for (let i = 0; i < 9; i++) if (state.board[i]) placeStoneMesh(i);
+}
+
+/* ═══════════════════════════════════════════════════════════
+ * 4. 카메라 컨트롤
+ * ═══════════════════════════════════════════════════════════ */
+function applyCamera() {
+  const radius = state._initCamRadius / state._zoom;
+  camera.position.x = radius * Math.cos(state._rotX) * Math.sin(state._rotY);
+  camera.position.y = radius * Math.sin(state._rotX);
+  camera.position.z = radius * Math.cos(state._rotX) * Math.cos(state._rotY);
+  camera.lookAt(0, 0, 0);
+}
+
+let isDragging = false, lastX = 0, lastY = 0, dragMoved = false;
+renderer.domElement.addEventListener('mousedown', e => {
+  isDragging = true; lastX = e.clientX; lastY = e.clientY; dragMoved = false;
+});
+window.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  const dx = e.clientX - lastX, dy = e.clientY - lastY;
+  if (Math.abs(dx) + Math.abs(dy) > 3) dragMoved = true;
+  lastX = e.clientX; lastY = e.clientY;
+  state._rotY -= dx * 0.006;
+  state._rotX += dy * 0.006;
+  state._rotX = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, state._rotX));
+  applyCamera();
+});
+window.addEventListener('mouseup', () => isDragging = false);
+renderer.domElement.addEventListener('wheel', e => {
+  e.preventDefault();
+  state._zoom *= e.deltaY > 0 ? 0.92 : 1.08;
+  state._zoom = Math.max(0.3, Math.min(3, state._zoom));
+  applyCamera();
+}, { passive: false });
+
+// Touch
+let touchStart = null, touchPinch = null;
+renderer.domElement.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) touchStart = { x:e.touches[0].clientX, y:e.touches[0].clientY };
+  else if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    touchPinch = Math.hypot(dx, dy);
+  }
+  dragMoved = false;
+}, { passive: true });
+renderer.domElement.addEventListener('touchmove', e => {
+  if (e.touches.length === 1 && touchStart) {
+    const dx = e.touches[0].clientX - touchStart.x;
+    const dy = e.touches[0].clientY - touchStart.y;
+    if (Math.abs(dx) + Math.abs(dy) > 3) dragMoved = true;
+    state._rotY -= dx * 0.006;
+    state._rotX += dy * 0.006;
+    state._rotX = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, state._rotX));
+    touchStart = { x:e.touches[0].clientX, y:e.touches[0].clientY };
+    applyCamera();
+  } else if (e.touches.length === 2 && touchPinch) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const nd = Math.hypot(dx, dy);
+    state._zoom *= nd / touchPinch;
+    state._zoom = Math.max(0.3, Math.min(3, state._zoom));
+    touchPinch = nd;
+    applyCamera();
+  }
+  e.preventDefault();
+}, { passive: false });
+renderer.domElement.addEventListener('touchend', e => {
+  if (e.touches.length === 0 && touchStart && !dragMoved) {
+    // Treat as tap → cell click
+    handleClickAt(touchStart.x, touchStart.y);
+  }
+  touchStart = null; touchPinch = null;
+});
+
+/* ═══════════════════════════════════════════════════════════
+ * 5. 셀 클릭 (raycaster)
+ * ═══════════════════════════════════════════════════════════ */
+const raycaster = new THREE.Raycaster();
+const mouseV = new THREE.Vector2();
+
+function handleClickAt(clientX, clientY) {
+  if (state.winner) return;
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouseV.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+  mouseV.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouseV, camera);
+  const hits = raycaster.intersectObjects(cellGroup.children, false);
+  if (!hits.length) return;
+  const idx = hits[0].object.userData.cellIdx;
+  if (state.board[idx] !== null) return;
+  state.board[idx] = state.turn;
+  const result = checkWinner();
+  if (result) {
+    state.winner = result.winner;
+    state.winLine = result.line;
+  } else {
+    state.turn = state.turn === 'X' ? 'O' : 'X';
+  }
+  rebuildStones();
+  updateStatus();
+  saveStorage();
+}
+
+renderer.domElement.addEventListener('click', e => {
+  if (!dragMoved) handleClickAt(e.clientX, e.clientY);
+});
+
+function checkWinner() {
+  for (const line of state.winLines) {
+    const s0 = state.board[line[0]];
+    if (!s0) continue;
+    if (state.board[line[1]] === s0 && state.board[line[2]] === s0) {
+      return { winner: s0, line };
+    }
+  }
+  if (state.board.every(c => c !== null)) return { winner: 'draw', line: null };
+  return null;
+}
+
+function updateStatus() {
+  const s = document.getElementById('status');
+  s.classList.remove('x','o','win');
+  if (state.winner === 'X') { s.textContent = '🎉 X 승!'; s.classList.add('x','win'); }
+  else if (state.winner === 'O') { s.textContent = '🎉 O 승!'; s.classList.add('o','win'); }
+  else if (state.winner === 'draw') { s.textContent = '무승부'; }
+  else { s.textContent = state.turn + ' 차례'; s.classList.add(state.turn.toLowerCase()); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+ * 6. localStorage
+ * ═══════════════════════════════════════════════════════════ */
+function storageKey() { return `topo_3dgame_${state.mode}`; }
+function saveStorage() {
+  if (!state.mode) return;
+  localStorage.setItem(storageKey(), JSON.stringify({
+    board: state.board, turn: state.turn,
+    winner: state.winner, winLine: state.winLine
+  }));
+}
+function loadStorage() {
+  if (!state.mode) return;
+  try {
+    const raw = localStorage.getItem(storageKey());
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    state.board = s.board || new Array(9).fill(null);
+    state.turn = s.turn || 'X';
+    state.winner = s.winner || null;
+    state.winLine = s.winLine || null;
+  } catch (e) {}
+}
+
+/* ═══════════════════════════════════════════════════════════
+ * 7. UI 전환
+ * ═══════════════════════════════════════════════════════════ */
+function setMode(mode) {
+  if (!['cylinder', 'torus', 'mobius'].includes(mode)) { showSelector(); return; }
+  state.mode = mode;
+  state.board = new Array(9).fill(null);
+  state.turn = 'X';
+  state.winner = null;
+  state.winLine = null;
+  state.winLines = computeWinLines(mode);
+  document.getElementById('selector').style.display = 'none';
+  document.getElementById('game-ui').style.display = 'flex';
+  document.getElementById('mode-name').textContent =
+    {cylinder:'🥫 원기둥', torus:'🍩 토러스', mobius:'♾️ 뫼비우스'}[mode];
+  buildSurface(mode);
+  loadStorage();
+  rebuildStones();
+  updateStatus();
+}
+function showSelector() {
+  document.getElementById('selector').style.display = 'flex';
+  document.getElementById('game-ui').style.display = 'none';
+  state.mode = null;
+}
+document.querySelectorAll('.card').forEach(c =>
+  c.addEventListener('click', () => setMode(c.dataset.mode))
+);
+document.getElementById('reset').addEventListener('click', () => {
+  state.board = new Array(9).fill(null);
+  state.turn = 'X'; state.winner = null; state.winLine = null;
+  rebuildStones(); updateStatus(); saveStorage();
+});
+document.getElementById('back').addEventListener('click', showSelector);
+
+/* ═══════════════════════════════════════════════════════════
+ * 8. URL 파싱
+ * ═══════════════════════════════════════════════════════════ */
+const params = new URLSearchParams(location.search);
+const urlMode = params.get('mode');
+if (urlMode && ['cylinder', 'torus', 'mobius'].includes(urlMode)) {
+  setMode(urlMode);
+} else {
+  showSelector();
+}
+
+/* ═══════════════════════════════════════════════════════════
+ * 9. resize + 렌더 루프
+ * ═══════════════════════════════════════════════════════════ */
+window.addEventListener('resize', () => {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+});
+
+(function loop() {
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

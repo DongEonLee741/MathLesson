@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>위상 오목</title>
+<style>
+:root { --bg:#0F172A; --panel:#1E293B; --text:#E2E8F0; --muted:#94A3B8;
+  --border:#334155; --accent:#38BDF8; --good:#34D399; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { min-height:100%; }
+body { font-family:'맑은 고딕','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  background:linear-gradient(180deg, #0F172A 0%, #1E1B4B 100%);
+  color:var(--text); min-height:100vh; padding:14px; }
+.container { max-width:880px; margin:0 auto; }
+.topbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+.title { font-size:20px; font-weight:800; color:var(--accent); }
+.back { color:var(--muted); text-decoration:none; font-size:14px; }
+.tabs { display:flex; gap:6px; margin:10px 0; flex-wrap:wrap; align-items:center; }
+.tab { padding:8px 14px; background:#334155; color:var(--muted); border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
+.tab.active { background:var(--accent); color:#0F172A; }
+.status { padding:6px 14px; border-radius:8px; font-weight:700; background:#334155; margin-left:auto; }
+.status.black { color:#1E293B; background:#E2E8F0; }
+.status.white { color:#E2E8F0; background:#1E293B; border:2px solid #94A3B8; }
+.status.win { background:linear-gradient(135deg, #FBBF24, #F87171); color:#0F172A; }
+.panel { background:var(--panel); border:1.5px solid var(--border); border-radius:14px; padding:14px; }
+.canvas-wrap { display:flex; justify-content:center; margin:10px 0; }
+canvas { background:#F5DEB3; border-radius:6px; touch-action:none; max-width:100%; }
+.controls { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; }
+.btn { background:var(--accent); color:#0F172A; border:none; border-radius:8px; padding:8px 16px; font-weight:700; cursor:pointer; font-size:13px; }
+.btn.outline { background:transparent; color:var(--accent); border:2px solid var(--accent); }
+.btn.toggle { background:#334155; color:var(--muted); }
+.btn.toggle.on { background:#DBEAFE; color:#1E40AF; }
+.info { background:rgba(15,23,42,0.7); border-left:3px solid var(--accent); padding:10px 14px; border-radius:6px; font-size:13px; margin:8px 0; line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <div class="title">⚫ 위상 오목 (10×10, 5목)</div>
+    <a class="back" href="../session4.html">← 돌아가기</a>
+  </div>
+
+  <div class="panel">
+    <div class="tabs">
+      <button class="tab active" data-mode="plain">평면</button>
+      <button class="tab" data-mode="cylinder">🥫 원기둥</button>
+      <button class="tab" data-mode="torus">🍩 토러스</button>
+      <button class="tab" data-mode="mobius">♾️ 뫼비우스</button>
+      <span class="status black" id="status">⚫ 흑 차례</span>
+    </div>
+
+    <div class="info" id="mode-info">평면: 5목은 격자 안에서만 인정됩니다.</div>
+
+    <div class="canvas-wrap">
+      <canvas id="board" width="600" height="600"></canvas>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="reset">↺ 새 판</button>
+      <button class="btn toggle on" id="tile-toggle">⊞ 타일링 보기</button>
+    </div>
+    <div class="info">
+      💡 같은 색 돌이 <b>5개 일렬</b>로 놓이면 승리. 원기둥/토러스/뫼비우스에서는 <b>경계를 넘어가는 5목</b>도 인정됩니다.
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const N = 10;
+const WIN = 5;
+const canvas = document.getElementById('board');
+const ctx = canvas.getContext('2d');
+const CW = canvas.width, CH = canvas.height;
+
+const state = {
+  mode: 'plain',
+  board: Array.from({length: N*N}, () => null),
+  turn: 'B', // B or W
+  winner: null,
+  winLine: null,
+  showTile: true,
+};
+
+const MODE_INFO = {
+  plain: '평면: 5목은 격자 안에서만 인정됩니다.',
+  cylinder: '원기둥: 좌우가 이어져 있어 <b>좌우 wrap 5목</b>도 인정.',
+  torus: '토러스: 좌우 + 상하 wrap 5목 모두 인정.',
+  mobius: '뫼비우스: 좌우 wrap이 행을 뒤집습니다. 거울상으로 이어지는 5목까지 인정.',
+};
+
+function flipPerm(n) { const a = new Array(n*n); for (let i=0;i<n;i++) for (let j=0;j<n;j++) a[i*n+j] = (n-1-i)*n+j; return a; }
+const FLIP = flipPerm(N);
+
+function ghosts(mode) {
+  if (mode === 'plain') return [];
+  if (mode === 'cylinder') return [
+    {dr:0, dc:-1, perm:null}, {dr:0, dc:1, perm:null},
+  ];
+  if (mode === 'torus') return [
+    {dr:-1, dc:-1, perm:null}, {dr:-1, dc:0, perm:null}, {dr:-1, dc:1, perm:null},
+    {dr:0, dc:-1, perm:null},                            {dr:0, dc:1, perm:null},
+    {dr:1, dc:-1, perm:null}, {dr:1, dc:0, perm:null},   {dr:1, dc:1, perm:null},
+  ];
+  if (mode === 'mobius') return [
+    {dr:0, dc:-1, perm:FLIP}, {dr:0, dc:1, perm:FLIP},
+  ];
+  return [];
+}
+
+// Returns [{cells:[idx,...], color}] for any 5-in-a-row containing 'newIdx'.
+// Use ghost-tile approach: search from newIdx in 4 directions, walk WIN cells in global grid.
+function checkWinAt(newIdx) {
+  const tiles = [{dr:0, dc:0, perm:null}, ...ghosts(state.mode)];
+  const look = new Map(); for (const t of tiles) look.set(`${t.dr},${t.dc}`, t);
+  const rs = tiles.map(t=>t.dr), cs = tiles.map(t=>t.dc);
+  const rMin = Math.min(...rs), cMin = Math.min(...cs);
+  const rMax = Math.max(...rs), cMax = Math.max(...cs);
+  const Hgrid = (rMax - rMin + 1) * N;
+  const Wgrid = (cMax - cMin + 1) * N;
+  const baseR = (0 - rMin) * N, baseC = (0 - cMin) * N;
+
+  function g2c(Y, X) {
+    if (Y < 0 || Y >= Hgrid || X < 0 || X >= Wgrid) return null;
+    const tr = Math.floor(Y/N) + rMin;
+    const tc = Math.floor(X/N) + cMin;
+    const t = look.get(`${tr},${tc}`); if (!t) return null;
+    const lo = (Y%N)*N + (X%N);
+    if (!t.perm) return lo;
+    return t.perm.indexOf(lo);
+  }
+
+  const color = state.board[newIdx];
+  if (!color) return null;
+  // For each direction, find starting cell s.t. walk of WIN cells passes through newIdx.
+  // For each direction, walk WIN cells from candidates around newIdx (-WIN+1..0 offsets).
+  const DIRS = [{dy:0, dx:1}, {dy:1, dx:0}, {dy:1, dx:1}, {dy:-1, dx:1}];
+  // newIdx in central tile global coords:
+  const newR = baseR + Math.floor(newIdx / N);
+  const newC = baseC + (newIdx % N);
+  for (const d of DIRS) {
+    for (let offset = -(WIN-1); offset <= 0; offset++) {
+      const startY = newR + offset * d.dy;
+      const startX = newC + offset * d.dx;
+      const idxs = []; let ok = true;
+      for (let s = 0; s < WIN; s++) {
+        const Y = startY + s * d.dy, X = startX + s * d.dx;
+        const ci = g2c(Y, X);
+        if (ci === null || ci < 0) { ok = false; break; }
+        if (state.board[ci] !== color) { ok = false; break; }
+        idxs.push(ci);
+      }
+      if (ok && new Set(idxs).size === WIN) {
+        return { cells: idxs, color };
+      }
+    }
+  }
+  return null;
+}
+
+function place(idx) {
+  if (state.winner) return;
+  if (state.board[idx]) return;
+  state.board[idx] = state.turn;
+  const w = checkWinAt(idx);
+  if (w) {
+    state.winner = state.turn;
+    state.winLine = w.cells;
+    document.getElementById('status').className = 'status win';
+    document.getElementById('status').textContent = (state.turn === 'B' ? '⚫ 흑 승!' : '⚪ 백 승!');
+    bumpPlayed();
+  } else if (state.board.every(c => c)) {
+    state.winner = 'draw';
+    document.getElementById('status').className = 'status win';
+    document.getElementById('status').textContent = '무승부';
+    bumpPlayed();
+  } else {
+    state.turn = state.turn === 'B' ? 'W' : 'B';
+    updateStatus();
+  }
+  render();
+}
+function updateStatus() {
+  const s = document.getElementById('status');
+  s.className = 'status ' + (state.turn === 'B' ? 'black' : 'white');
+  s.textContent = state.turn === 'B' ? '⚫ 흑 차례' : '⚪ 백 차례';
+}
+function bumpPlayed() {
+  const n = parseInt(localStorage.getItem('topo_gomoku_played') || '0') + 1;
+  localStorage.setItem('topo_gomoku_played', n.toString());
+}
+
+function reset() {
+  state.board = Array.from({length: N*N}, () => null);
+  state.turn = 'B';
+  state.winner = null;
+  state.winLine = null;
+  updateStatus();
+  render();
+}
+document.getElementById('reset').addEventListener('click', reset);
+
+function setMode(m) {
+  state.mode = m;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.mode === m));
+  document.getElementById('mode-info').innerHTML = MODE_INFO[m];
+  reset();
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setMode(t.dataset.mode)));
+
+document.getElementById('tile-toggle').addEventListener('click', () => {
+  state.showTile = !state.showTile;
+  document.getElementById('tile-toggle').classList.toggle('on', state.showTile);
+  render();
+});
+
+// Click / tap
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const scale = CW / rect.width;
+  const px = (e.clientX - rect.left) * scale;
+  const py = (e.clientY - rect.top) * scale;
+  const idx = clickToCell(px, py);
+  if (idx !== null) place(idx);
+});
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length !== 1) return;
+  const rect = canvas.getBoundingClientRect();
+  const scale = CW / rect.width;
+  const px = (e.touches[0].clientX - rect.left) * scale;
+  const py = (e.touches[0].clientY - rect.top) * scale;
+  const idx = clickToCell(px, py);
+  if (idx !== null) place(idx);
+  e.preventDefault();
+}, { passive: false });
+
+function clickToCell(px, py) {
+  // central tile occupies center 60% of canvas
+  const padding = 60;
+  const boardW = CW - padding * 2;
+  const cellW = boardW / N;
+  const x = px - padding, y = py - padding;
+  if (x < 0 || x >= boardW || y < 0 || y >= boardW) return null;
+  const c = Math.floor(x / cellW);
+  const r = Math.floor(y / cellW);
+  return r * N + c;
+}
+
+function render() {
+  ctx.fillStyle = '#F5DEB3';
+  ctx.fillRect(0, 0, CW, CH);
+
+  const padding = 60;
+  const boardW = CW - padding * 2;
+  const cellW = boardW / N;
+
+  // Tiling: render ghost tiles dimly first
+  if (state.showTile && state.mode !== 'plain') {
+    const ghs = ghosts(state.mode);
+    for (const g of ghs) {
+      // Each ghost is one tile offset.
+      // Draw in a faded color around central tile.
+      // The ghost positions in canvas: shift by (g.dc, g.dr) * boardW
+      const offX = g.dc * boardW;
+      const offY = g.dr * boardW;
+      // Skip drawing huge corners that go off canvas
+      ctx.save();
+      ctx.globalAlpha = 0.25;
+      // Just draw stones for ghost (no grid lines)
+      for (let i = 0; i < N*N; i++) {
+        if (!state.board[i]) continue;
+        const localIdx = g.perm ? g.perm[i] : i;
+        const lr = Math.floor(localIdx / N);
+        const lc = localIdx % N;
+        const cx = padding + offX + (lc + 0.5) * cellW;
+        const cy = padding + offY + (lr + 0.5) * cellW;
+        drawStone(cx, cy, state.board[i], cellW * 0.4);
+      }
+      ctx.restore();
+    }
+  }
+
+  // Grid lines for central tile
+  ctx.strokeStyle = '#8B6914';
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i <= N; i++) {
+    ctx.beginPath();
+    ctx.moveTo(padding + i * cellW, padding);
+    ctx.lineTo(padding + i * cellW, padding + boardW);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(padding, padding + i * cellW);
+    ctx.lineTo(padding + boardW, padding + i * cellW);
+    ctx.stroke();
+  }
+  // Border accent based on mode
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = state.mode === 'mobius' ? '#F87171' : (state.mode === 'plain' ? '#8B6914' : '#34D399');
+  ctx.strokeRect(padding, padding, boardW, boardW);
+
+  // Stones in central tile
+  for (let i = 0; i < N*N; i++) {
+    if (!state.board[i]) continue;
+    const r = Math.floor(i / N), c = i % N;
+    const cx = padding + (c + 0.5) * cellW;
+    const cy = padding + (r + 0.5) * cellW;
+    drawStone(cx, cy, state.board[i], cellW * 0.4);
+  }
+
+  // Win line highlight
+  if (state.winLine) {
+    ctx.strokeStyle = '#FBBF24';
+    ctx.lineWidth = 4;
+    for (const i of state.winLine) {
+      const r = Math.floor(i / N), c = i % N;
+      const cx = padding + (c + 0.5) * cellW;
+      const cy = padding + (r + 0.5) * cellW;
+      ctx.beginPath(); ctx.arc(cx, cy, cellW * 0.5, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+}
+
+function drawStone(cx, cy, color, r) {
+  ctx.fillStyle = color === 'B' ? '#0F172A' : '#FFFFFF';
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = color === 'B' ? '#334155' : '#94A3B8';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+reset();
+</script>
+</body>
+</html>

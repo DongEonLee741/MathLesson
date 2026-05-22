@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>3D 토러스 비행 시뮬레이터</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: '맑은 고딕', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  background: #0A0A2E;
+  color: white;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#canvas-host {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+canvas { display: block; }
+
+/* ─── 좌상단: 조작 안내 ─── */
+.help-panel {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  max-width: 300px;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+.help-panel.collapsed {
+  padding: 8px;
+  max-width: 38px;
+  cursor: pointer;
+}
+.help-panel.collapsed .help-content { display: none; }
+.help-panel h3 {
+  font-size: 14px;
+  color: #38BDF8;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.help-panel .toggle-btn {
+  background: none;
+  border: none;
+  color: #94A3B8;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+}
+.help-panel kbd {
+  background: rgba(56, 189, 248, 0.2);
+  color: #BAE6FD;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: Consolas, monospace;
+  font-size: 11px;
+}
+
+/* ─── 우상단: 관찰 미션 ─── */
+.mission-panel {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(168, 85, 247, 0.4);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  z-index: 10;
+  min-width: 220px;
+}
+.mission-panel h3 {
+  font-size: 14px;
+  color: #C084FC;
+  margin-bottom: 6px;
+}
+.mission-list { list-style: none; padding: 0; margin: 0; }
+.mission-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+}
+.mission-list li input[type=checkbox] {
+  accent-color: #A855F7;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+.mission-list li.done {
+  color: #94A3B8;
+  text-decoration: line-through;
+}
+
+.celebration {
+  display: none;
+  background: linear-gradient(135deg, #6D28D9, #EC4899);
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-top: 8px;
+  text-align: center;
+  font-weight: 700;
+  animation: pulse 1.2s ease infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+.celebration.show { display: block; }
+
+/* ─── 하단: 좌표 표시 ─── */
+.position-bar {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-family: Consolas, monospace;
+  z-index: 10;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.position-bar .coord { color: #BAE6FD; }
+.position-bar .compass { color: #FCD34D; }
+
+/* ─── 우하단: 설정 ─── */
+.settings-btn {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  width: 44px; height: 44px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  border-radius: 50%;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.settings-panel {
+  position: fixed;
+  bottom: 64px;
+  right: 12px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 13px;
+  z-index: 11;
+  min-width: 220px;
+  display: none;
+}
+.settings-panel.open { display: block; }
+.settings-panel h3 {
+  color: #38BDF8;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.setting-row {
+  margin: 8px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.setting-row label { color: #94A3B8; }
+.setting-row select {
+  background: rgba(15, 23, 42, 0.6);
+  color: white;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-family: inherit;
+}
+
+/* ─── 가상 조이스틱 (모바일) ─── */
+.joystick {
+  position: fixed;
+  bottom: 80px;
+  left: 30px;
+  width: 110px; height: 110px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 2px solid rgba(56, 189, 248, 0.5);
+  border-radius: 50%;
+  z-index: 9;
+  touch-action: none;
+  display: none;
+}
+.joystick.show { display: block; }
+.joystick .knob {
+  position: absolute;
+  width: 50px; height: 50px;
+  background: rgba(56, 189, 248, 0.8);
+  border-radius: 50%;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+}
+
+.vert-pad {
+  position: fixed;
+  bottom: 80px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9;
+}
+.vert-pad.show { display: flex; }
+.vert-pad button {
+  width: 50px; height: 50px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 2px solid rgba(56, 189, 248, 0.5);
+  border-radius: 50%;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  touch-action: none;
+}
+.vert-pad button:active { background: rgba(56, 189, 248, 0.4); }
+.vert-pad { display: none; }
+@media (pointer: coarse) {
+  .joystick { display: block; }
+  .vert-pad { display: flex; }
+}
+
+/* ─── 시작 안내 ─── */
+.intro {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(15, 23, 42, 0.95);
+  border: 2px solid rgba(168, 85, 247, 0.5);
+  border-radius: 14px;
+  padding: 24px 28px;
+  text-align: center;
+  z-index: 20;
+  box-shadow: 0 8px 32px rgba(168, 85, 247, 0.3);
+  max-width: 460px;
+}
+.intro h1 {
+  font-size: 22px;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #38BDF8, #C084FC);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.intro p { font-size: 14px; color: #BFDBFE; line-height: 1.7; margin-bottom: 14px; }
+.intro button {
+  background: linear-gradient(135deg, #6D28D9, #EC4899);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
+}
+.intro.hidden { display: none; }
+
+/* ─── 뒤로 가기 ─── */
+.back-link {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 12;
+  background: rgba(15, 23, 42, 0.6);
+  color: #BAE6FD;
+  text-decoration: none;
+  padding: 5px 12px;
+  border-radius: 18px;
+  font-size: 12px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+.back-link:hover { background: rgba(15, 23, 42, 0.85); }
+
+@media (max-width: 600px) {
+  .help-panel, .mission-panel { font-size: 12px; padding: 10px 12px; }
+  .help-panel { max-width: 220px; }
+  .mission-panel { min-width: 180px; }
+}
+</style>
+</head>
+<body>
+
+<a class="back-link" href="session4.html">← 4차시 학습지로</a>
+
+<div id="canvas-host"></div>
+
+<!-- 시작 안내 -->
+<div class="intro" id="intro">
+  <h1>🌌 3D 토러스 비행</h1>
+  <p>
+    여러분은 <b>3차원 토러스</b> 우주에 들어왔습니다.<br>
+    어느 방향으로 가도 결국 <b>같은 자리</b>로 돌아옵니다.<br><br>
+    앞을 보면 <b>내 뒷모습</b>이, 옆을 보면 <b>내 옆모습</b>이 보일 거예요.
+  </p>
+  <button onclick="startSimulation()">🚀 비행 시작</button>
+</div>
+
+<!-- 조작 안내 -->
+<div class="help-panel" id="help-panel">
+  <h3>
+    🎮 조작법
+    <button class="toggle-btn" id="help-toggle">−</button>
+  </h3>
+  <div class="help-content">
+    <div>이동: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 또는 화살표</div>
+    <div>상승: <kbd>Space</kbd> · 하강: <kbd>Shift</kbd></div>
+    <div>시선: 마우스 드래그 (또는 터치)</div>
+    <div style="margin-top:6px; color:#94A3B8; font-size:11px;">모바일: 왼쪽 조이스틱 + 우측 터치</div>
+  </div>
+</div>
+
+<!-- 미션 패널 -->
+<div class="mission-panel">
+  <h3>🔭 관찰 미션</h3>
+  <ul class="mission-list" id="mission-list">
+    <li><input type="checkbox" id="m1"><label for="m1">① 앞을 바라보면?</label></li>
+    <li><input type="checkbox" id="m2"><label for="m2">② 옆을 바라보면?</label></li>
+    <li><input type="checkbox" id="m3"><label for="m3">③ 위를 올려다보면?</label></li>
+    <li><input type="checkbox" id="m4"><label for="m4">④ 타일링의 3D!</label></li>
+  </ul>
+  <div class="celebration" id="celebration">🎉 관찰 완료!</div>
+</div>
+
+<!-- 좌표 표시 -->
+<div class="position-bar">
+  <span class="coord">📍 <span id="pos-text">0.0, 0.0, 0.0</span></span>
+  <span class="compass">🧭 <span id="dir-text">N</span></span>
+  <span style="color:#94A3B8; font-size:12px;">FPS: <span id="fps">--</span></span>
+</div>
+
+<!-- 설정 -->
+<button class="settings-btn" id="settings-btn">⚙</button>
+<div class="settings-panel" id="settings-panel">
+  <h3>설정</h3>
+  <div class="setting-row">
+    <label>이동 속도</label>
+    <select id="speed-sel">
+      <option value="1.0">느림</option>
+      <option value="2.0" selected>보통</option>
+      <option value="4.0">빠름</option>
+    </select>
+  </div>
+  <div class="setting-row">
+    <label>시선 민감도</label>
+    <select id="sens-sel">
+      <option value="0.0015">낮음</option>
+      <option value="0.003" selected>보통</option>
+      <option value="0.005">높음</option>
+    </select>
+  </div>
+  <div class="setting-row">
+    <label>안개</label>
+    <select id="fog-sel">
+      <option value="on" selected>ON</option>
+      <option value="off">OFF</option>
+    </select>
+  </div>
+  <div class="setting-row">
+    <label>경계 표시</label>
+    <select id="bound-sel">
+      <option value="on" selected>ON</option>
+      <option value="off">OFF</option>
+    </select>
+  </div>
+</div>
+
+<!-- 모바일 조이스틱 -->
+<div class="joystick" id="joystick"><div class="knob" id="joystick-knob"></div></div>
+<div class="vert-pad" id="vert-pad">
+  <button id="btn-up">↑</button>
+  <button id="btn-down">↓</button>
+</div>
+
+<!-- Three.js (CDN — 오프라인 시 미러로 교체 가능) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+"use strict";
+
+/* ═════════════════════════════════════════════════════════════
+ *  3D 토러스 비행 시뮬레이터
+ *  기본영역: 10×10×10 정육면체, 26개 이웃 복제본
+ * ═════════════════════════════════════════════════════════════ */
+
+const HALF = 5;             // 기본영역 절반 크기
+const SIZE = 10;            // 기본영역 한 변
+
+let scene, camera, renderer;
+let player = { yaw: 0, pitch: 0, x: 0, y: 0, z: 0 };
+let moveSpeed = 2.0;
+let mouseSens = 0.003;
+const keys = { w: false, a: false, s: false, d: false, up: false, down: false };
+let useFog = true;
+let showBoundary = true;
+let avatarMaterials = [];
+let boundaryMesh = null;
+let lastTime = performance.now();
+let fpsAcc = 0, fpsCount = 0, lastFpsTime = performance.now();
+
+function init3D() {
+  // 씬
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0A0A2E);
+  if (useFog) scene.fog = new THREE.Fog(0x0A0A2E, 15, 45);
+
+  // 카메라
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+
+  // 렌더러
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.getElementById('canvas-host').appendChild(renderer.domElement);
+
+  // 조명
+  const ambient = new THREE.AmbientLight(0xFFFFFF, 0.5);
+  scene.add(ambient);
+  const directional = new THREE.DirectionalLight(0xFFFFFF, 0.7);
+  directional.position.set(1, 2, 1);
+  scene.add(directional);
+
+  // 별 (배경)
+  addStars();
+
+  // 기본영역 경계
+  addBoundary();
+
+  // 바닥 격자
+  addFloorGrid();
+
+  // 중앙 마커
+  addCenterMarker();
+
+  // 미니 행성
+  addMiniPlanets();
+
+  // 아바타 + 26개 복제본
+  addAvatarInstances();
+
+  // 방향 화살표 (3축)
+  addAxisArrows();
+
+  window.addEventListener('resize', onResize);
+}
+
+function addStars() {
+  const starGeo = new THREE.BufferGeometry();
+  const positions = [];
+  for (let i = 0; i < 250; i++) {
+    positions.push(
+      (Math.random() - 0.5) * 200,
+      (Math.random() - 0.5) * 200,
+      (Math.random() - 0.5) * 200
+    );
+  }
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  const starMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.18, transparent: true, opacity: 0.85 });
+  const stars = new THREE.Points(starGeo, starMat);
+  scene.add(stars);
+}
+
+function addBoundary() {
+  // 6면을 반투명 패널로
+  const boxGeo = new THREE.BoxGeometry(SIZE, SIZE, SIZE);
+  const edges = new THREE.EdgesGeometry(boxGeo);
+  const lineMat = new THREE.LineBasicMaterial({ color: 0x90CAF9, transparent: true, opacity: 0.5 });
+  boundaryMesh = new THREE.LineSegments(edges, lineMat);
+  scene.add(boundaryMesh);
+
+  // 바닥/천장 등 면 패널
+  const faceMat = new THREE.MeshBasicMaterial({
+    color: 0x2196F3,
+    transparent: true, opacity: 0.06,
+    side: THREE.DoubleSide
+  });
+  const facePositions = [
+    { p: [0, HALF, 0],  r: [-Math.PI/2, 0, 0] },
+    { p: [0, -HALF, 0], r: [-Math.PI/2, 0, 0] },
+    { p: [0, 0, HALF],  r: [0, 0, 0] },
+    { p: [0, 0, -HALF], r: [0, 0, 0] },
+    { p: [HALF, 0, 0],  r: [0, Math.PI/2, 0] },
+    { p: [-HALF, 0, 0], r: [0, Math.PI/2, 0] },
+  ];
+  const faces = new THREE.Group();
+  for (const f of facePositions) {
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(SIZE, SIZE), faceMat);
+    plane.position.set(...f.p);
+    plane.rotation.set(...f.r);
+    faces.add(plane);
+  }
+  scene.add(faces);
+  faces.userData.isBoundaryFaces = true;
+  boundaryMesh.userData.faces = faces;
+}
+
+function addFloorGrid() {
+  const grid = new THREE.GridHelper(SIZE, 10, 0x90CAF9, 0x90CAF9);
+  grid.position.y = -HALF;
+  grid.material.transparent = true;
+  grid.material.opacity = 0.35;
+  scene.add(grid);
+}
+
+function addCenterMarker() {
+  const sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.18, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xFFC107 })
+  );
+  scene.add(sphere);
+}
+
+function addMiniPlanets() {
+  const planets = [
+    { color: 0xFF9800, pos: [2.5, 1.5, -2] },
+    { color: 0x4CAF50, pos: [-2, -1.5, 2.5] },
+    { color: 0x9C27B0, pos: [-2.5, 2, -2.5] }
+  ];
+  for (const p of planets) {
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.35, 16, 16),
+      new THREE.MeshLambertMaterial({ color: p.color })
+    );
+    mesh.position.set(...p.pos);
+    scene.add(mesh);
+  }
+}
+
+function addAxisArrows() {
+  // 3축 화살표 (R: x축, G: y축, B: z축)
+  scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), 1.5, 0xFF5252, 0.3, 0.18));
+  scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), 1.5, 0x69F0AE, 0.3, 0.18));
+  scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), 1.5, 0x40C4FF, 0.3, 0.18));
+}
+
+function buildAvatar() {
+  // 인체형: 머리 + 몸통 + 팔 + 다리
+  const grp = new THREE.Group();
+  const bodyMat = new THREE.MeshLambertMaterial({ color: 0x2196F3 });
+  const headMat = new THREE.MeshLambertMaterial({ color: 0xFFCC80 });
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+
+  // 몸통
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.6, 12), bodyMat);
+  torso.position.y = 0;
+  grp.add(torso);
+  // 머리
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 16), headMat);
+  head.position.y = 0.45;
+  grp.add(head);
+  // 눈 (앞면 표시)
+  const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeMat);
+  eyeL.position.set(-0.07, 0.48, 0.18);
+  grp.add(eyeL);
+  const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeMat);
+  eyeR.position.set(0.07, 0.48, 0.18);
+  grp.add(eyeR);
+  // 팔
+  const armGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.45, 8);
+  const armL = new THREE.Mesh(armGeo, bodyMat);
+  armL.position.set(-0.25, 0, 0);
+  armL.rotation.z = Math.PI / 8;
+  grp.add(armL);
+  const armR = new THREE.Mesh(armGeo, bodyMat);
+  armR.position.set(0.25, 0, 0);
+  armR.rotation.z = -Math.PI / 8;
+  grp.add(armR);
+  // 다리
+  const legGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.5, 8);
+  const legL = new THREE.Mesh(legGeo, bodyMat);
+  legL.position.set(-0.1, -0.55, 0);
+  grp.add(legL);
+  const legR = new THREE.Mesh(legGeo, bodyMat);
+  legR.position.set(0.1, -0.55, 0);
+  grp.add(legR);
+
+  return grp;
+}
+
+function addAvatarInstances() {
+  // 27개 위치 (-1, 0, 1)^3 — 단, (0,0,0)에는 카메라가 있으니 표시 안 함
+  // 26개 복제본을 복제하여 배치
+  const offsets = [];
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dz = -1; dz <= 1; dz++) {
+        if (dx === 0 && dy === 0 && dz === 0) continue;
+        offsets.push([dx, dy, dz]);
+      }
+    }
+  }
+  // 26개 아바타 그룹 생성
+  const baseAvatar = buildAvatar();
+  for (const [dx, dy, dz] of offsets) {
+    const clone = baseAvatar.clone(true);
+    clone.position.set(dx * SIZE, dy * SIZE, dz * SIZE);
+    clone.userData.offset = { dx, dy, dz };
+    clone.traverse(o => {
+      if (o.material) {
+        o.material = o.material.clone();
+        o.material.transparent = true;
+        o.material.opacity = 0.85;
+      }
+    });
+    scene.add(clone);
+    avatarMaterials.push(clone);
+  }
+  // 기본영역 아바타는 카메라 위치이므로 표시 안 함 (자기 자신 안 보임)
+}
+
+function updateAvatarTransforms() {
+  // 모든 아바타가 카메라 위치/회전을 따라가되, 각자의 오프셋만큼 이동
+  for (const avatar of avatarMaterials) {
+    const { dx, dy, dz } = avatar.userData.offset;
+    avatar.position.set(
+      player.x + dx * SIZE,
+      player.y + dy * SIZE,
+      player.z + dz * SIZE
+    );
+    avatar.rotation.y = player.yaw;
+  }
+}
+
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+/* ─── 입력 ─── */
+window.addEventListener('keydown', e => {
+  if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.w = true;
+  if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.s = true;
+  if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.a = true;
+  if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.d = true;
+  if (e.code === 'Space') keys.up = true;
+  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') keys.down = true;
+});
+window.addEventListener('keyup', e => {
+  if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.w = false;
+  if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.s = false;
+  if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.a = false;
+  if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.d = false;
+  if (e.code === 'Space') keys.up = false;
+  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') keys.down = false;
+});
+
+/* 마우스 시선 */
+let mouseDown = false;
+let lastMx = 0, lastMy = 0;
+const canvasEl = document.getElementById('canvas-host');
+canvasEl.addEventListener('mousedown', e => {
+  // 우상단 미션 패널 등은 제외
+  if (e.target.closest('.mission-panel, .help-panel, .settings-panel, .settings-btn, .joystick, .vert-pad')) return;
+  mouseDown = true;
+  lastMx = e.clientX;
+  lastMy = e.clientY;
+});
+window.addEventListener('mouseup', () => mouseDown = false);
+window.addEventListener('mousemove', e => {
+  if (!mouseDown) return;
+  const dx = e.clientX - lastMx;
+  const dy = e.clientY - lastMy;
+  player.yaw -= dx * mouseSens;
+  player.pitch -= dy * mouseSens;
+  player.pitch = Math.max(-Math.PI/2 * 0.95, Math.min(Math.PI/2 * 0.95, player.pitch));
+  lastMx = e.clientX;
+  lastMy = e.clientY;
+});
+
+/* 터치 시선 (오른쪽 절반) */
+let touchLook = null;
+canvasEl.addEventListener('touchstart', e => {
+  if (e.target.closest('.mission-panel, .help-panel, .settings-panel, .settings-btn, .joystick, .vert-pad')) return;
+  for (const t of e.touches) {
+    if (t.clientX > window.innerWidth / 2) {
+      touchLook = { id: t.identifier, x: t.clientX, y: t.clientY };
+      break;
+    }
+  }
+});
+canvasEl.addEventListener('touchmove', e => {
+  if (!touchLook) return;
+  for (const t of e.touches) {
+    if (t.identifier === touchLook.id) {
+      const dx = t.clientX - touchLook.x;
+      const dy = t.clientY - touchLook.y;
+      player.yaw -= dx * mouseSens;
+      player.pitch -= dy * mouseSens;
+      player.pitch = Math.max(-Math.PI/2 * 0.95, Math.min(Math.PI/2 * 0.95, player.pitch));
+      touchLook.x = t.clientX;
+      touchLook.y = t.clientY;
+      e.preventDefault();
+    }
+  }
+}, { passive: false });
+canvasEl.addEventListener('touchend', e => {
+  for (const t of e.changedTouches) {
+    if (touchLook && t.identifier === touchLook.id) {
+      touchLook = null;
+    }
+  }
+});
+
+/* 가상 조이스틱 */
+const joystick = document.getElementById('joystick');
+const knob = document.getElementById('joystick-knob');
+let joyTouch = null;
+let joyVec = { x: 0, y: 0 };
+
+function joyStart(e) {
+  const t = e.touches ? e.touches[0] : e;
+  joyTouch = { id: t.identifier, cx: joystick.offsetLeft + 55, cy: joystick.offsetTop + 55 };
+  joyMove(e);
+}
+function joyMove(e) {
+  if (!joyTouch) return;
+  let t = null;
+  if (e.touches) {
+    for (const x of e.touches) if (x.identifier === joyTouch.id) { t = x; break; }
+  } else t = e;
+  if (!t) return;
+  const dx = t.clientX - joyTouch.cx;
+  const dy = t.clientY - joyTouch.cy;
+  const dist = Math.min(45, Math.sqrt(dx*dx + dy*dy));
+  const ang = Math.atan2(dy, dx);
+  const kx = Math.cos(ang) * dist;
+  const ky = Math.sin(ang) * dist;
+  knob.style.transform = `translate(calc(-50% + ${kx}px), calc(-50% + ${ky}px))`;
+  joyVec.x = kx / 45;
+  joyVec.y = ky / 45;
+}
+function joyEnd() {
+  joyTouch = null;
+  joyVec.x = joyVec.y = 0;
+  knob.style.transform = 'translate(-50%, -50%)';
+}
+joystick.addEventListener('touchstart', joyStart);
+joystick.addEventListener('touchmove', joyMove);
+joystick.addEventListener('touchend', joyEnd);
+joystick.addEventListener('mousedown', joyStart);
+window.addEventListener('mousemove', joyMove);
+window.addEventListener('mouseup', joyEnd);
+
+/* 상승/하강 버튼 */
+const btnUp = document.getElementById('btn-up');
+const btnDown = document.getElementById('btn-down');
+const handleVertDown = (key) => () => keys[key] = true;
+const handleVertUp = (key) => () => keys[key] = false;
+btnUp.addEventListener('touchstart', handleVertDown('up'));
+btnUp.addEventListener('touchend', handleVertUp('up'));
+btnUp.addEventListener('mousedown', handleVertDown('up'));
+btnUp.addEventListener('mouseup', handleVertUp('up'));
+btnDown.addEventListener('touchstart', handleVertDown('down'));
+btnDown.addEventListener('touchend', handleVertUp('down'));
+btnDown.addEventListener('mousedown', handleVertDown('down'));
+btnDown.addEventListener('mouseup', handleVertUp('down'));
+
+/* ─── 토러스 감싸기 ─── */
+function wrapPosition() {
+  while (player.x > HALF) player.x -= SIZE;
+  while (player.x < -HALF) player.x += SIZE;
+  while (player.y > HALF) player.y -= SIZE;
+  while (player.y < -HALF) player.y += SIZE;
+  while (player.z > HALF) player.z -= SIZE;
+  while (player.z < -HALF) player.z += SIZE;
+}
+
+/* ─── 메인 루프 ─── */
+function animate() {
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+
+  // 입력에 따른 이동량
+  let mx = 0, mz = 0, my = 0;
+  if (keys.w) mz -= 1;
+  if (keys.s) mz += 1;
+  if (keys.a) mx -= 1;
+  if (keys.d) mx += 1;
+  if (keys.up) my += 1;
+  if (keys.down) my -= 1;
+  // 조이스틱
+  mx += joyVec.x;
+  mz += joyVec.y;
+  // 정규화
+  const mag = Math.sqrt(mx*mx + mz*mz);
+  if (mag > 1) { mx /= mag; mz /= mag; }
+
+  // 로컬 → 월드 변환 (yaw 기준)
+  const cosY = Math.cos(player.yaw);
+  const sinY = Math.sin(player.yaw);
+  const worldX =  mx * cosY - mz * sinY;
+  const worldZ =  mx * sinY + mz * cosY;
+
+  player.x += worldX * moveSpeed * dt;
+  player.z += worldZ * moveSpeed * dt;
+  player.y += my * moveSpeed * dt;
+
+  wrapPosition();
+
+  // 카메라 자세
+  camera.position.set(player.x, player.y, player.z);
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = player.yaw;
+  camera.rotation.x = player.pitch;
+
+  // 아바타 업데이트
+  updateAvatarTransforms();
+
+  // 좌표/방향 표시
+  document.getElementById('pos-text').textContent =
+    `${player.x.toFixed(1)}, ${player.y.toFixed(1)}, ${player.z.toFixed(1)}`;
+  // 나침반
+  const yawDeg = ((player.yaw * 180 / Math.PI) % 360 + 360) % 360;
+  let dir = 'N';
+  if (yawDeg < 22.5 || yawDeg >= 337.5) dir = 'N';
+  else if (yawDeg < 67.5) dir = 'NE';
+  else if (yawDeg < 112.5) dir = 'E';
+  else if (yawDeg < 157.5) dir = 'SE';
+  else if (yawDeg < 202.5) dir = 'S';
+  else if (yawDeg < 247.5) dir = 'SW';
+  else if (yawDeg < 292.5) dir = 'W';
+  else dir = 'NW';
+  document.getElementById('dir-text').textContent = dir;
+
+  // FPS
+  fpsAcc += dt;
+  fpsCount++;
+  if (now - lastFpsTime > 500) {
+    document.getElementById('fps').textContent = Math.round(fpsCount / fpsAcc);
+    fpsAcc = 0; fpsCount = 0;
+    lastFpsTime = now;
+  }
+
+  renderer.render(scene, camera);
+}
+
+/* ─── UI 컨트롤 ─── */
+document.getElementById('help-toggle').addEventListener('click', e => {
+  e.stopPropagation();
+  const panel = document.getElementById('help-panel');
+  panel.classList.toggle('collapsed');
+  e.target.textContent = panel.classList.contains('collapsed') ? '+' : '−';
+});
+document.getElementById('help-panel').addEventListener('click', e => {
+  const panel = document.getElementById('help-panel');
+  if (panel.classList.contains('collapsed')) {
+    panel.classList.remove('collapsed');
+    document.getElementById('help-toggle').textContent = '−';
+  }
+});
+
+const settingsBtn = document.getElementById('settings-btn');
+const settingsPanel = document.getElementById('settings-panel');
+settingsBtn.addEventListener('click', () => settingsPanel.classList.toggle('open'));
+
+document.getElementById('speed-sel').addEventListener('change', e => moveSpeed = parseFloat(e.target.value));
+document.getElementById('sens-sel').addEventListener('change', e => mouseSens = parseFloat(e.target.value));
+document.getElementById('fog-sel').addEventListener('change', e => {
+  useFog = e.target.value === 'on';
+  scene.fog = useFog ? new THREE.Fog(0x0A0A2E, 15, 45) : null;
+});
+document.getElementById('bound-sel').addEventListener('change', e => {
+  showBoundary = e.target.value === 'on';
+  if (boundaryMesh) boundaryMesh.visible = showBoundary;
+  if (boundaryMesh && boundaryMesh.userData.faces) boundaryMesh.userData.faces.visible = showBoundary;
+});
+
+// 미션 체크
+const missionList = document.getElementById('mission-list');
+const celebration = document.getElementById('celebration');
+missionList.querySelectorAll('input').forEach(cb => {
+  cb.addEventListener('change', () => {
+    cb.parentElement.classList.toggle('done', cb.checked);
+    const all = [...missionList.querySelectorAll('input')].every(x => x.checked);
+    celebration.classList.toggle('show', all);
+  });
+});
+
+/* ─── 시작 ─── */
+function startSimulation() {
+  document.getElementById('intro').classList.add('hidden');
+  if (!scene) {
+    if (typeof THREE === 'undefined') {
+      alert('Three.js 로드에 실패했습니다. 인터넷 연결을 확인해 주세요.');
+      return;
+    }
+    init3D();
+    animate();
+  }
+}
+window.startSimulation = startSimulation;
+
+// Three.js가 로드되었는지 확인
+window.addEventListener('load', () => {
+  if (typeof THREE === 'undefined') {
+    document.getElementById('intro').innerHTML = `
+      <h1>⚠ Three.js 로드 실패</h1>
+      <p>네트워크에 연결되어 있는지 확인해 주세요.<br>
+      또는 시스템 관리자에게 Three.js 인라인 패키징을 요청하세요.</p>
+      <button onclick="location.reload()">다시 시도</button>
+    `;
+  }
+});
+</script>
+
+</body>
+</html>

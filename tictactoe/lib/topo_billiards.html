@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>위상 4구 당구</title>
+<style>
+:root { --bg:#0F172A; --panel:#1E293B; --text:#E2E8F0; --muted:#94A3B8;
+  --border:#334155; --accent:#38BDF8; --good:#34D399; --warm:#FBBF24; --danger:#F87171; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { min-height:100%; }
+body { font-family:'맑은 고딕','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  background:linear-gradient(180deg, #0F172A 0%, #1E1B4B 100%);
+  color:var(--text); min-height:100vh; padding:14px; }
+.container { max-width:880px; margin:0 auto; }
+.topbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+.title { font-size:20px; font-weight:800; color:var(--accent); }
+.back { color:var(--muted); text-decoration:none; font-size:14px; }
+.back:hover { color:var(--accent); }
+.tabs { display:flex; gap:6px; margin:10px 0; flex-wrap:wrap; align-items:center; }
+.tab { padding:8px 14px; background:#334155; color:var(--muted); border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
+.tab.active { background:var(--accent); color:#0F172A; }
+.panel { background:var(--panel); border:1.5px solid var(--border); border-radius:14px; padding:14px; box-shadow:0 4px 16px rgba(0,0,0,0.4); }
+.canvas-wrap { display:flex; justify-content:center; margin:10px 0; }
+canvas { background:#0E5C2F; border-radius:10px; touch-action:none; max-width:100%;
+         box-shadow:inset 0 0 30px rgba(0,0,0,0.4); }
+.controls { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:10px 0; }
+.controls label { font-size:13px; color:var(--muted); display:inline-flex; align-items:center; gap:6px; }
+.controls input[type=range] { width:160px; }
+.btn { background:var(--accent); color:#0F172A; border:none; border-radius:8px; padding:8px 18px; font-weight:700; cursor:pointer; font-size:14px; }
+.btn.warm { background:var(--warm); }
+.btn.outline { background:transparent; color:var(--accent); border:2px solid var(--accent); }
+.btn:disabled { opacity:0.45; cursor:not-allowed; }
+.btn:hover:not(:disabled) { transform:translateY(-1px); }
+.info { background:rgba(15,23,42,0.7); border-left:3px solid var(--accent); padding:10px 14px; border-radius:6px; font-size:13px; margin:8px 0; line-height:1.6; }
+.score-row { display:flex; gap:14px; flex-wrap:wrap; align-items:center; font-size:14px; margin-left:auto; }
+.score-chip { padding:6px 12px; background:rgba(52,211,153,0.18); border:1px solid var(--good); color:var(--good); border-radius:8px; font-weight:700; }
+.shots-chip { padding:6px 12px; background:#334155; color:var(--text); border-radius:8px; font-weight:700; }
+.legend { display:flex; gap:14px; font-size:12px; color:var(--muted); justify-content:center; margin:6px 0; flex-wrap:wrap; }
+.legend .dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:4px; vertical-align:middle; border:1px solid #555; }
+.toast {
+  position:fixed; bottom:32px; left:50%; transform:translateX(-50%) translateY(120%);
+  background:rgba(15,23,42,0.95); border:2px solid var(--good); color:#FFF;
+  padding:14px 28px; border-radius:14px; font-size:18px; font-weight:800;
+  transition:transform 0.35s cubic-bezier(.2,.9,.3,1.2);
+  box-shadow:0 8px 24px rgba(0,0,0,0.5); z-index:50;
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
+.toast.fail { border-color:var(--warm); }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <div class="title">🎱 위상 4구 당구</div>
+    <a class="back" href="../session4.html">← 돌아가기</a>
+  </div>
+
+  <div class="panel">
+    <div class="tabs">
+      <button class="tab active" data-mode="plain">평면</button>
+      <button class="tab" data-mode="cylinder">🥫 원기둥</button>
+      <button class="tab" data-mode="torus">🍩 토러스</button>
+      <button class="tab" data-mode="mobius">♾️ 뫼비우스</button>
+      <div class="score-row">
+        <span class="shots-chip" id="shots-chip">시도 0</span>
+        <span class="score-chip" id="score-chip">득점 0</span>
+      </div>
+    </div>
+
+    <div class="info" id="mode-info">평면: 모든 벽에서 반사. 정통 당구 환경입니다.</div>
+
+    <div class="canvas-wrap">
+      <canvas id="board" width="760" height="380"></canvas>
+    </div>
+
+    <div class="legend">
+      <span><span class="dot" style="background:#FFFFFF;"></span>내 큐(흰 공)</span>
+      <span><span class="dot" style="background:#FBBF24;"></span>상대 큐(노란 공, 장애물)</span>
+      <span><span class="dot" style="background:#EF4444;"></span>목표(빨간 공 2개)</span>
+    </div>
+
+    <div class="controls">
+      <button class="btn outline" id="reset-balls">↺ 공 재배치</button>
+      <span style="font-size:13px; color:var(--muted);">🎯 흰 공을 <b style="color:var(--text);">잡아당겼다 놓으면</b> 그 반대 방향으로 발사됩니다 (슬링샷)</span>
+    </div>
+
+    <div class="info">
+      💡 <b>4구 룰</b>: 흰 공을 발사하여 <b>빨간 공 두 개를 한 샷에 모두 맞추면 1점</b>! 노란 공(상대 큐)에 맞아도 감점 없음.<br>
+      <b>슬링샷 조준</b>: 흰 공을 누른 채 <b>쏘고 싶은 방향의 반대쪽</b>으로 끌었다가 손을 떼세요. 많이 당길수록 강하게 나갑니다.
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">득점!</div>
+
+<script>
+"use strict";
+
+const canvas = document.getElementById('board');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+const R = 13;                  // 공 반지름
+const FRICTION = 0.987;        // 매 프레임 속도 감쇠
+const STOP_V = 0.03;           // 정지 판정 임계 속도
+const RESTITUTION = 0.96;      // 공-공 충돌 탄성 계수
+
+function makeInitialBalls() {
+  return [
+    { x: 180, y: 190, vx:0, vy:0, color:'#FFFFFF', stroke:'#374151', label:'cue',   r: R },
+    { x: 580, y: 190, vx:0, vy:0, color:'#FBBF24', stroke:'#92400E', label:'other', r: R },
+    { x: 360, y: 110, vx:0, vy:0, color:'#EF4444', stroke:'#7F1D1D', label:'red1',  r: R },
+    { x: 360, y: 270, vx:0, vy:0, color:'#EF4444', stroke:'#7F1D1D', label:'red2',  r: R },
+  ];
+}
+
+const state = {
+  mode: 'plain',
+  balls: makeInitialBalls(),
+  shooting: false,
+  aiming: false,        // 슬링샷 조준 중
+  aimPointer: null,     // 조준 중 포인터 위치 {x, y}
+  redsHitThisShot: new Set(),
+  cueTrail: [],
+  score: 0,
+  shots: 0,
+};
+
+// 슬링샷 파라미터
+const MAX_POWER = 14;     // 최대 발사 속도
+const PULL_SCALE = 20;    // 픽셀당 파워 환산 (20px 당김 = 파워 1)
+const MIN_PULL = 16;      // 이보다 짧게 당기면 발사 취소
+
+const MODE_INFO = {
+  plain: '평면: 모든 벽에서 반사. 정통 당구 환경입니다.',
+  cylinder: '원기둥: 좌우 벽은 통과 (반대쪽에서 같은 높이로 출현). 상하 벽은 반사.',
+  torus: '토러스: 좌우 + 상하 4개 벽 모두 통과. 어디로 가도 반대쪽에서 나옵니다.',
+  mobius: '뫼비우스: 좌우 벽 통과 시 <b>위아래가 뒤집힙니다</b>. 상하 벽은 반사.',
+};
+
+/* ═══════════════════════════════════════════════════════════
+ * 위상 wrap — 공 한 개에 적용
+ * ═══════════════════════════════════════════════════════════ */
+function wrapBall(b) {
+  // RIGHT
+  if (b.x + b.r > W) {
+    if (state.mode === 'cylinder' || state.mode === 'torus') {
+      b.x -= W;
+    } else if (state.mode === 'mobius') {
+      b.x -= W;
+      b.y = H - b.y;
+      b.vy = -b.vy;
+    } else {
+      b.x = W - b.r - (b.x + b.r - W);
+      b.vx = -b.vx;
+    }
+  }
+  // LEFT
+  if (b.x - b.r < 0) {
+    if (state.mode === 'cylinder' || state.mode === 'torus') {
+      b.x += W;
+    } else if (state.mode === 'mobius') {
+      b.x += W;
+      b.y = H - b.y;
+      b.vy = -b.vy;
+    } else {
+      b.x = b.r - (b.x - b.r);
+      b.vx = -b.vx;
+    }
+  }
+  // TOP
+  if (b.y - b.r < 0) {
+    if (state.mode === 'torus') {
+      b.y += H;
+    } else {
+      b.y = b.r - (b.y - b.r);
+      b.vy = -b.vy;
+    }
+  }
+  // BOTTOM
+  if (b.y + b.r > H) {
+    if (state.mode === 'torus') {
+      b.y -= H;
+    } else {
+      b.y = H - b.r - (b.y + b.r - H);
+      b.vy = -b.vy;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+ * 공-공 충돌 (탄성, 같은 질량)
+ * ═══════════════════════════════════════════════════════════ */
+function collide(a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const d2 = dx*dx + dy*dy;
+  const rSum = a.r + b.r;
+  if (d2 >= rSum*rSum || d2 === 0) return false;
+  const d = Math.sqrt(d2);
+  const nx = dx / d, ny = dy / d;
+  // 상대 속도 (a 기준 b를 향하는 방향)
+  const dvx = a.vx - b.vx, dvy = a.vy - b.vy;
+  const vNorm = dvx*nx + dvy*ny;
+  if (vNorm <= 0) {
+    // 이미 멀어지는 중이지만 겹친 상태 → 위치만 분리
+    const overlap = rSum - d;
+    a.x -= nx * overlap / 2;
+    a.y -= ny * overlap / 2;
+    b.x += nx * overlap / 2;
+    b.y += ny * overlap / 2;
+    return false;
+  }
+  // 같은 질량 충돌 + 복원계수 e (정통 식): impulse = (1+e)/2 * vNorm
+  const impulse = vNorm * (1 + RESTITUTION) / 2;
+  a.vx -= impulse * nx;
+  a.vy -= impulse * ny;
+  b.vx += impulse * nx;
+  b.vy += impulse * ny;
+  // 위치 분리 (겹침 방지)
+  const overlap = rSum - d + 0.5;
+  a.x -= nx * overlap / 2;
+  a.y -= ny * overlap / 2;
+  b.x += nx * overlap / 2;
+  b.y += ny * overlap / 2;
+  return true;
+}
+
+/* ═══════════════════════════════════════════════════════════
+ * 물리 1스텝
+ * ═══════════════════════════════════════════════════════════ */
+function physicsStep() {
+  // 위치 갱신 + wrap
+  for (const b of state.balls) {
+    b.x += b.vx;
+    b.y += b.vy;
+    wrapBall(b);
+    b.vx *= FRICTION;
+    b.vy *= FRICTION;
+    if (Math.hypot(b.vx, b.vy) < STOP_V) { b.vx = 0; b.vy = 0; }
+  }
+  // 공-공 충돌
+  const cue = state.balls[0];
+  for (let i = 0; i < state.balls.length; i++) {
+    for (let j = i+1; j < state.balls.length; j++) {
+      const collided = collide(state.balls[i], state.balls[j]);
+      if (collided) {
+        const a = state.balls[i], b = state.balls[j];
+        // cue가 빨간 공을 맞춘 경우 기록 (한 샷 안에서)
+        if (a === cue && (b.label === 'red1' || b.label === 'red2')) {
+          state.redsHitThisShot.add(b.label);
+        } else if (b === cue && (a.label === 'red1' || a.label === 'red2')) {
+          state.redsHitThisShot.add(a.label);
+        }
+      }
+    }
+  }
+  // 흰 공 궤적 기록 (시각화용)
+  if (state.shooting) {
+    state.cueTrail.push({ x: cue.x, y: cue.y });
+    if (state.cueTrail.length > 240) state.cueTrail.shift();
+  }
+}
+
+function isAllStopped() {
+  return state.balls.every(b => b.vx === 0 && b.vy === 0);
+}
+
+/* ═══════════════════════════════════════════════════════════
+ * 발사
+ * ═══════════════════════════════════════════════════════════ */
+function fireWithVelocity(vx, vy) {
+  if (state.shooting) return;
+  if (!isAllStopped()) return;
+  state.shooting = true;
+  state.redsHitThisShot.clear();
+  state.cueTrail = [];
+  state.balls[0].vx = vx;
+  state.balls[0].vy = vy;
+  runPhysics();
+}
+
+const MAX_STEPS = 4000;
+let stepCount = 0;
+function runPhysics() {
+  if (isAllStopped() || stepCount++ > MAX_STEPS) {
+    evaluateShot();
+    render();
+    return;
+  }
+  physicsStep();
+  render();
+  requestAnimationFrame(runPhysics);
+}
+
+function evaluateShot() {
+  state.shooting = false;
+  stepCount = 0;
+  state.shots++;
+  const success = state.redsHitThisShot.size === 2;
+  if (success) state.score++;
+  updateScoreUI();
+  saveScore();
+  showToast(success);
+  state.redsHitThisShot.clear();
+}
+
+function updateScoreUI() {
+  document.getElementById('shots-chip').textContent = '시도 ' + state.shots;
+  document.getElementById('score-chip').textContent = '득점 ' + state.score;
+}
+
+function saveScore() {
+  localStorage.setItem('topo_billiards_played', String(state.shots));
+  localStorage.setItem('topo_billiards_hits', String(state.score));
+}
+
+function showToast(success) {
+  const t = document.getElementById('toast');
+  t.classList.remove('show', 'fail');
+  if (success) {
+    t.textContent = '🎉 득점! (' + state.score + '점)';
+  } else {
+    const n = state.redsHitThisShot.size;
+    t.textContent = n === 0 ? '아쉬움 — 빨간 공을 맞히지 못했어요'
+                   : n === 1 ? '아쉬움 — 빨간 공 1개만 맞았어요'
+                   : '득점!';
+    t.classList.add('fail');
+  }
+  // requestAnimationFrame to ensure class change triggers transition
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+/* ═══════════════════════════════════════════════════════════
+ * 입력 — 슬링샷 (드래그 앤 릴리즈)
+ * ═══════════════════════════════════════════════════════════ */
+document.getElementById('reset-balls').addEventListener('click', () => {
+  if (state.shooting) return;
+  state.balls = makeInitialBalls();
+  state.redsHitThisShot.clear();
+  state.cueTrail = [];
+  state.aiming = false;
+  state.aimPointer = null;
+  render();
+});
+
+/* 모드 탭 */
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    if (state.shooting) return;
+    state.mode = tab.dataset.mode;
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.mode === state.mode));
+    document.getElementById('mode-info').innerHTML = MODE_INFO[state.mode];
+    state.balls = makeInitialBalls();
+    state.cueTrail = [];
+    state.aiming = false;
+    state.aimPointer = null;
+    render();
+  });
+});
+
+function getCanvasPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const sx = canvas.width / rect.width;
+  const sy = canvas.height / rect.height;
+  const src = e.touches && e.touches[0] ? e.touches[0]
+            : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0] : e);
+  return { x: (src.clientX - rect.left) * sx, y: (src.clientY - rect.top) * sy };
+}
+
+/** 슬링샷 조준값 계산: 흰 공 기준 당김 벡터 → 발사 속도 */
+function computeShot() {
+  const cue = state.balls[0];
+  const pullX = state.aimPointer.x - cue.x;
+  const pullY = state.aimPointer.y - cue.y;
+  const pullDist = Math.hypot(pullX, pullY);
+  const power = Math.min(pullDist / PULL_SCALE, MAX_POWER);
+  // 발사 방향 = 당김의 반대
+  let dirX = 0, dirY = 0;
+  if (pullDist > 0.01) { dirX = -pullX / pullDist; dirY = -pullY / pullDist; }
+  return { pullX, pullY, pullDist, power, dirX, dirY };
+}
+
+function pointerDown(e) {
+  if (state.shooting || !isAllStopped()) return;
+  const p = getCanvasPos(e);
+  const cue = state.balls[0];
+  // 흰 공 근처를 눌렀을 때만 슬링샷 시작 (다른 곳 탭으로 오발사 방지)
+  if (Math.hypot(p.x - cue.x, p.y - cue.y) > cue.r + 55) return;
+  state.aiming = true;
+  state.aimPointer = p;
+  render();
+  if (e.preventDefault) e.preventDefault();
+}
+function pointerMove(e) {
+  if (!state.aiming) return;
+  state.aimPointer = getCanvasPos(e);
+  render();
+  if (e.preventDefault) e.preventDefault();
+}
+function pointerUp(e) {
+  if (!state.aiming) return;
+  state.aiming = false;
+  const shot = computeShot();
+  state.aimPointer = null;
+  if (shot.pullDist < MIN_PULL) {
+    // 너무 짧게 당김 → 발사 취소
+    render();
+    return;
+  }
+  fireWithVelocity(shot.dirX * shot.power, shot.dirY * shot.power);
+  if (e && e.preventDefault) e.preventDefault();
+}
+canvas.addEventListener('mousedown', pointerDown);
+window.addEventListener('mousemove', pointerMove);
+window.addEventListener('mouseup', pointerUp);
+canvas.addEventListener('touchstart', pointerDown, { passive: false });
+canvas.addEventListener('touchmove', pointerMove, { passive: false });
+canvas.addEventListener('touchend', pointerUp, { passive: false });
+
+/* ═══════════════════════════════════════════════════════════
+ * 렌더링
+ * ═══════════════════════════════════════════════════════════ */
+function render() {
+  // 배경 (펠트)
+  ctx.fillStyle = '#0E5C2F';
+  ctx.fillRect(0, 0, W, H);
+
+  // 경계선: 모드별 색
+  drawBorders();
+
+  // 큐 공 궤적 (발사 중에만)
+  if (state.shooting && state.cueTrail.length > 1) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    let last = state.cueTrail[0];
+    ctx.moveTo(last.x, last.y);
+    for (let i = 1; i < state.cueTrail.length; i++) {
+      const p = state.cueTrail[i];
+      if (Math.hypot(p.x - last.x, p.y - last.y) > 60) {
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+      } else {
+        ctx.lineTo(p.x, p.y);
+      }
+      last = p;
+    }
+    ctx.stroke();
+  }
+
+  // 공
+  for (const b of state.balls) {
+    drawBall(b);
+  }
+
+  // 슬링샷 조준 시각화 (조준 중에만)
+  if (state.aiming && state.aimPointer) {
+    const cue = state.balls[0];
+    const shot = computeShot();
+    if (shot.pullDist > 2) {
+      const t = shot.power / MAX_POWER;          // 0(약) ~ 1(강)
+      const col = powerColor(t);
+      // (1) 당김 밴드: 흰 공 → 포인터 (슬링샷 고무줄)
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(cue.x, cue.y);
+      ctx.lineTo(cue.x + shot.pullX, cue.y + shot.pullY);
+      ctx.stroke();
+      // 당김 끝 손잡이
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.beginPath();
+      ctx.arc(cue.x + shot.pullX, cue.y + shot.pullY, 7, 0, Math.PI*2);
+      ctx.fill();
+      ctx.lineCap = 'butt';
+      // (2) 발사 방향 예상선: 흰 공 → 반대 방향
+      const aimLen = 26 + t * 150;
+      const ax = cue.x + shot.dirX * aimLen;
+      const ay = cue.y + shot.dirY * aimLen;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 3.5;
+      ctx.setLineDash([10, 6]);
+      ctx.beginPath();
+      ctx.moveTo(cue.x + shot.dirX * (cue.r + 2), cue.y + shot.dirY * (cue.r + 2));
+      ctx.lineTo(ax, ay);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // 화살촉
+      const ang = Math.atan2(shot.dirY, shot.dirX);
+      const ah = 11;
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(ax - Math.cos(ang - 0.42) * ah, ay - Math.sin(ang - 0.42) * ah);
+      ctx.lineTo(ax - Math.cos(ang + 0.42) * ah, ay - Math.sin(ang + 0.42) * ah);
+      ctx.closePath();
+      ctx.fill();
+      // (3) 파워 게이지 텍스트
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+      ctx.lineWidth = 3;
+      const label = '파워 ' + shot.power.toFixed(1) + (shot.pullDist < MIN_PULL ? '  (더 당기세요)' : '');
+      const lx = cue.x, ly = cue.y - cue.r - 14;
+      ctx.strokeText(label, lx, ly);
+      ctx.fillText(label, lx, ly);
+      ctx.textAlign = 'left';
+    }
+  }
+}
+
+/** 파워(0~1)에 따른 색: 초록 → 노랑 → 빨강 */
+function powerColor(t) {
+  t = Math.max(0, Math.min(1, t));
+  let r, g, b;
+  if (t < 0.5) {
+    const k = t / 0.5;
+    r = Math.round(52 + (251 - 52) * k);
+    g = Math.round(211 + (191 - 211) * k);
+    b = Math.round(153 + (36 - 153) * k);
+  } else {
+    const k = (t - 0.5) / 0.5;
+    r = Math.round(251 + (248 - 251) * k);
+    g = Math.round(191 + (113 - 191) * k);
+    b = Math.round(36 + (113 - 36) * k);
+  }
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function drawBall(b) {
+  // 그림자
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath(); ctx.ellipse(b.x + 1.5, b.y + 3, b.r * 0.95, b.r * 0.55, 0, 0, Math.PI * 2); ctx.fill();
+  // 본체
+  const grad = ctx.createRadialGradient(b.x - b.r * 0.35, b.y - b.r * 0.4, b.r * 0.1, b.x, b.y, b.r);
+  grad.addColorStop(0, lighten(b.color, 0.3));
+  grad.addColorStop(1, b.color);
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
+  // 외곽선
+  ctx.strokeStyle = b.stroke;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // 하이라이트
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.beginPath(); ctx.arc(b.x - b.r * 0.35, b.y - b.r * 0.4, b.r * 0.25, 0, Math.PI * 2); ctx.fill();
+}
+
+function lighten(hex, t) {
+  // hex: #RRGGBB. t: 0..1 (1=white).
+  const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+  if (!m) return hex;
+  const r = parseInt(m[1],16), g = parseInt(m[2],16), b = parseInt(m[3],16);
+  const lr = Math.round(r + (255 - r) * t);
+  const lg = Math.round(g + (255 - g) * t);
+  const lb = Math.round(b + (255 - b) * t);
+  const hx = n => n.toString(16).padStart(2,'0');
+  return '#' + hx(lr) + hx(lg) + hx(lb);
+}
+
+function drawBorders() {
+  ctx.lineWidth = 5;
+  const mode = state.mode;
+  // 좌우
+  ctx.strokeStyle = (mode === 'plain') ? '#8B5A2B' : (mode === 'mobius' ? '#F87171' : '#34D399');
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, H); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W, 0); ctx.lineTo(W, H); ctx.stroke();
+  // 상하
+  ctx.strokeStyle = (mode === 'torus') ? '#34D399' : '#8B5A2B';
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(W, 0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(W, H); ctx.stroke();
+
+  // 화살표
+  ctx.fillStyle = (mode === 'mobius') ? '#F87171' : '#34D399';
+  if (mode === 'cylinder' || mode === 'torus') {
+    drawVerticalArrow(0, H/2, 'up');
+    drawVerticalArrow(W, H/2, 'up');
+  } else if (mode === 'mobius') {
+    drawVerticalArrow(0, H/2, 'up');
+    drawVerticalArrow(W, H/2, 'down');
+  }
+  if (mode === 'torus') {
+    ctx.fillStyle = '#34D399';
+    drawHorizontalArrow(W/2, 0, 'right');
+    drawHorizontalArrow(W/2, H, 'right');
+  }
+}
+
+function drawVerticalArrow(x, y, dir) {
+  const s = 9;
+  ctx.beginPath();
+  if (dir === 'up') {
+    ctx.moveTo(x, y - s); ctx.lineTo(x - s, y + s); ctx.lineTo(x + s, y + s);
+  } else {
+    ctx.moveTo(x, y + s); ctx.lineTo(x - s, y - s); ctx.lineTo(x + s, y - s);
+  }
+  ctx.closePath(); ctx.fill();
+}
+function drawHorizontalArrow(x, y, dir) {
+  const s = 9;
+  ctx.beginPath();
+  if (dir === 'right') {
+    ctx.moveTo(x + s, y); ctx.lineTo(x - s, y - s); ctx.lineTo(x - s, y + s);
+  } else {
+    ctx.moveTo(x - s, y); ctx.lineTo(x + s, y - s); ctx.lineTo(x + s, y + s);
+  }
+  ctx.closePath(); ctx.fill();
+}
+
+/* ═══════════════════════════════════════════════════════════
+ * 초기화
+ * ═══════════════════════════════════════════════════════════ */
+// 누적 점수 복원
+state.shots = parseInt(localStorage.getItem('topo_billiards_played') || '0');
+state.score = parseInt(localStorage.getItem('topo_billiards_hits') || '0');
+updateScoreUI();
+render();
+</script>
+</body>
+</html>

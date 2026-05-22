@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4차시 학습지 — 위상 게임 축제</title>
+<style>
+:root {
+  --bg:#0F172A; --panel:#1E293B; --text:#E2E8F0; --muted:#94A3B8;
+  --border:#334155; --accent:#38BDF8; --accent-light:#1E40AF;
+  --warm:#FBBF24; --good:#34D399; --teacher:#C084FC;
+  --shadow:0 4px 16px rgba(0,0,0,0.4);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { min-height:100%; }
+body {
+  font-family:'맑은 고딕','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  background:linear-gradient(180deg, #0F172A 0%, #1E1B4B 100%);
+  color:var(--text); font-size:16px; line-height:1.7;
+  min-height:100vh;
+}
+.container { max-width:880px; margin:0 auto; padding:16px; }
+
+.cover {
+  background:linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #6D28D9 100%);
+  color:white; border-radius:16px;
+  padding:24px 26px; margin-bottom:18px; box-shadow:var(--shadow);
+  position:relative; overflow:hidden;
+}
+.cover::before {
+  content:''; position:absolute; top:10%; right:15%;
+  width:4px; height:4px; background:white; border-radius:50%;
+  box-shadow:20px 30px 0 rgba(255,255,255,0.8), 50px 10px 0 rgba(255,255,255,0.6),
+    100px 50px 0 rgba(255,255,255,0.7), -50px 80px 0 rgba(255,255,255,0.5),
+    150px 30px 0 rgba(255,255,255,0.8), -120px 50px 0 rgba(255,255,255,0.4),
+    80px 100px 0 rgba(255,255,255,0.6), -30px 110px 0 rgba(255,255,255,0.5);
+}
+.cover .session-tag {
+  display:inline-block; background:rgba(255,255,255,0.25);
+  padding:3px 10px; border-radius:12px; font-size:13px; font-weight:600;
+  margin-bottom:8px; position:relative;
+}
+.cover h1 { font-size:26px; font-weight:800; margin-bottom:6px; position:relative; }
+.cover .subtitle { font-size:15px; opacity:0.92; margin-bottom:14px; position:relative; }
+.cover .meta { display:flex; flex-wrap:wrap; gap:10px; font-size:14px; position:relative; }
+.cover .meta-item { background:rgba(255,255,255,0.22); padding:5px 12px; border-radius:8px; }
+.cover .meta-item input {
+  background:transparent; border:none;
+  border-bottom:1.5px dashed rgba(255,255,255,0.6);
+  color:white; font-family:inherit; font-size:14px; width:110px; outline:none;
+}
+
+.progress-bar {
+  position:sticky; top:0; z-index:50;
+  background:var(--panel); border:1.5px solid var(--border);
+  padding:10px 14px; border-radius:12px; box-shadow:var(--shadow);
+  margin-bottom:16px; display:flex; gap:6px; align-items:center;
+}
+.progress-bar .step {
+  flex:1; text-align:center; padding:8px 4px; border-radius:6px;
+  font-weight:600; cursor:pointer; background:#334155;
+  color:var(--muted); transition:all 0.2s ease;
+}
+.progress-bar .step.active { background:var(--accent); color:#0F172A; }
+.progress-bar .step.done { background:var(--good); color:#0F172A; }
+
+.section {
+  background:var(--panel); border:1.5px solid var(--border);
+  border-radius:14px; padding:22px; margin-bottom:18px;
+  box-shadow:var(--shadow); scroll-margin-top:80px;
+}
+.section-header {
+  display:flex; align-items:center; gap:10px;
+  border-bottom:2px solid var(--border); padding-bottom:10px; margin-bottom:16px;
+}
+.section-header h2 { font-size:19px; font-weight:700; flex:1; }
+.section-header .time {
+  font-size:13px; color:var(--muted);
+  background:#334155; padding:3px 10px; border-radius:8px;
+}
+
+.activity { margin-bottom:18px; padding-bottom:16px; border-bottom:1px dashed var(--border); }
+.activity:last-child { border-bottom:none; padding-bottom:0; }
+.activity h3 { font-size:16px; font-weight:700; color:var(--accent); margin-bottom:8px; }
+
+.q-row { margin:10px 0; padding:10px 12px; background:rgba(15,23,42,0.7); border-radius:8px; border-left:3px solid var(--accent); }
+.q-row label { font-weight:600; margin-right:6px; display:inline-block; min-width:120px; }
+
+input.short-input { width:60px; text-align:center; }
+textarea.area-input { width:100%; min-height:70px; resize:vertical; line-height:1.6; padding:6px 10px;
+  border:1.5px solid var(--border); border-radius:6px;
+  background:rgba(15,23,42,0.6); color:var(--text); font-family:inherit; font-size:15px; outline:none; }
+input, select {
+  font-family:inherit; font-size:15px; padding:6px 10px;
+  border:1.5px solid var(--border); border-radius:6px;
+  background:rgba(15,23,42,0.6); color:var(--text); outline:none;
+}
+input:focus, textarea:focus, select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(56,189,248,0.25); }
+
+table.tbl { width:100%; border-collapse:collapse; margin:10px 0; font-size:14px; }
+table.tbl th, table.tbl td { border:1px solid var(--border); padding:8px 10px; text-align:center; }
+table.tbl th { background:#334155; font-weight:700; }
+table.tbl td input { width:100%; border:none; text-align:center; background:transparent; }
+
+.tip-box { background:rgba(6,78,59,0.4); border-left:3px solid var(--good); padding:10px 14px; border-radius:6px; margin:10px 0; font-size:14px; }
+.warning-box { background:rgba(120,53,15,0.4); border-left:3px solid var(--warm); padding:10px 14px; border-radius:6px; margin:10px 0; font-size:14px; color:#FED7AA; }
+.fact-box { background:rgba(67,56,202,0.3); border-left:3px solid #818CF8; padding:10px 14px; border-radius:6px; margin:10px 0; font-size:14px; }
+.cosmic-box { background:linear-gradient(135deg, rgba(109,40,217,0.4), rgba(236,72,153,0.3)); border:1.5px solid #A855F7; padding:12px 16px; border-radius:10px; margin:12px 0; font-size:14px; }
+
+.complete-check { display:flex; align-items:center; gap:10px; margin-top:14px; padding:10px 14px; background:rgba(6,78,59,0.4); border-radius:8px; border:1.5px solid var(--good); }
+.complete-check input[type=checkbox] { width:22px; height:22px; cursor:pointer; }
+.complete-check label { font-weight:600; color:var(--good); cursor:pointer; font-size:14px; }
+
+.answer-key { display:none; background:rgba(124,58,237,0.3); border-left:4px solid var(--teacher); padding:14px 16px; margin-top:12px; border-radius:8px; font-size:14px; }
+.answer-key h4 { color:var(--teacher); font-weight:700; margin-bottom:6px; }
+body.teacher-mode .answer-key { display:block; }
+.teacher-note { display:none; font-size:13px; background:rgba(120,53,15,0.4); border-left:3px solid var(--warm); padding:8px 12px; margin:8px 0; border-radius:6px; color:#FCD34D; }
+body.teacher-mode .teacher-note { display:block; }
+
+.game-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; margin:16px 0; }
+@media (max-width:600px) { .game-grid { grid-template-columns:1fr; } }
+.game-card {
+  background:rgba(15,23,42,0.7); border:2px solid var(--border);
+  border-radius:14px; padding:18px; text-decoration:none; color:var(--text);
+  transition:all 0.2s ease; display:flex; flex-direction:column; gap:6px;
+}
+.game-card:hover { border-color:var(--accent); transform:translateY(-3px); box-shadow:0 8px 24px rgba(56,189,248,0.2); }
+.game-card .game-icon { font-size:36px; }
+.game-card .game-title { font-size:17px; font-weight:800; color:var(--accent); }
+.game-card .game-desc { font-size:13px; color:var(--muted); line-height:1.5; }
+.game-card .game-meta { font-size:12px; color:var(--good); margin-top:4px; }
+.game-card .progress-tag { display:inline-block; font-size:11px; padding:2px 8px; border-radius:8px; background:var(--accent-light); color:var(--accent); margin-top:2px; }
+
+.toolbar-bottom {
+  position:sticky; bottom:12px; background:var(--panel);
+  border:1.5px solid var(--border); border-radius:10px;
+  padding:10px 14px; box-shadow:0 4px 14px rgba(0,0,0,0.5);
+  display:flex; gap:10px; justify-content:space-between;
+  align-items:center; margin:16px 0; z-index:40; font-size:13px;
+}
+.toolbar-bottom .saved-state { color:var(--muted); }
+.toolbar-bottom .saved-state.on { color:var(--good); }
+.toolbar-bottom button { background:var(--warm); color:#0F172A; border:none; padding:6px 14px; border-radius:8px; font-weight:700; cursor:pointer; font-size:13px; }
+
+@media (max-width:600px) {
+  .cover h1 { font-size:22px; }
+  .section { padding:16px; }
+  table.tbl { font-size:12px; }
+  table.tbl th, table.tbl td { padding:5px 4px; }
+}
+@media print {
+  body { background:white; color:black; }
+  .section { background:white; color:black; border-color:#999; }
+  .progress-bar, .toolbar-bottom { display:none; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- 표지 -->
+  <div class="cover">
+    <span class="session-tag">4차시 / 4차시 (마지막)</span>
+    <h1>위상 게임 축제 — 공간이 바뀌면 게임이 바뀐다</h1>
+    <div class="subtitle">당구·오목·미로·색칠 — 4종 게임으로 위상수학을 종합 체험하고, 마지막에 진짜 우주의 모양을 만납니다.</div>
+    <div class="meta">
+      <span class="meta-item">수업일 <input type="date" data-store="meta_date"></span>
+      <span class="meta-item">이름 <input type="text" placeholder="홍길동" data-store="meta_name"></span>
+      <span class="meta-item">⏱ 45분</span>
+    </div>
+  </div>
+
+  <!-- 진행도 (3단) -->
+  <div class="progress-bar">
+    <div class="step active" data-jump="intro">도입</div>
+    <div class="step" data-jump="games">🎮 게임</div>
+    <div class="step" data-jump="wrap">마무리</div>
+  </div>
+
+  <!-- ═══════════ 도입 (5분) ═══════════ -->
+  <section class="section" id="sec-intro">
+    <div class="section-header">
+      <h2>🔄 지금까지의 여정</h2>
+      <span class="time">5분</span>
+    </div>
+
+    <p>3차시에 걸쳐 발견한 것을 한 표에 정리합시다.</p>
+
+    <table class="tbl">
+      <thead>
+        <tr><th>공간</th><th>직선 수</th><th>가치 패턴</th><th>균등?</th><th>특이점</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>평면</td>
+          <td><input type="number" data-store="intro_plain_lines" class="short-input"></td>
+          <td>[3,2,3 / 2,4,2 / 3,2,3]</td>
+          <td><select data-store="intro_plain_eq"><option value="">?</option><option>균등</option><option>불균등</option></select></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>원기둥</td>
+          <td><input type="number" data-store="intro_cyl_lines" class="short-input"></td>
+          <td>[4,4,4 / 4,4,4 / 4,4,4]</td>
+          <td><select data-store="intro_cyl_eq"><option value="">?</option><option>균등</option><option>불균등</option></select></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>토러스</td>
+          <td><input type="number" data-store="intro_torus_lines" class="short-input"></td>
+          <td>[4,4,4 / 4,4,4 / 4,4,4]</td>
+          <td><select data-store="intro_torus_eq"><option value="">?</option><option>균등</option><option>불균등</option></select></td>
+          <td>원기둥과 동등한 게임</td>
+        </tr>
+        <tr>
+          <td>뫼비우스</td>
+          <td><input type="number" data-store="intro_mob_lines" class="short-input"></td>
+          <td>[6,6,6 / 4,4,4 / 6,6,6]</td>
+          <td><select data-store="intro_mob_eq"><option value="">?</option><option>균등</option><option>불균등</option></select></td>
+          <td>2행이 특별 (자기 자신)</td>
+        </tr>
+        <tr style="background:rgba(124,58,237,0.3);">
+          <td><b>★ 클라인 병</b></td>
+          <td><b>22</b></td>
+          <td><b>[8,6,8 / 8,6,8 / 8,6,8]</b></td>
+          <td><b>불균등</b></td>
+          <td><b>2열이 특별 (글라이드 고정점)</b></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="answer-key">
+      <h4>📋 정답</h4>
+      평면 <b>8</b> / 불균등 · 원기둥 <b>12</b> / 균등 · 토러스 <b>12</b> / 균등 · 뫼비우스 <b>16</b> / 불균등<br>
+      클라인 병은 위 표에 정답이 미리 채워져 있습니다 (3차시 C-2 정답 공개).
+      <div class="teacher-note">학생이 1~3차시 학습지를 다시 열어 확인하도록 권하세요. 직접 입력하며 회수하는 과정이 핵심.</div>
+    </div>
+
+    <div class="fact-box">
+      <strong>★ 클라인 병 — 3차시 C-2 정답 공개</strong><br><br>
+      3차시에서 예측한 클라인 병의 결과입니다.<br>
+      뫼비우스에서는 <b>좌우 wrap이 행을 뒤집어서 2행</b>이 특별했습니다.<br>
+      클라인 병은 <b>상하 wrap도 추가되며 그 wrap이 열을 뒤집어서 2열</b>이 특별합니다.<br><br>
+      ⇒ "공간을 어떻게 이어붙이느냐에 따라 <b>어디가 특별한지</b>가 달라진다."
+    </div>
+
+    <div class="cosmic-box">
+      <strong>🎮 오늘의 활동</strong><br>
+      틱택토 말고도 <b>당구, 오목, 미로, 색칠</b> — 어떤 게임이든 공간의 모양이 바뀌면 완전히 달라집니다.<br>
+      4종 게임을 <b>자유 순서</b>로 체험하세요!
+    </div>
+
+    <div class="complete-check">
+      <input type="checkbox" id="done-intro" data-store="done-intro">
+      <label for="done-intro">도입 완료 ✓</label>
+    </div>
+  </section>
+
+  <!-- ═══════════ 본체 — 게임 허브 (25~30분) ═══════════ -->
+  <section class="section" id="sec-games">
+    <div class="section-header">
+      <h2>🎮 위상 게임 4종 — 자유 탐구</h2>
+      <span class="time">25~30분</span>
+    </div>
+
+    <p>아래 4개 게임을 <b>자유 순서</b>로 체험하세요. 각 게임에서 <b>공간을 바꿔가며</b> 차이를 느껴 봅시다.</p>
+
+    <div class="game-grid">
+      <a class="game-card" href="lib/topo_billiards.html" target="_blank">
+        <div class="game-icon">🎱</div>
+        <div class="game-title">위상 당구</div>
+        <div class="game-desc">공을 쏘면 벽 대신 반대편으로! 같은 각도, 다른 공간, 다른 궤적.</div>
+        <div class="game-meta">4종 공간 · 자유 발사</div>
+        <div class="progress-tag" id="prog-billiards">진행도 확인 중…</div>
+      </a>
+
+      <a class="game-card" href="lib/topo_gomoku.html" target="_blank">
+        <div class="game-icon">⚫</div>
+        <div class="game-title">위상 오목</div>
+        <div class="game-desc">10×10 격자에서 5목! 가장자리가 이어지면 전략이 완전히 달라진다.</div>
+        <div class="game-meta">4종 공간 · 2인 대전</div>
+        <div class="progress-tag" id="prog-gomoku">진행도 확인 중…</div>
+      </a>
+
+      <a class="game-card" href="lib/topo_maze.html" target="_blank">
+        <div class="game-icon">🧩</div>
+        <div class="game-title">위상 미로</div>
+        <div class="game-desc">막다른 길? 공간을 바꾸면 길이 열린다! 스테이지 클리어.</div>
+        <div class="game-meta">3종 공간 × 5단계 = 15 스테이지</div>
+        <div class="progress-tag" id="prog-maze">진행도 확인 중…</div>
+      </a>
+
+      <a class="game-card" href="lib/topo_coloring.html" target="_blank">
+        <div class="game-icon">🎨</div>
+        <div class="game-title">위상 색칠</div>
+        <div class="game-desc">이웃한 영역이 같은 색이면 안 돼! 그런데 4색으로 부족하다고?</div>
+        <div class="game-meta">4종 공간 × 5단계 = 20 스테이지</div>
+        <div class="progress-tag" id="prog-coloring">진행도 확인 중…</div>
+      </a>
+    </div>
+
+    <div class="tip-box">
+      💡 <b>각 게임은 새 탭에서 열립니다.</b> 게임을 마치면 이 탭으로 돌아와 다음 게임을 선택하세요.<br>
+      모든 게임은 오프라인에서 작동합니다.
+    </div>
+  </section>
+
+  <!-- ═══════════ 마무리 (10분) ═══════════ -->
+  <section class="section" id="sec-wrap">
+    <div class="section-header">
+      <h2>🌌 마무리</h2>
+      <span class="time">10분</span>
+    </div>
+
+    <!-- 1.5.1 게임 체험 소감 -->
+    <div class="activity">
+      <h3>💬 어떤 게임이 가장 인상적이었나요?</h3>
+      <div class="q-row">
+        <label>가장 재미있었던 게임:</label>
+        <select data-store="wrap_best_game">
+          <option value="">선택</option>
+          <option>위상 당구</option>
+          <option>위상 오목</option>
+          <option>위상 미로</option>
+          <option>위상 색칠</option>
+        </select>
+      </div>
+      <div class="q-row">
+        <label>"공간이 바뀌면 게임이 바뀐다"를 가장 강하게 느낀 순간:</label>
+        <textarea class="area-input" data-store="wrap_moment" placeholder="…"></textarea>
+      </div>
+    </div>
+
+    <!-- 1.5.2 X 필승 공개 -->
+    <div class="activity">
+      <h3>⚡ 1차시 큰 질문 회수 — "틱택토는 정말 무승부인가?"</h3>
+      <p>1차시에서 평면 틱택토가 완벽 플레이 시 <b>무승부</b>라는 사실을 확인했습니다.</p>
+      <p>3차시에서 예측해 보았습니다. 이제 답을 공개합니다.</p>
+
+      <div class="cosmic-box">
+        <strong style="font-size:18px;">원기둥 · 토러스 · 뫼비우스 — 모두 X 필승!</strong><br><br>
+        평면에서는 무승부였지만, 경로가 늘어난 변형 공간에서는 첫 수의 이점이 X 필승으로 이어집니다.<br>
+        어느 칸에서 시작해도, 세 공간 모두에서 X가 이깁니다.<br><br>
+        ⇒ <b>게임의 결과조차 "공간의 모양"에 따라 달라진다.</b>
+      </div>
+
+      <div class="answer-key">
+        <h4>📋 교사 참고</h4>
+        <p>미니맥스 알고리즘으로 전수 검증 완료 (Python). 원기둥·토러스·뫼비우스 어느 칸 시작이든 X 필승.</p>
+        <p>학생 반응: "그럼 오목도 공간에 따라 다를까?" — 맞습니다. 위상 오목에서 체험한 것이 바로 그것.</p>
+      </div>
+    </div>
+
+    <!-- 1.5.3 우주의 모양 -->
+    <div class="activity">
+      <h3>🌌 이 수학이 진짜 우주의 모양을…</h3>
+
+      <p>지금까지 우리는 게임판의 경계를 이어붙여 다양한 공간을 만들었습니다.</p>
+      <p>놀랍게도, 과학자들은 <b>진짜 우주</b>에 대해서도 같은 질문을 합니다.</p>
+
+      <div class="fact-box">
+        <strong>만약 우주가 3D 토러스라면?</strong><br>
+        2차시에서 토러스 게임판을 드래그하면 끝이 없었습니다.<br>
+        3D 토러스 우주에서는 어느 방향으로 가도 반대편에서 나타납니다 — <b>유한하지만 끝이 없는 공간</b>.<br>
+        밤하늘 곳곳에서 <b>우리 은하의 과거 모습</b>이 보일 것입니다.
+      </div>
+
+      <div class="fact-box">
+        <strong>과학자들은 정말 찾고 있습니다</strong><br>
+        COMPACT 공동연구(2024~2026)는 우주배경복사(빅뱅의 잔광)에서 <b>같은 패턴이 반복되는 흔적</b>을 찾고 있습니다.<br>
+        평탄한 우주에서 가능한 위상은 수학적으로 <b>17가지 이상</b>. 대부분 아직 검증되지 않았습니다.
+      </div>
+
+      <div class="warning-box">
+        <strong>아직 모르는 것</strong><br>
+        우주가 유한한지, 토러스인지, 다른 모양인지 — 아직 답을 모릅니다.<br>
+        하지만 수학이 <b>질문을 가능하게</b> 합니다. 우리가 4차시에 걸쳐 배운 도구가 바로 그 수학입니다.
+      </div>
+
+      <div class="cosmic-box" style="text-align:center;">
+        ✨ <b>"경계를 어떻게 연결하느냐에 따라 세상이 완전히 달라진다.<br>
+        그리고 이 수학은 진짜 우주의 모양을 이해하는 데 쓰인다."</b> ✨
+      </div>
+    </div>
+
+    <!-- 1.5.4 도구 체크리스트 -->
+    <div class="activity">
+      <h3>🔧 4차시 전체 도구 체크리스트</h3>
+      <table class="tbl">
+        <thead><tr><th>도구</th><th>이해도</th><th>도입 차시</th></tr></thead>
+        <tbody>
+          <tr><td>승리 경로 열거</td><td><select data-store="tool_t1"><option>○</option><option>△</option><option>×</option></select></td><td>1차시</td></tr>
+          <tr><td>칸의 가치</td><td><select data-store="tool_t2"><option>○</option><option>△</option><option>×</option></select></td><td>1차시</td></tr>
+          <tr><td>붙이기 다이어그램</td><td><select data-store="tool_t3"><option>○</option><option>△</option><option>×</option></select></td><td>1차시</td></tr>
+          <tr><td>동등한 게임</td><td><select data-store="tool_t4"><option>○</option><option>△</option><option>×</option></select></td><td>2차시</td></tr>
+          <tr><td>기본 다각형 표현</td><td><select data-store="tool_t5"><option>○</option><option>△</option><option>×</option></select></td><td>2차시</td></tr>
+          <tr><td>타일링 뷰</td><td><select data-store="tool_t6"><option>○</option><option>△</option><option>×</option></select></td><td>3차시</td></tr>
+          <tr style="background:rgba(124,58,237,0.3);">
+            <td><b>★ 위상이 게임을 바꾼다</b></td>
+            <td><select data-store="tool_t7"><option>○</option><option>△</option><option>×</option></select></td>
+            <td><b>4차시</b></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 1.5.5 전체 소감 -->
+    <div class="activity">
+      <h3>✍️ 4차시를 관통하는 한 문장</h3>
+      <p>이 수업 전체를 한 문장으로 요약한다면?</p>
+      <textarea class="area-input" data-store="wrap_summary" placeholder="…" style="min-height:80px;"></textarea>
+
+      <div class="q-row">
+        <label>4차시 중 가장 기억에 남는 순간:</label>
+        <textarea class="area-input" data-store="wrap_memory" placeholder="…"></textarea>
+      </div>
+      <div class="q-row">
+        <label>더 알고 싶은 것:</label>
+        <textarea class="area-input" data-store="wrap_more" placeholder="…"></textarea>
+      </div>
+    </div>
+
+    <div class="complete-check">
+      <input type="checkbox" id="done-wrap" data-store="done-wrap">
+      <label for="done-wrap">마무리 완료 ✓ — 4차시 전체 학습 완료!</label>
+    </div>
+  </section>
+
+  <!-- 하단 도구바 -->
+  <div class="toolbar-bottom">
+    <span class="saved-state" id="saved-state">자동 저장 대기</span>
+    <button id="clear-btn">↺ 4차시 입력 지우기</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const PREFIX = 'topo_session4_';
+
+/* ─── 교사 모드 ─── */
+const params = new URLSearchParams(location.search);
+if (params.get('teacher') === '1') document.body.classList.add('teacher-mode');
+
+/* ─── localStorage ─── */
+function saveOne(el) {
+  const key = PREFIX + el.dataset.store;
+  if (el.type === 'checkbox') localStorage.setItem(key, el.checked ? '1' : '0');
+  else localStorage.setItem(key, el.value);
+  flashSaved();
+}
+function loadAll() {
+  document.querySelectorAll('[data-store]').forEach(el => {
+    const v = localStorage.getItem(PREFIX + el.dataset.store);
+    if (v === null) return;
+    if (el.type === 'checkbox') el.checked = (v === '1');
+    else el.value = v;
+  });
+}
+let savedTimer = null;
+function flashSaved() {
+  const el = document.getElementById('saved-state');
+  el.textContent = '✓ 저장됨';
+  el.classList.add('on');
+  clearTimeout(savedTimer);
+  savedTimer = setTimeout(() => {
+    el.textContent = '자동 저장 대기';
+    el.classList.remove('on');
+  }, 1500);
+}
+document.querySelectorAll('[data-store]').forEach(el => {
+  const evt = (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'number' || el.type === 'date'))) ? 'input' : 'change';
+  el.addEventListener(evt, () => saveOne(el));
+});
+loadAll();
+
+/* ─── 진행도 바 ─── */
+function updateProgress() {
+  const introDone = document.getElementById('done-intro').checked;
+  const wrapDone = document.getElementById('done-wrap').checked;
+  document.querySelectorAll('.progress-bar .step').forEach(step => {
+    step.classList.remove('done');
+    const j = step.dataset.jump;
+    if (j === 'intro' && introDone) step.classList.add('done');
+    if (j === 'wrap' && wrapDone) step.classList.add('done');
+  });
+}
+['done-intro', 'done-wrap'].forEach(id => {
+  document.getElementById(id).addEventListener('change', updateProgress);
+});
+document.querySelectorAll('.progress-bar .step').forEach(step => {
+  step.addEventListener('click', () => {
+    const j = step.dataset.jump;
+    document.getElementById('sec-' + j).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelectorAll('.progress-bar .step').forEach(s => s.classList.remove('active'));
+    step.classList.add('active');
+  });
+});
+updateProgress();
+
+/* ─── 4종 게임 진행도 표시 ─── */
+function showGameProgress() {
+  // 위상 당구
+  const billiards = parseInt(localStorage.getItem('topo_billiards_played') || '0');
+  document.getElementById('prog-billiards').textContent = billiards > 0 ? `${billiards}판 발사` : '아직 안 함';
+  // 위상 오목
+  const gomoku = parseInt(localStorage.getItem('topo_gomoku_played') || '0');
+  document.getElementById('prog-gomoku').textContent = gomoku > 0 ? `${gomoku}판 완료` : '아직 안 함';
+  // 위상 미로
+  let mazeCleared = 0;
+  for (let n = 1; n <= 15; n++) {
+    if (localStorage.getItem('topo_maze_cleared_' + n) === '1') mazeCleared++;
+  }
+  document.getElementById('prog-maze').textContent = mazeCleared > 0 ? `${mazeCleared}/15 클리어` : '아직 안 함';
+  // 위상 색칠
+  let colCleared = 0;
+  for (let n = 1; n <= 20; n++) {
+    if (localStorage.getItem('topo_coloring_cleared_' + n) === '1') colCleared++;
+  }
+  document.getElementById('prog-coloring').textContent = colCleared > 0 ? `${colCleared}/20 클리어` : '아직 안 함';
+}
+showGameProgress();
+window.addEventListener('focus', showGameProgress);
+
+/* ─── 전체 지우기 (4차시 prefix만) ─── */
+document.getElementById('clear-btn').addEventListener('click', () => {
+  if (!confirm('4차시 입력만 지웁니다 (게임 진행도는 유지). 계속할까요?')) return;
+  Object.keys(localStorage).forEach(k => {
+    if (k.startsWith(PREFIX)) localStorage.removeItem(k);
+  });
+  location.reload();
+});
+</script>
+
+</body>
+</html>

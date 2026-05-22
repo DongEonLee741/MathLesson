@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>위상 색칠</title>
+<style>
+:root { --bg:#0F172A; --panel:#1E293B; --text:#E2E8F0; --muted:#94A3B8;
+  --border:#334155; --accent:#38BDF8; --good:#34D399; --warm:#FBBF24; --danger:#F87171; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { min-height:100%; }
+body { font-family:'맑은 고딕','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  background:linear-gradient(180deg, #0F172A 0%, #1E1B4B 100%);
+  color:var(--text); min-height:100vh; padding:14px; }
+.container { max-width:880px; margin:0 auto; }
+.topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px; }
+.title { font-size:20px; font-weight:800; color:var(--accent); }
+.back { color:var(--muted); text-decoration:none; font-size:14px; }
+.panel { background:var(--panel); border:1.5px solid var(--border); border-radius:14px; padding:14px; }
+.stage-grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; margin:10px 0; }
+.stage-btn { padding:8px 4px; background:#334155; color:var(--muted); border:none; border-radius:6px; font-size:12px; cursor:pointer; }
+.stage-btn.unlocked { background:#1E40AF; color:#E2E8F0; }
+.stage-btn.cleared { background:var(--good); color:#0F172A; font-weight:700; }
+.stage-btn.active { background:var(--accent); color:#0F172A; font-weight:700; border:2px solid var(--accent); }
+.stage-btn:disabled { cursor:not-allowed; opacity:0.4; }
+.space-label { display:inline-block; padding:3px 10px; border-radius:8px; font-size:12px; font-weight:700; margin-right:6px; }
+.space-label.plain { background:rgba(148,163,184,0.2); color:var(--muted); }
+.space-label.cylinder { background:rgba(52,211,153,0.2); color:var(--good); }
+.space-label.torus { background:rgba(251,191,36,0.2); color:var(--warm); }
+.space-label.mobius { background:rgba(248,113,113,0.2); color:var(--danger); }
+.canvas-wrap { display:flex; justify-content:center; margin:10px 0; }
+canvas { background:#FFFFFF; border-radius:8px; touch-action:none; max-width:100%; }
+.palette { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:10px 0; }
+.color-btn { width:40px; height:40px; border-radius:50%; border:3px solid transparent; cursor:pointer; }
+.color-btn.active { border-color:#0F172A; box-shadow:0 0 0 3px var(--accent); }
+.controls { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; align-items:center; }
+.btn { background:var(--accent); color:#0F172A; border:none; border-radius:8px; padding:8px 16px; font-weight:700; cursor:pointer; font-size:13px; }
+.btn.outline { background:transparent; color:var(--accent); border:2px solid var(--accent); }
+.info { background:rgba(15,23,42,0.7); border-left:3px solid var(--accent); padding:10px 14px; border-radius:6px; font-size:13px; margin:8px 0; line-height:1.5; }
+.stats { font-size:13px; color:var(--muted); display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
+.stars { font-size:20px; }
+.cleared-banner { background:linear-gradient(135deg, #34D399, #10B981); color:#0F172A; padding:14px; border-radius:10px; text-align:center; font-weight:800; font-size:16px; margin:10px 0; }
+.heawood-notice { background:rgba(124,58,237,0.3); border:1.5px solid #A855F7; padding:12px 16px; border-radius:10px; margin:10px 0; font-size:14px; }
+.heawood-notice b { color:#C084FC; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <div class="title">🎨 위상 색칠</div>
+    <a class="back" href="../session4.html">← 돌아가기</a>
+  </div>
+
+  <div class="panel">
+    <div style="margin-bottom:8px;">
+      <span class="space-label plain">평면 1~5</span>
+      <span class="space-label cylinder">🥫 원기둥 6~10</span>
+      <span class="space-label torus">🍩 토러스 11~15</span>
+      <span class="space-label mobius">♾️ 뫼비우스 16~20</span>
+    </div>
+    <div class="stage-grid" id="stage-grid"></div>
+
+    <div class="info" id="stage-info">스테이지를 선택하세요.</div>
+
+    <div class="canvas-wrap">
+      <canvas id="map" width="600" height="600"></canvas>
+    </div>
+
+    <div class="palette" id="palette"></div>
+
+    <div class="controls">
+      <span class="stats">
+        <span id="stat-colors">사용 색: 0</span>
+        <span id="stat-conflicts">충돌: 0</span>
+        <span id="stat-stars" class="stars">☆☆☆</span>
+      </span>
+      <button class="btn outline" id="reset-colors" style="margin-left:auto;">↺ 색 초기화</button>
+    </div>
+
+    <div class="info">
+      💡 같은 색으로 이웃한 영역(<span style="color:var(--danger);">빨간 점선</span>)이 없도록 칠하세요. 모든 영역이 충돌 없이 색칠되면 자동으로 클리어!
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const COLORING_DATA = {"plain_1":{"rows":4,"cols":4,"regions":[[3,3,1,1],[5,5,4,4],[0,0,2,2],[0,0,2,2]],"numRegions":6,"space":"plain","chromaticNumber":2,"maxColors":3,"adjacency":[[2,5],[3,4],[0,4],[1,5],[1,2,5],[0,3,4]]},"plain_2":{"rows":4,"cols":4,"regions":[[5,5,2,2],[3,1,6,0],[3,1,6,0],[7,7,4,4]],"numRegions":8,"space":"plain","chromaticNumber":3,"maxColors":4,"adjacency":[[2,4,6],[3,5,6,7],[0,5,6],[1,5,7],[0,6,7],[1,2,3],[0,1,2,4],[1,3,4]]},"plain_3":{"rows":5,"cols":5,"regions":[[9,7,7,2,2],[9,1,1,2,2],[5,5,0,0,3],[5,5,4,4,3],[6,6,6,8,8]],"numRegions":10,"space":"plain","chromaticNumber":4,"maxColors":5,"adjacency":[[1,2,3,4,5],[0,2,5,7,9],[0,1,3,7],[0,2,4,8],[0,3,5,6,8],[0,1,4,6,9],[4,5,8],[1,2,9],[3,4,6],[1,5,7]]},"plain_4":{"rows":6,"cols":6,"regions":[[6,5,4,4,4,12],[6,5,8,4,12,12],[13,1,8,10,7,9],[13,1,0,10,7,9],[11,11,0,0,7,7],[3,3,0,2,2,2]],"numRegions":14,"space":"plain","chromaticNumber":4,"maxColors":5,"adjacency":[[1,2,3,7,8,10,11],[0,5,8,11,13],[0,7],[0,11],[5,8,10,12],[1,4,6,8],[5,13],[0,2,9,10,12],[0,1,4,5,10],[7,12],[0,4,7,8],[0,1,3,13],[4,7,9],[1,6,11]]},"plain_5":{"rows":7,"cols":7,"regions":[[3,3,15,15,17,17,8],[3,7,4,4,0,0,8],[7,7,7,12,0,16,2],[7,7,1,12,10,16,2],[1,1,1,1,10,6,9],[13,5,14,14,6,6,9],[13,5,5,11,11,6,9]],"numRegions":18,"space":"plain","chromaticNumber":4,"maxColors":5,"adjacency":[[4,8,10,12,16,17],[5,7,10,12,13,14],[8,9,16],[7,15],[0,7,12,15],[1,11,13,14],[9,10,11,14,16],[1,3,4,12],[0,2,17],[2,6],[0,1,6,12,16],[5,6,14],[0,1,4,7,10],[1,5],[1,5,6,11],[3,4,17],[0,2,6,10],[0,8,15]]},"cylinder_1":{"rows":4,"cols":4,"regions":[[1,1,0,0],[4,4,3,3],[6,2,2,6],[7,5,5,7]],"numRegions":8,"space":"cylinder","chromaticNumber":4,"maxColors":5,"adjacency":[[1,3],[0,4],[3,4,5,6],[0,2,4,6],[1,2,3,6],[2,7],[2,3,4,7],[5,6]]},"cylinder_2":{"rows":5,"cols":5,"regions":[[3,4,4,3,3],[2,0,4,1,2],[0,0,8,1,1],[7,9,8,1,7],[5,9,6,6,5]],"numRegions":10,"space":"cylinder","chromaticNumber":4,"maxColors":5,"adjacency":[[1,2,4,7,8,9],[0,2,3,4,6,7,8],[0,1,3],[1,2,4],[0,1,3,8],[6,7,9],[1,5,8,9],[0,1,5,9],[0,1,4,6,9],[0,5,6,7,8]]},"cylinder_3":{"rows":5,"cols":5,"regions":[[5,3,10,10,5],[0,3,11,11,6],[0,1,1,1,6],[9,9,4,4,2],[8,8,7,7,2]],"numRegions":12,"space":"cylinder","chromaticNumber":4,"maxColors":5,"adjacency":[[1,3,5,6,9],[0,3,4,6,9,11],[4,6,7,8,9],[0,1,5,10,11],[1,2,7,9],[0,3,6,10],[0,1,2,5,11],[2,4,8],[2,7,9],[0,1,2,4,8],[3,5,11],[1,3,6,10]]},"cylinder_4":{"rows":6,"cols":6,"regions":[[3,10,10,2,2,2],[3,10,13,13,2,12],[6,6,6,9,12,12],[0,0,8,9,9,0],[4,4,8,7,11,11],[5,1,1,7,7,5]],"numRegions":14,"space":"cylinder","chromaticNumber":4,"maxColors":5,"adjacency":[[4,6,8,9,11,12],[4,5,7,8],[3,10,12,13],[2,6,10,12],[0,1,5,8,11],[1,4,7,11],[0,3,8,9,10,12,13],[1,5,8,9,11],[0,1,4,6,7,9],[0,6,7,8,11,12,13],[2,3,6,13],[0,4,5,7,9],[0,2,3,6,9],[2,6,9,10]]},"cylinder_5":{"rows":6,"cols":6,"regions":[[9,11,6,0,0,12],[9,11,6,3,14,12],[9,15,15,3,14,5],[8,8,13,10,4,5],[1,8,13,10,4,1],[2,2,2,7,7,7]],"numRegions":16,"space":"cylinder","chromaticNumber":4,"maxColors":5,"adjacency":[[3,6,12,14],[2,4,5,7,8],[1,7,8,13],[0,6,10,14,15],[1,5,7,10,14],[1,4,8,9,12,14],[0,3,11,15],[1,2,4,10],[1,2,5,9,13,15],[5,8,11,12,15],[3,4,7,13],[6,9,15],[0,5,9,14],[2,8,10,15],[0,3,4,5,12],[3,6,8,9,11,13]]},"torus_1":{"rows":5,"cols":5,"regions":[[4,4,1,1,0],[0,3,3,2,0],[0,6,6,2,0],[0,5,5,2,0],[7,7,1,1,0]],"numRegions":8,"space":"torus","chromaticNumber":5,"maxColors":6,"adjacency":[[1,2,3,4,5,6,7],[0,2,3,4,5,7],[0,1,3,5,6],[0,1,2,4,6],[0,1,3,7],[0,1,2,6,7],[0,2,3,5],[0,1,4,5]]},"torus_2":{"rows":5,"cols":5,"regions":[[7,7,5,5,2],[9,4,5,8,2],[9,4,1,8,3],[6,6,1,0,3],[6,7,1,0,2]],"numRegions":10,"space":"torus","chromaticNumber":5,"maxColors":6,"adjacency":[[1,2,3,5,8],[0,4,5,6,7,8],[0,3,5,6,7,8,9],[0,2,6,8,9],[1,5,6,7,9],[0,1,2,4,7,8],[1,2,3,4,7,9],[1,2,4,5,6,9],[0,1,2,3,5],[2,3,4,6,7]]},"torus_3":{"rows":7,"cols":7,"regions":[[11,1,10,10,0,6,11],[11,11,10,10,0,2,2],[11,11,11,10,0,0,0],[5,5,11,10,3,4,4],[7,9,8,8,3,3,3],[7,9,1,8,8,6,3],[1,1,1,6,6,6,3]],"numRegions":12,"space":"torus","chromaticNumber":6,"maxColors":7,"adjacency":[[2,3,4,6,10,11],[3,6,7,8,9,10,11],[0,6,11],[0,1,4,6,7,8,10,11],[0,3,5],[4,7,9,11],[0,1,2,3,8,10,11],[1,3,5,9],[1,3,6,9,10,11],[1,5,7,8],[0,1,3,6,8,11],[0,1,2,3,5,6,8,10]]},"torus_4":{"rows":8,"cols":8,"regions":[[5,7,7,7,4,8,4,11],[5,7,7,7,0,8,10,11],[10,7,3,3,0,10,10,10],[10,10,12,12,0,0,6,2],[9,9,9,12,6,6,6,2],[9,12,12,12,12,4,6,6],[9,7,12,1,1,4,4,6],[6,7,13,13,4,4,4,6]],"numRegions":14,"space":"torus","chromaticNumber":6,"maxColors":7,"adjacency":[[3,4,6,7,8,10,12],[4,12,13],[6,9,10],[0,7,12],[0,1,6,7,8,10,11,12,13],[6,7,10,11],[0,2,4,5,7,9,10,11,12],[0,3,4,5,6,9,10,12,13],[0,4,10],[2,6,7,10,12],[0,2,4,5,6,7,8,9,11,12],[4,5,6,10],[0,1,3,4,6,7,9,10,13],[1,4,7,12]]},"torus_5":{"rows":9,"cols":9,"regions":[[3,11,11,11,4,7,7,7,7],[3,0,0,0,14,7,7,3,3],[3,3,8,14,14,13,1,1,1],[13,13,8,2,2,13,1,6,13],[10,13,13,13,13,13,1,6,6],[10,10,9,5,13,12,1,15,6],[6,10,9,5,5,12,5,15,6],[6,5,5,5,5,5,5,7,6],[3,3,11,4,4,4,5,7,7]],"numRegions":16,"space":"torus","chromaticNumber":6,"maxColors":7,"adjacency":[[3,8,11,14],[3,5,6,7,12,13,15],[8,13,14],[0,1,5,6,7,8,11,13],[5,7,11,14],[1,3,4,6,7,9,10,11,12,13,15],[1,3,5,7,10,13,15],[1,3,4,5,6,13,14,15],[0,2,3,13,14],[5,10,13],[5,6,9,13],[0,3,4,5],[1,5,13],[1,2,3,5,6,7,8,9,10,12,14],[0,2,4,7,8,13],[1,5,6,7]]},"mobius_1":{"rows":4,"cols":4,"regions":[[4,2,2,0],[3,6,6,0],[1,1,7,3],[5,5,7,4]],"numRegions":8,"space":"mobius","chromaticNumber":4,"maxColors":5,"adjacency":[[1,2,3,5,6],[0,3,5,6,7],[0,4,6],[0,1,4,6,7],[2,3,7],[0,1,7],[0,1,2,3,7],[1,3,4,5,6]]},"mobius_2":{"rows":5,"cols":5,"regions":[[9,9,6,5,5],[4,9,6,2,2],[4,4,7,7,1],[2,8,8,1,1],[3,3,8,0,0]],"numRegions":10,"space":"mobius","chromaticNumber":5,"maxColors":6,"adjacency":[[1,8,9],[0,2,4,7,8],[1,3,4,5,6,7,8],[2,5,8],[1,2,7,8,9],[2,3,6],[2,5,7,9],[1,2,4,6,8],[0,1,2,3,4,7],[0,4,6]]},"mobius_3":{"rows":6,"cols":6,"regions":[[1,10,11,11,8,8],[3,10,11,11,5,4],[2,2,5,5,5,4],[4,9,9,0,0,0],[4,9,6,6,6,3],[8,8,7,7,7,1]],"numRegions":12,"space":"mobius","chromaticNumber":5,"maxColors":6,"adjacency":[[2,3,4,5,6,9],[3,7,10],[0,3,4,5,9,10],[0,1,2,6,10],[0,2,5,8,9],[0,2,4,8,9,11],[0,3,7,9],[1,6,8],[4,5,7,9,11],[0,2,4,5,6,8],[1,2,3,11],[5,8,10]]},"mobius_4":{"rows":8,"cols":8,"regions":[[0,0,12,12,8,8,2,2],[11,12,12,12,12,8,9,1],[4,12,13,12,5,8,9,8],[7,7,13,13,5,8,8,8],[7,8,8,4,5,5,5,7],[8,8,4,4,4,4,4,4],[1,10,10,3,3,4,4,11],[1,10,6,6,6,4,11,11]],"numRegions":14,"space":"mobius","chromaticNumber":6,"maxColors":7,"adjacency":[[11,12],[2,8,9,10],[1,8,9],[4,6,10],[3,5,6,7,8,10,11,12,13],[4,7,8,12,13],[3,4,10],[4,5,8,12,13],[1,2,4,5,7,9,10,12,13],[1,2,8],[1,3,4,6,8],[0,4,12],[0,4,5,7,8,11,13],[4,5,7,8,12]]},"mobius_5":{"rows":7,"cols":7,"regions":[[9,0,0,4,4,15,14],[0,0,3,3,5,15,14],[6,5,5,5,5,5,2],[10,10,10,12,12,1,1],[2,2,2,2,12,6,6],[11,7,7,2,2,2,9],[11,13,13,8,8,9,9]],"numRegions":16,"space":"mobius","chromaticNumber":6,"maxColors":7,"adjacency":[[3,4,5,6,9],[2,5,6,10,12],[1,5,6,7,8,9,10,11,12,14],[0,4,5],[0,3,5,15],[0,1,2,3,4,6,10,12,15],[0,1,2,5,9,10,12],[2,11,13],[2,9,13],[0,2,6,8],[1,2,5,6,12],[2,7,13,14],[1,2,5,6,10],[7,8,11],[2,11,15],[4,5,14]]}};
+
+const STAGES = [
+  ...Array.from({length:5}, (_, i) => `plain_${i+1}`),
+  ...Array.from({length:5}, (_, i) => `cylinder_${i+1}`),
+  ...Array.from({length:5}, (_, i) => `torus_${i+1}`),
+  ...Array.from({length:5}, (_, i) => `mobius_${i+1}`),
+];
+
+const COLORS = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
+
+const state = {
+  stageIdx: 0,
+  stage: null,
+  colors: [], // index by region
+  selectedColor: 0,
+  cleared: false,
+};
+
+const canvas = document.getElementById('map');
+const ctx = canvas.getContext('2d');
+
+const stageGrid = document.getElementById('stage-grid');
+STAGES.forEach((key, idx) => {
+  const btn = document.createElement('button');
+  btn.className = 'stage-btn';
+  btn.textContent = idx + 1;
+  btn.dataset.idx = idx;
+  btn.addEventListener('click', () => selectStage(idx));
+  stageGrid.appendChild(btn);
+});
+
+function updateStageButtons() {
+  document.querySelectorAll('.stage-btn').forEach((btn, idx) => {
+    btn.classList.remove('unlocked', 'cleared', 'active');
+    const cleared = localStorage.getItem('topo_coloring_cleared_' + (idx+1)) === '1';
+    const unlocked = idx === 0 || localStorage.getItem('topo_coloring_cleared_' + idx) === '1';
+    btn.disabled = !unlocked;
+    if (cleared) btn.classList.add('cleared');
+    else if (unlocked) btn.classList.add('unlocked');
+    if (idx === state.stageIdx) btn.classList.add('active');
+  });
+}
+
+function selectStage(idx) {
+  state.stageIdx = idx;
+  const key = STAGES[idx];
+  state.stage = COLORING_DATA[key];
+  if (!state.stage) return;
+  state.colors = new Array(state.stage.numRegions).fill(null);
+  state.cleared = false;
+  state.selectedColor = 0;
+  buildPalette();
+  document.getElementById('stage-info').innerHTML =
+    `<b>스테이지 ${idx+1} — ${state.stage.space}</b>: ${state.stage.numRegions}개 영역. <b>최소 ${state.stage.chromaticNumber}색</b>으로 충돌 없이 칠하세요 (제공: ${state.stage.maxColors}색).`;
+  localStorage.setItem('topo_coloring_stage', String(idx + 1));
+  document.querySelector('.cleared-banner')?.remove();
+  document.querySelector('.heawood-notice')?.remove();
+  updateStageButtons();
+  updateStats();
+  render();
+}
+
+function buildPalette() {
+  const pal = document.getElementById('palette');
+  pal.innerHTML = '';
+  for (let i = 0; i < state.stage.maxColors; i++) {
+    const b = document.createElement('button');
+    b.className = 'color-btn' + (i === state.selectedColor ? ' active' : '');
+    b.style.background = COLORS[i];
+    b.dataset.idx = i;
+    b.addEventListener('click', () => {
+      state.selectedColor = i;
+      buildPalette();
+    });
+    pal.appendChild(b);
+  }
+}
+
+function updateStats() {
+  const used = new Set(state.colors.filter(c => c !== null)).size;
+  document.getElementById('stat-colors').textContent = `사용 색: ${used}`;
+  const conflicts = countConflicts();
+  document.getElementById('stat-conflicts').textContent = `충돌: ${conflicts}`;
+  // Stars
+  let stars = '☆☆☆';
+  if (state.colors.every(c => c !== null) && conflicts === 0) {
+    if (used === state.stage.chromaticNumber) stars = '★★★';
+    else if (used === state.stage.chromaticNumber + 1) stars = '★★☆';
+    else stars = '★☆☆';
+  }
+  document.getElementById('stat-stars').textContent = stars;
+}
+
+function countConflicts() {
+  let cnt = 0;
+  for (let i = 0; i < state.stage.numRegions; i++) {
+    if (state.colors[i] === null) continue;
+    for (const j of state.stage.adjacency[i]) {
+      if (j > i && state.colors[j] === state.colors[i]) cnt++;
+    }
+  }
+  return cnt;
+}
+
+function checkClear() {
+  if (state.cleared) return;
+  if (state.colors.every(c => c !== null) && countConflicts() === 0) {
+    state.cleared = true;
+    const num = state.stageIdx + 1;
+    localStorage.setItem('topo_coloring_cleared_' + num, '1');
+    const used = new Set(state.colors).size;
+    const stars = used === state.stage.chromaticNumber ? '★★★' : (used === state.stage.chromaticNumber + 1 ? '★★☆' : '★☆☆');
+    const banner = document.createElement('div');
+    banner.className = 'cleared-banner';
+    banner.innerHTML = `🎉 스테이지 ${num} 클리어! ${stars} (${used}색 사용)`;
+    document.querySelector('.panel').insertBefore(banner, document.querySelector('.canvas-wrap'));
+
+    // Torus 5 (stage idx 14) — Heawood notice
+    if (state.stage.space === 'torus' && num === 15) {
+      const h = document.createElement('div');
+      h.className = 'heawood-notice';
+      h.innerHTML = `🎓 수학자들은 토러스에서 최대 <b>7색</b>이 필요한 지도가 존재함을 증명했습니다 (<b>Heawood 추측</b>, 1968년 Ringel·Youngs 증명).<br><br>여러분이 체험한 지도는 ${used}색이면 충분했지만, 더 복잡한 지도에서는 7색이 필요할 수 있습니다!`;
+      document.querySelector('.panel').appendChild(h);
+    }
+    updateStageButtons();
+  }
+}
+
+document.getElementById('reset-colors').addEventListener('click', () => {
+  state.colors = new Array(state.stage.numRegions).fill(null);
+  state.cleared = false;
+  document.querySelector('.cleared-banner')?.remove();
+  document.querySelector('.heawood-notice')?.remove();
+  updateStats();
+  render();
+});
+
+// Click region
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const scale = canvas.width / rect.width;
+  const px = (e.clientX - rect.left) * scale;
+  const py = (e.clientY - rect.top) * scale;
+  handleClick(px, py);
+});
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length !== 1) return;
+  const rect = canvas.getBoundingClientRect();
+  const scale = canvas.width / rect.width;
+  const px = (e.touches[0].clientX - rect.left) * scale;
+  const py = (e.touches[0].clientY - rect.top) * scale;
+  handleClick(px, py);
+  e.preventDefault();
+}, { passive: false });
+
+function handleClick(px, py) {
+  if (!state.stage) return;
+  const { rows, cols, regions } = state.stage;
+  const cellW = Math.min(canvas.width / cols, canvas.height / rows);
+  const offX = (canvas.width - cellW * cols) / 2;
+  const offY = (canvas.height - cellW * rows) / 2;
+  const c = Math.floor((px - offX) / cellW);
+  const r = Math.floor((py - offY) / cellW);
+  if (r < 0 || r >= rows || c < 0 || c >= cols) return;
+  const region = regions[r][c];
+  state.colors[region] = state.selectedColor;
+  updateStats();
+  render();
+  checkClear();
+}
+
+function render() {
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  if (!state.stage) return;
+  const { rows, cols, regions, numRegions } = state.stage;
+  const cellW = Math.min(canvas.width / cols, canvas.height / rows);
+  const offX = (canvas.width - cellW * cols) / 2;
+  const offY = (canvas.height - cellW * rows) / 2;
+
+  // Fill regions
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const rid = regions[r][c];
+    const colorIdx = state.colors[rid];
+    ctx.fillStyle = colorIdx === null ? '#F3F4F6' : COLORS[colorIdx];
+    ctx.fillRect(offX + c*cellW, offY + r*cellW, cellW, cellW);
+  }
+
+  // Region borders (between different regions)
+  ctx.strokeStyle = '#1F2937'; ctx.lineWidth = 2;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const rid = regions[r][c];
+    // Right neighbor
+    if (c < cols-1 && regions[r][c+1] !== rid) {
+      ctx.beginPath();
+      ctx.moveTo(offX + (c+1)*cellW, offY + r*cellW);
+      ctx.lineTo(offX + (c+1)*cellW, offY + (r+1)*cellW);
+      ctx.stroke();
+    }
+    if (r < rows-1 && regions[r+1][c] !== rid) {
+      ctx.beginPath();
+      ctx.moveTo(offX + c*cellW, offY + (r+1)*cellW);
+      ctx.lineTo(offX + (c+1)*cellW, offY + (r+1)*cellW);
+      ctx.stroke();
+    }
+  }
+
+  // Outer border with space color
+  const sp = state.stage.space;
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = sp === 'plain' ? '#1F2937' : (sp === 'mobius' ? '#F87171' : '#10B981');
+  ctx.strokeRect(offX, offY, cols*cellW, rows*cellW);
+
+  // Conflict highlight
+  ctx.strokeStyle = '#EF4444';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([6, 4]);
+  // We need to highlight adjacency between same-colored regions
+  // Iterate cell pairs:
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const rid = regions[r][c];
+    if (state.colors[rid] === null) continue;
+    // Right
+    let nr = r, nc = c + 1;
+    if (nc >= cols) {
+      if (sp === 'cylinder' || sp === 'torus') nc = 0;
+      else if (sp === 'mobius') { nc = 0; nr = rows-1-r; }
+      else continue;
+    }
+    const nrid = regions[nr][nc];
+    if (nrid !== rid && state.colors[nrid] === state.colors[rid]) {
+      // Only draw the edge in main tile
+      if (nc !== 0 || (nc === 0 && c + 1 < cols)) {
+        // Edge within main tile
+        ctx.beginPath();
+        ctx.moveTo(offX + (c+1)*cellW, offY + r*cellW + 4);
+        ctx.lineTo(offX + (c+1)*cellW, offY + (r+1)*cellW - 4);
+        ctx.stroke();
+      }
+    }
+    // Down
+    let nr2 = r + 1, nc2 = c;
+    if (nr2 >= rows) {
+      if (sp === 'torus') nr2 = 0;
+      else continue;
+    }
+    const nrid2 = regions[nr2][nc2];
+    if (nrid2 !== rid && state.colors[nrid2] === state.colors[rid]) {
+      if (nr2 !== 0 || (nr2 === 0 && r + 1 < rows)) {
+        ctx.beginPath();
+        ctx.moveTo(offX + c*cellW + 4, offY + (r+1)*cellW);
+        ctx.lineTo(offX + (c+1)*cellW - 4, offY + (r+1)*cellW);
+        ctx.stroke();
+      }
+    }
+  }
+  ctx.setLineDash([]);
+}
+
+updateStageButtons();
+const lastIdx = Math.max(0, Math.min(19, parseInt(localStorage.getItem('topo_coloring_stage') || '1') - 1));
+selectStage(lastIdx);
+</script>
+</body>
+</html>

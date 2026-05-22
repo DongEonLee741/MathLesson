@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3차시 학습지 — 뫼비우스 · 뒤집힌 세상의 수학</title>
+<style>
+:root {
+  --bg: #F8F9FA; --panel: #FFFFFF; --text: #1F2933; --muted: #6B7280;
+  --border: #D1D5DB; --accent: #2E86C1; --accent-light: #EBF5FB;
+  --warm: #F59E0B; --warm-light: #FEF3C7;
+  --good: #16A34A; --good-light: #DCFCE7;
+  --danger: #DC2626;
+  --w: #6366F1; --e: #2E86C1; --d: #10B981; --c: #F59E0B; --r: #EC4899;
+  --teacher: #7C3AED;
+  --shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: '맑은 고딕', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  background: var(--bg); color: var(--text);
+  font-size: 16px; line-height: 1.7;
+}
+.container { max-width: 880px; margin: 0 auto; padding: 16px; }
+
+.cover {
+  background: linear-gradient(135deg, #9333EA 0%, #EC4899 100%);
+  color: white; border-radius: 16px;
+  padding: 22px 24px; margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.cover .session-tag {
+  display: inline-block; background: rgba(255,255,255,0.22);
+  padding: 3px 10px; border-radius: 12px;
+  font-size: 13px; font-weight: 600; margin-bottom: 8px;
+}
+.cover h1 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+.cover .subtitle { font-size: 15px; opacity: 0.92; margin-bottom: 14px; }
+.cover .meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 14px; }
+.cover .meta-item { background: rgba(255,255,255,0.18); padding: 5px 12px; border-radius: 8px; }
+.cover .meta-item input {
+  background: transparent; border: none;
+  border-bottom: 1.5px dashed rgba(255,255,255,0.6);
+  color: white; font-family: inherit; font-size: 14px;
+  width: 110px; outline: none;
+}
+.cover .meta-item input::placeholder { color: rgba(255,255,255,0.65); }
+
+.progress-bar {
+  position: sticky; top: 0; background: white; z-index: 50;
+  padding: 10px 14px; border-radius: 12px; box-shadow: var(--shadow);
+  margin-bottom: 16px;
+  display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+  font-size: 13px;
+}
+.progress-bar .step {
+  flex: 1; min-width: 80px; text-align: center;
+  padding: 6px 4px; border-radius: 6px;
+  font-weight: 600; cursor: pointer;
+  background: #F1F5F9; color: var(--muted);
+  transition: all 0.2s ease;
+}
+.progress-bar .step.active { background: var(--accent); color: white; }
+.progress-bar .step.done { background: var(--good); color: white; }
+.progress-bar .step:hover { transform: translateY(-1px); }
+
+.section {
+  background: var(--panel); border-radius: 14px;
+  padding: 22px; margin-bottom: 18px;
+  box-shadow: var(--shadow); position: relative;
+  scroll-margin-top: 80px;
+}
+.section.locked { opacity: 0.45; pointer-events: none; }
+.section.locked::before {
+  content: "🔒 이전 섹션을 완료해 주세요";
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(31, 41, 51, 0.92); color: white;
+  padding: 10px 18px; border-radius: 10px;
+  font-weight: 600; font-size: 14px;
+  z-index: 10; pointer-events: auto;
+}
+.section-header {
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 10px; margin-bottom: 16px;
+}
+.section-header .step-tag {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  color: white; font-weight: 800; font-size: 16px;
+}
+.step-tag.W { background: var(--w); }
+.step-tag.E { background: var(--e); }
+.step-tag.D { background: var(--d); }
+.step-tag.C { background: var(--c); }
+.step-tag.R { background: var(--r); }
+.section-header h2 { font-size: 19px; font-weight: 700; flex: 1; }
+.section-header .time {
+  font-size: 13px; color: var(--muted);
+  background: #F3F4F6; padding: 3px 10px; border-radius: 8px;
+}
+
+.activity {
+  margin-bottom: 18px; padding-bottom: 16px;
+  border-bottom: 1px dashed var(--border);
+}
+.activity:last-child { border-bottom: none; padding-bottom: 0; }
+.activity h3 {
+  font-size: 16px; font-weight: 700; color: var(--accent);
+  margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+}
+.activity h3 .num {
+  background: var(--accent-light); color: var(--accent);
+  padding: 2px 8px; border-radius: 6px; font-size: 13px;
+}
+.activity .desc { margin-bottom: 10px; }
+
+.q-row {
+  margin: 10px 0; padding: 10px 12px;
+  background: #F8FAFC; border-radius: 8px;
+  border-left: 3px solid var(--accent);
+}
+.q-row.optional { border-left-color: var(--warm); background: #FFFBEB; }
+.q-row.required { border-left-color: var(--good); background: #ECFDF5; }
+.q-row .q-label { font-weight: 600; margin-right: 6px; }
+.q-row .badge-req {
+  display: inline-block; font-size: 11px;
+  background: var(--accent); color: white;
+  padding: 1px 6px; border-radius: 4px;
+  margin-right: 6px; font-weight: 700;
+}
+.q-row.optional .badge-req { background: var(--warm); }
+.q-row.required .badge-req { background: var(--good); }
+
+input.text-input, input.short-input, input.med-input, textarea.area-input {
+  font-family: inherit; font-size: 15px;
+  border: 1.5px solid var(--border); border-radius: 6px;
+  padding: 6px 10px; background: white;
+  outline: none; transition: border-color 0.15s ease;
+}
+input.text-input { width: 100%; max-width: 480px; }
+input.short-input { width: 60px; text-align: center; }
+input.med-input { width: 110px; }
+textarea.area-input { width: 100%; min-height: 80px; resize: vertical; line-height: 1.6; }
+input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(46, 134, 193, 0.15); }
+select { font-family: inherit; font-size: 15px; padding: 5px 10px; border: 1.5px solid var(--border); border-radius: 6px; background: white; outline: none; cursor: pointer; }
+
+table.tbl { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 14px; }
+table.tbl th, table.tbl td { border: 1px solid var(--border); padding: 8px 10px; text-align: center; }
+table.tbl th { background: #F3F4F6; font-weight: 700; }
+table.tbl td input { width: 100%; border: none; text-align: center; font-family: inherit; font-size: 14px; background: transparent; outline: none; }
+table.tbl td input:focus { background: #FEFCE8; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border: none; border-radius: 10px;
+  background: var(--accent); color: white;
+  font-family: inherit; font-size: 15px; font-weight: 700;
+  cursor: pointer; text-decoration: none; box-shadow: var(--shadow);
+  transition: transform 0.15s ease;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn.warm { background: var(--warm); }
+.btn.good { background: var(--good); }
+.btn.outline { background: white; color: var(--accent); border: 2px solid var(--accent); }
+.btn.purple { background: linear-gradient(135deg, #9333EA, #EC4899); }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+
+.tip-box {
+  background: #ECFDF5; border-left: 3px solid var(--good);
+  padding: 10px 14px; border-radius: 6px;
+  margin: 10px 0; font-size: 14px;
+}
+.warning-box {
+  background: #FEF3C7; border-left: 3px solid var(--warm);
+  padding: 10px 14px; border-radius: 6px;
+  margin: 10px 0; font-size: 14px; color: #78350F;
+}
+.fact-box {
+  background: #F3E8FF; border-left: 3px solid #9333EA;
+  padding: 10px 14px; border-radius: 6px;
+  margin: 10px 0; font-size: 14px;
+}
+
+.complete-check {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 14px; padding: 10px 14px;
+  background: var(--good-light); border-radius: 8px;
+  border: 1.5px solid var(--good);
+}
+.complete-check input[type=checkbox] { width: 22px; height: 22px; cursor: pointer; }
+.complete-check label { font-weight: 600; color: #15803D; cursor: pointer; font-size: 14px; }
+
+.answer-key {
+  display: none;
+  background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%);
+  border-left: 4px solid var(--teacher);
+  padding: 14px 16px; margin-top: 12px;
+  border-radius: 8px; font-size: 14px; line-height: 1.7;
+}
+.answer-key h4 { color: var(--teacher); font-weight: 700; margin-bottom: 6px; }
+body.teacher-mode .answer-key { display: block; }
+.teacher-note {
+  display: none;
+  font-size: 13px; background: #FFFBEB;
+  border-left: 3px solid var(--warm);
+  padding: 8px 12px; margin: 8px 0;
+  border-radius: 6px; color: #78350F;
+}
+body.teacher-mode .teacher-note { display: block; }
+
+.toolbar-bottom {
+  position: sticky; bottom: 12px;
+  background: white; border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+  display: flex; gap: 10px; justify-content: space-between;
+  align-items: center; margin: 16px 0; z-index: 40;
+}
+.toolbar-bottom .saved-state { font-size: 13px; color: var(--muted); }
+.toolbar-bottom .saved-state.on { color: var(--good); }
+
+/* 미니 격자 (예시) */
+.mini-tiling {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 6px; margin: 10px 0; justify-content: center;
+}
+.mini-tile {
+  display: grid; grid-template-columns: repeat(3, 28px);
+  gap: 1px; background: var(--text); border: 2px solid var(--text);
+}
+.mini-tile.center { border-color: var(--accent); border-width: 3px; }
+.mini-tile.flipped { opacity: 0.7; }
+.mini-tile .c {
+  background: white; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 600; color: var(--muted);
+}
+
+@media (max-width: 600px) {
+  .cover h1 { font-size: 20px; }
+  .section { padding: 16px; }
+  table.tbl { font-size: 12px; }
+  table.tbl th, table.tbl td { padding: 5px 4px; }
+}
+@media print {
+  body { background: white; }
+  .progress-bar, .toolbar-bottom { display: none; }
+  .section.locked { opacity: 1; pointer-events: auto; }
+  .section.locked::before { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- 표지 -->
+  <div class="cover">
+    <span class="session-tag">3차시 / 4차시</span>
+    <h1>뫼비우스 — 뒤집힌 세상의 수학</h1>
+    <div class="subtitle">반대 방향으로 이어붙이면, 경로와 칸의 가치는 어떻게 변하는가?</div>
+    <div class="meta">
+      <span class="meta-item">수업일 <input type="date" data-store="meta_date"></span>
+      <span class="meta-item">이름 <input type="text" placeholder="홍길동" data-store="meta_name"></span>
+      <span class="meta-item">⏱ 45분</span>
+    </div>
+  </div>
+
+  <!-- 진행도 -->
+  <div class="progress-bar">
+    <div class="step active" data-jump="W">W 워밍업</div>
+    <div class="step" data-jump="E">E 탐구</div>
+    <div class="step" data-jump="D">D 심화</div>
+    <div class="step" data-jump="C">C 도전</div>
+    <div class="step" data-jump="R">R 성찰</div>
+  </div>
+
+  <!-- ═══════════ W. 워밍업 (5분) ═══════════ -->
+  <section class="section" id="sec-W" data-step="W">
+    <div class="section-header">
+      <div class="step-tag W">W</div><h2>워밍업</h2>
+      <span class="time">5분</span>
+    </div>
+
+    <div class="activity">
+      <h3><span class="num">W-1</span> 지금까지의 여정 — 1·2차시 회수</h3>
+      <p class="desc">지난 2차시까지의 발견을 카드 형태로 빠르게 복기합시다. <b>각 카드의 9칸 가치 패턴</b>을 직접 채워 보세요.</p>
+
+      <div class="w1-cards" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin:12px 0;">
+        <!-- 평면 카드 -->
+        <div class="w1-card" data-space="plain" style="background:#FFF; border:1.5px solid #D1D5DB; border-radius:10px; padding:12px;">
+          <div class="w1-card-title" style="font-weight:800; font-size:16px;">평면</div>
+          <div class="w1-card-subtitle" style="color:#6B7280; font-size:12px; margin-bottom:8px;">연결 없음 (1차시)</div>
+          <div class="w1-grid3x3" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; margin:8px 0;">
+            <input type="number" min="0" max="20" data-store="w1_plain_r1c1" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_plain_r1c2" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_plain_r1c3" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_plain_r2c1" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_plain_r2c2" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_plain_r2c3" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_plain_r3c1" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_plain_r3c2" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_plain_r3c3" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+          </div>
+          <div class="w1-card-fields" style="display:flex; flex-direction:column; gap:6px; font-size:13px;">
+            <label>경로 수 <input type="number" data-store="w1_plain_count" style="width:60px;"></label>
+            <label>가치 종 수 <input type="number" data-store="w1_plain_kinds" style="width:60px;"></label>
+            <label>균등?
+              <select data-store="w1_plain_uniform">
+                <option value="">선택</option><option value="균등">균등</option><option value="불균등">불균등</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <!-- 원기둥 카드 -->
+        <div class="w1-card" data-space="cylinder" style="background:#FFF; border:1.5px solid #D1D5DB; border-radius:10px; padding:12px;">
+          <div class="w1-card-title" style="font-weight:800; font-size:16px;">원기둥</div>
+          <div class="w1-card-subtitle" style="color:#6B7280; font-size:12px; margin-bottom:8px;">좌우 같은 방향 (2차시)</div>
+          <div class="w1-grid3x3" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; margin:8px 0;">
+            <input type="number" min="0" max="20" data-store="w1_cylinder_r1c1" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_cylinder_r1c2" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_cylinder_r1c3" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_cylinder_r2c1" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_cylinder_r2c2" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_cylinder_r2c3" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_cylinder_r3c1" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_cylinder_r3c2" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_cylinder_r3c3" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+          </div>
+          <div class="w1-card-fields" style="display:flex; flex-direction:column; gap:6px; font-size:13px;">
+            <label>경로 수 <input type="number" data-store="w1_cylinder_count" style="width:60px;"></label>
+            <label>가치 종 수 <input type="number" data-store="w1_cylinder_kinds" style="width:60px;"></label>
+            <label>균등?
+              <select data-store="w1_cylinder_uniform">
+                <option value="">선택</option><option value="균등">균등</option><option value="불균등">불균등</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <!-- 토러스 카드 -->
+        <div class="w1-card" data-space="torus" style="background:#FFF; border:1.5px solid #D1D5DB; border-radius:10px; padding:12px;">
+          <div class="w1-card-title" style="font-weight:800; font-size:16px;">토러스</div>
+          <div class="w1-card-subtitle" style="color:#6B7280; font-size:12px; margin-bottom:8px;">좌우 + 상하 같은 방향 (2차시)</div>
+          <div class="w1-grid3x3" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; margin:8px 0;">
+            <input type="number" min="0" max="20" data-store="w1_torus_r1c1" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_torus_r1c2" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_torus_r1c3" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_torus_r2c1" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_torus_r2c2" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_torus_r2c3" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_torus_r3c1" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_torus_r3c2" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+            <input type="number" min="0" max="20" data-store="w1_torus_r3c3" style="text-align:center; font-weight:700; padding:6px 0; border:1px solid #D1D5DB; border-radius:4px;">
+          </div>
+          <div class="w1-card-fields" style="display:flex; flex-direction:column; gap:6px; font-size:13px;">
+            <label>경로 수 <input type="number" data-store="w1_torus_count" style="width:60px;"></label>
+            <label>가치 종 수 <input type="number" data-store="w1_torus_kinds" style="width:60px;"></label>
+            <label>균등?
+              <select data-store="w1_torus_uniform">
+                <option value="">선택</option><option value="균등">균등</option><option value="불균등">불균등</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <p style="font-size:12px; color:#6B7280; margin-top:8px;">💡 기억나는 칸만 채워도 OK. 정답은 아래에서 확인하세요. (C-1에서 이 입력값이 자동 회수됩니다.)</p>
+
+      <div class="answer-key">
+        <h4>📋 W-1 정답</h4>
+        <table class="tbl" style="margin-top:6px;">
+          <tr><th>공간</th><th>9칸 가치 패턴</th><th>경로 수</th><th>종 수</th><th>균등?</th></tr>
+          <tr><td>평면</td><td>[3,2,3 / 2,4,2 / 3,2,3]</td><td><b>8</b></td><td>3종</td><td>불균등</td></tr>
+          <tr><td>원기둥</td><td>[4,4,4 / 4,4,4 / 4,4,4]</td><td><b>12</b></td><td>1종</td><td>균등</td></tr>
+          <tr><td>토러스</td><td>[4,4,4 / 4,4,4 / 4,4,4]</td><td><b>12</b></td><td>1종</td><td>균등</td></tr>
+        </table>
+        <div class="teacher-note" style="margin-top:6px;">
+          ⚠️ 1차시 평면 가치(중앙 4, 꼭짓점 3, 변 중앙 2)와 2차시 원기둥·토러스 균등 결과(모두 4)를 한 표에 회수한 것이 핵심입니다.
+        </div>
+      </div>
+    </div>
+
+    <div class="activity">
+      <h3><span class="num">W-2</span> 뫼비우스 — 반대 방향으로!</h3>
+      <p class="desc">원기둥은 좌우를 <b>같은 방향</b>으로 이어붙였습니다. 오늘은 <b>반대 방향</b>으로 이어붙입니다.</p>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px; margin:10px 0;">
+        <div class="fact-box">
+          <strong>같은 방향 = 원기둥</strong>
+          <pre style="font-family:Consolas,monospace; font-size:12px; line-height:1.4; margin-top:6px;">─────────
+|       |
+a→ ▦ →a
+|       |
+─────────</pre>
+        </div>
+        <div class="fact-box">
+          <strong>반대 방향 = 뫼비우스</strong>
+          <pre style="font-family:Consolas,monospace; font-size:12px; line-height:1.4; margin-top:6px;">─────────
+|       |
+a→ ▦ ←a
+|       |
+─────────</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="activity">
+      <h3><span class="num">W-3</span> 내 예측 확인</h3>
+      <p class="desc">2차시 C-3에서 적은 예측을 꺼내 봅시다!</p>
+      <table class="tbl">
+        <thead><tr><th>항목</th><th>내 예측 (2차시)</th><th>실제 값 (오늘 확인)</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>뫼비우스 경로 수</td>
+            <td><input type="number" data-store="w3_pred_p"> 개</td>
+            <td>→ E에서 확인</td>
+          </tr>
+          <tr>
+            <td>뫼비우스 칸 가치 균등?</td>
+            <td>
+              <select data-store="w3_pred_eq"><option value="">?</option><option>균등</option><option>불균등</option></select>
+            </td>
+            <td>→ E에서 확인</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="complete-check">
+      <input type="checkbox" id="done-W" data-store="done_W">
+      <label for="done-W">W 섹션 완료 ✓</label>
+    </div>
+  </section>
+
+  <!-- ═══════════ E. 탐구 (18분) ═══════════ -->
+  <section class="section locked" id="sec-E" data-step="E" data-requires="W">
+    <div class="section-header">
+      <div class="step-tag E">E</div><h2>탐구</h2>
+      <span class="time">18분</span>
+    </div>
+
+    <!-- E-0: 눈으로 보기 -->
+    <div class="activity">
+      <h3><span class="num">E-0</span> 눈으로 보기 — 뫼비우스 띠</h3>
+      <p class="desc">뫼비우스 띠를 마우스로 돌려 보세요. 면이 어떻게 이어지는지 살펴봅니다.</p>
+      <iframe src="lib/mobius_3d.html"
+              style="width:100%; height:420px; border:1px solid var(--border); border-radius:8px; background:#F8F9FA;"
+              title="뫼비우스 띠 3D 관찰"></iframe>
+      <div class="teacher-note">💡 학생들이 "이거 한 면짜리네?" 같은 자각을 가지면 충분. 명시적 답변 요구 없음.</div>
+    </div>
+
+    <!-- E-1: 직접 해 보기 -->
+    <div class="activity">
+      <h3><span class="num">E-1</span> 직접 해 보기 — 뫼비우스 3D 게임</h3>
+      <p class="desc">짝과 한 판 둬 봅시다. 3D 표면 위에서 직접 두면 어떤 느낌일까요?</p>
+      <div class="btn-row">
+        <a class="btn warm" href="lib/topo_tictactoe_3d.html?mode=mobius" target="_blank" rel="noopener">
+          🎮 뫼비우스 3D 게임 열기
+        </a>
+      </div>
+      <div class="q-row" style="margin-top:12px;">
+        <span class="q-label">3D 뫼비우스에서 게임을 두면서 <b>어떤 점이 어려웠나요?</b></span>
+        <textarea class="area-input" data-store="e1_difficulty" placeholder="예: 칸 위치를 한눈에 보기 어려웠다 / 어디로 이어지는지 헷갈렸다 …"></textarea>
+      </div>
+      <div class="teacher-note">💡 학생이 "3D는 한눈에 보기 어렵다"는 자각에 도달하면 E-2 도입이 자연스러움. 자각이 약하면 "그래서 다음엔 평면에서 다시 해보겠습니다" 한 마디로 전환.</div>
+    </div>
+
+    <!-- E-2: 평면에서 진행하기 -->
+    <div class="activity">
+      <h3><span class="num">E-2</span> 평면에서 진행하기 — 기본 다각형 표현법</h3>
+
+      <!-- (1) 화살표 약속 -->
+      <h4 style="margin-top:12px;">(1) 화살표 약속 — 같은 색 화살표는 같은 변</h4>
+      <p class="desc">2차시에서 배운 화살표 약속을 떠올려 봅시다. 뫼비우스는 한 가지가 <b>다릅니다</b>.</p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:10px 0;">
+        <figure style="text-align:center;">
+          <svg viewBox="0 0 140 140" width="140" height="140" style="border:1px solid var(--border); border-radius:8px; background:#FFF;">
+            <rect x="20" y="20" width="100" height="100" fill="none" stroke="#1F2933" stroke-width="2"/>
+            <line x1="20" y1="40" x2="20" y2="100" stroke="#E74C3C" stroke-width="3"/>
+            <polygon points="20,38 16,46 24,46" fill="#E74C3C"/>
+            <line x1="120" y1="40" x2="120" y2="100" stroke="#E74C3C" stroke-width="3"/>
+            <polygon points="120,38 116,46 124,46" fill="#E74C3C"/>
+          </svg>
+          <figcaption><b>원기둥 — 같은 방향</b></figcaption>
+        </figure>
+        <figure style="text-align:center;">
+          <svg viewBox="0 0 140 140" width="140" height="140" style="border:1px solid var(--border); border-radius:8px; background:#FFF;">
+            <rect x="20" y="20" width="100" height="100" fill="none" stroke="#1F2933" stroke-width="2"/>
+            <line x1="20" y1="40" x2="20" y2="100" stroke="#E74C3C" stroke-width="3"/>
+            <polygon points="20,38 16,46 24,46" fill="#E74C3C"/>
+            <line x1="120" y1="40" x2="120" y2="100" stroke="#E74C3C" stroke-width="3"/>
+            <polygon points="120,102 116,94 124,94" fill="#E74C3C"/>
+          </svg>
+          <figcaption><b>뫼비우스 — 반대 방향</b></figcaption>
+        </figure>
+      </div>
+
+      <p style="margin-top:8px;">⇒ 뫼비우스는 좌우 변이 <b>반대 방향</b>으로 이어붙기 때문에, 한쪽으로 나간 점은 반대편에서 <b>위아래가 뒤집힌 위치</b>로 돌아옵니다.</p>
+
+      <!-- (1') 좌표 변환 빈칸 -->
+      <h4 style="margin-top:14px;">(1') 좌표 변환 — 직접 채워봅시다</h4>
+      <p class="desc">오른쪽으로 빠져나간 점은 왼쪽 어디로 들어올까요? 행이 뒤집힌다는 사실에 주의하세요.</p>
+
+      <table class="tbl">
+        <thead><tr><th>나가는 위치</th><th>들어오는 위치 (행, 열)</th></tr></thead>
+        <tbody>
+          <tr><td>(1, 3) → 오른쪽으로</td>
+            <td>(<input class="short-input" type="number" min="1" max="3" data-store="e2_coord_13_r" style="width:50px;">,
+                <input class="short-input" type="number" min="1" max="3" data-store="e2_coord_13_c" style="width:50px;">)</td></tr>
+          <tr><td>(2, 3) → 오른쪽으로</td>
+            <td>(<input class="short-input" type="number" min="1" max="3" data-store="e2_coord_23_r" style="width:50px;">,
+                <input class="short-input" type="number" min="1" max="3" data-store="e2_coord_23_c" style="width:50px;">)</td></tr>
+          <tr><td>(3, 3) → 오른쪽으로</td>
+            <td>(<input class="short-input" type="number" min="1" max="3" data-store="e2_coord_33_r" style="width:50px;">,
+                <input class="short-input" type="number" min="1" max="3" data-store="e2_coord_33_c" style="width:50px;">)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="answer-key">
+        <h4>📋 E-2 (1') 정답</h4>
+        <div>(1,3) → <b>(3, 1)</b>, (2,3) → <b>(2, 1)</b>, (3,3) → <b>(1, 1)</b></div>
+        <div style="font-size:13px; color:#6B7280; margin-top:4px;">규칙: 오른쪽으로 나간 (r, 3)은 왼쪽에서 (4−r, 1)로 들어옴. <b>행이 뒤집힘</b>.</div>
+      </div>
+
+      <!-- (2) 2D 타일링 게임 -->
+      <h4 style="margin-top:14px;">(2) 2D 평면에서 게임 한 판</h4>
+      <p class="desc">이번엔 평면 격자판에서 짝과 한 판 둬 봅시다. 게임판 옆에 복사본이 펼쳐지는 모습을 <b>「타일링 뷰」</b>라고 합니다. 원리는 D 심화에서 자세히 배울 예정이니, 지금은 직선이 어떻게 이어지는지만 관찰하세요.</p>
+      <div class="btn-row">
+        <a class="btn warm" href="lib/topo_tictactoe_2d.html?mode=mobius" target="_blank" rel="noopener">
+          🎮 뫼비우스 2D 게임 열기
+        </a>
+      </div>
+      <div class="teacher-note">💡 (2) 직후 학생들이 "3D보다 훨씬 보기 쉽다"는 반응을 보이면, 평면 표현법의 힘이 자연스럽게 체득된 것. E-3로 전환.</div>
+    </div>
+
+    <!-- E-3: 경로와 가치 분석 -->
+    <div class="activity">
+      <h3><span class="num">E-3</span> 경로와 가치 분석</h3>
+
+      <!-- (1) 경로 발견 + 분석기 검증 -->
+      <h4>(1) 뫼비우스 직선 사냥 — 학생이 먼저, 분석기로 확인</h4>
+      <p class="desc">2D 평면에서 새로 보이는 직선을 <b>3개 이상</b> 찾아 적어 봅시다. (1차시 평면 8개 + 새 직선)</p>
+      <textarea class="area-input" data-store="e3_new_lines" placeholder="예: (1,1)→(1,2)→(2,3)  /  (1,2)→(2,1)→(1,3) …"></textarea>
+
+      <div class="btn-row" style="margin-top:8px;">
+        <a class="btn outline" href="tictactoe-analyzer.html?session=3&space=mobius&view=tiling" target="_blank" rel="noopener">
+          🎯 분석기로 검증 (뫼비우스 모드 + 타일링 뷰)
+        </a>
+      </div>
+
+      <div class="q-row" style="margin-top:8px;">
+        <span class="q-label">총 직선 수:</span>
+        <input class="short-input" type="number" data-store="e3_total_count" style="width:80px;"> 개
+      </div>
+
+      <div class="answer-key">
+        <h4>📋 E-3 (1) 정답</h4>
+        <div>뫼비우스 3×3 직선 수: <b>16개</b> (평면 8개 + 변형으로 새로 생긴 8개)</div>
+      </div>
+
+      <!-- (2) 9칸 가치 -->
+      <h4 style="margin-top:14px;">(2) 뫼비우스 칸의 가치</h4>
+      <p class="desc">9칸 각각이 몇 개의 직선에 속하는지 채워 봅시다.</p>
+      <div style="text-align:center; margin:10px 0;">
+        <div style="display:inline-grid; grid-template-columns:repeat(3, 60px); gap:4px;">
+          <input class="short-input" type="number" data-store="e3_mobius_r1c1" style="width:60px; text-align:center;">
+          <input class="short-input" type="number" data-store="e3_mobius_r1c2" style="width:60px; text-align:center;">
+          <input class="short-input" type="number" data-store="e3_mobius_r1c3" style="width:60px; text-align:center;">
+          <input class="short-input" type="number" data-store="e3_mobius_r2c1" style="width:60px; text-align:center;">
+          <input class="short-input" type="number" data-store="e3_mobius_r2c2" style="width:60px; text-align:center;">
+          <input class="short-input" type="number" data-store="e3_mobius_r2c3" style="width:60px; text-align:center;">
+          <input class="short-input" type="number" data-store="e3_mobius_r3c1" style="width:60px; text-align:center;">
+          <input class="short-input" type="number" data-store="e3_mobius_r3c2" style="width:60px; text-align:center;">
+          <input class="short-input" type="number" data-store="e3_mobius_r3c3" style="width:60px; text-align:center;">
+        </div>
+      </div>
+
+      <div class="answer-key">
+        <h4>📋 E-3 (2) 정답</h4>
+        <div>뫼비우스 가치 패턴: <b>[6, 6, 6 / 4, 4, 4 / 6, 6, 6]</b></div>
+        <div>합계: 48 = 16 × 3 ✓</div>
+      </div>
+
+      <!-- (3) 3단 시각 비교 -->
+      <h4 style="margin-top:14px;">(3) 평면 → 원기둥/토러스 → 뫼비우스 비교</h4>
+      <table class="tbl">
+        <thead><tr><th>공간</th><th>경로 수</th><th>가치 종 수</th><th>균등?</th></tr></thead>
+        <tbody>
+          <tr><td>평면</td><td>8</td><td>3종</td><td>불균등</td></tr>
+          <tr><td>원기둥 / 토러스</td><td>12</td><td>1종</td><td><b>균등</b></td></tr>
+          <tr style="background:rgba(251,191,36,0.18);"><td>뫼비우스</td><td>16</td><td>2종</td><td><b>다시 불균등!</b></td></tr>
+        </tbody>
+      </table>
+
+      <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-top:12px;">
+        <figure style="text-align:center;">
+          <div style="display:inline-grid; grid-template-columns:repeat(3, 28px); gap:2px; padding:8px; background:#FFF; border-radius:6px;">
+            <span style="background:#FCD34D; padding:4px; font-weight:700;">3</span>
+            <span style="background:#FBD38D; padding:4px; font-weight:700;">2</span>
+            <span style="background:#FCD34D; padding:4px; font-weight:700;">3</span>
+            <span style="background:#FBD38D; padding:4px; font-weight:700;">2</span>
+            <span style="background:#F59E0B; padding:4px; font-weight:700; color:#FFF;">4</span>
+            <span style="background:#FBD38D; padding:4px; font-weight:700;">2</span>
+            <span style="background:#FCD34D; padding:4px; font-weight:700;">3</span>
+            <span style="background:#FBD38D; padding:4px; font-weight:700;">2</span>
+            <span style="background:#FCD34D; padding:4px; font-weight:700;">3</span>
+          </div>
+          <figcaption style="font-size:12px; margin-top:4px;">평면 — 3종</figcaption>
+        </figure>
+        <figure style="text-align:center;">
+          <div style="display:inline-grid; grid-template-columns:repeat(3, 28px); gap:2px; padding:8px; background:#FFF; border-radius:6px;">
+            <span style="background:#86EFAC; padding:4px; font-weight:700;">4</span>
+            <span style="background:#86EFAC; padding:4px; font-weight:700;">4</span>
+            <span style="background:#86EFAC; padding:4px; font-weight:700;">4</span>
+            <span style="background:#86EFAC; padding:4px; font-weight:700;">4</span>
+            <span style="background:#86EFAC; padding:4px; font-weight:700;">4</span>
+            <span style="background:#86EFAC; padding:4px; font-weight:700;">4</span>
+            <span style="background:#86EFAC; padding:4px; font-weight:700;">4</span>
+            <span style="background:#86EFAC; padding:4px; font-weight:700;">4</span>
+            <span style="background:#86EFAC; padding:4px; font-weight:700;">4</span>
+          </div>
+          <figcaption style="font-size:12px; margin-top:4px;">원기둥/토러스 — 균등</figcaption>
+        </figure>
+        <figure style="text-align:center;">
+          <div style="display:inline-grid; grid-template-columns:repeat(3, 28px); gap:2px; padding:8px; background:#FFF; border-radius:6px;">
+            <span style="background:#A78BFA; padding:4px; font-weight:700; color:#FFF;">6</span>
+            <span style="background:#A78BFA; padding:4px; font-weight:700; color:#FFF;">6</span>
+            <span style="background:#A78BFA; padding:4px; font-weight:700; color:#FFF;">6</span>
+            <span style="background:#FBD38D; padding:4px; font-weight:700;">4</span>
+            <span style="background:#FBD38D; padding:4px; font-weight:700;">4</span>
+            <span style="background:#FBD38D; padding:4px; font-weight:700;">4</span>
+            <span style="background:#A78BFA; padding:4px; font-weight:700; color:#FFF;">6</span>
+            <span style="background:#A78BFA; padding:4px; font-weight:700; color:#FFF;">6</span>
+            <span style="background:#A78BFA; padding:4px; font-weight:700; color:#FFF;">6</span>
+          </div>
+          <figcaption style="font-size:12px; margin-top:4px;">뫼비우스 — <b>2행만 특별</b></figcaption>
+        </figure>
+      </div>
+
+      <!-- (4) 정점 발문 -->
+      <h4 style="margin-top:14px;">(4) ★ 정점 질문 — 균등이 다시 깨졌습니다. 왜일까요?</h4>
+      <p class="desc">원기둥과 토러스에서는 모든 칸이 똑같이 4였습니다. 뫼비우스에서는 2행만 4, 나머지는 6입니다. <b>왜 2행만 다를까요?</b></p>
+      <textarea class="area-input" data-store="e3_q4_hypothesis" placeholder="자유롭게 추측을 적어 봅시다. 정답이 아니어도 됩니다."></textarea>
+      <div class="teacher-note">💡 이 질문의 답은 다음 단계 <b>D-2 (4)</b>에서 함께 발견합니다. 여기서는 추측 단계로 둡니다.</div>
+    </div>
+
+    <div class="complete-check">
+      <input type="checkbox" id="done-E" data-store="done_E">
+      <label for="done-E">E 섹션 완료 ✓</label>
+    </div>
+  </section>
+
+  <!-- ═══════════ D. 심화 — 타일링 뷰 (10분) ═══════════ -->
+  <section class="section locked" id="sec-D" data-step="D" data-requires="E">
+    <div class="section-header">
+      <div class="step-tag D">D</div>
+      <h2>심화 — 타일링 뷰</h2>
+      <span class="time">10분</span>
+    </div>
+
+    <!-- D-1 -->
+    <div class="activity">
+      <h3><span class="num">D-1</span> 타일링 뷰란? <span style="font-size:13px; color:var(--muted); font-weight:400;">(3분)</span></h3>
+      <p class="desc">
+        경로가 16개나 되니 머릿속으로 추적하기 어렵습니다. <b>타일링 뷰</b>는 이 복잡함을 한눈에 보여주는 새 도구입니다.
+        2차시에서 배운 <b>시프트</b>와 같은 원리로, 게임판을 옆에 복사해 나란히 놓는 방식이에요.
+      </p>
+      <div class="tip-box">
+        <strong>원리</strong>: 기본영역(게임판)을 옆에 복사해서 나란히 놓으면, 경계를 넘는 경로가 <b>평범한 직선</b>으로 보입니다!
+      </div>
+
+      <p class="desc"><b>[원기둥 타일링]</b> — 같은 방향이므로 복사본은 원본과 동일</p>
+      <div class="mini-tiling">
+        <div class="mini-tile flipped">
+          <div class="c">1,1</div><div class="c">1,2</div><div class="c">1,3</div>
+          <div class="c">2,1</div><div class="c">2,2</div><div class="c">2,3</div>
+          <div class="c">3,1</div><div class="c">3,2</div><div class="c">3,3</div>
+        </div>
+        <div class="mini-tile center">
+          <div class="c">1,1</div><div class="c">1,2</div><div class="c">1,3</div>
+          <div class="c">2,1</div><div class="c">2,2</div><div class="c">2,3</div>
+          <div class="c">3,1</div><div class="c">3,2</div><div class="c">3,3</div>
+        </div>
+        <div class="mini-tile flipped">
+          <div class="c">1,1</div><div class="c">1,2</div><div class="c">1,3</div>
+          <div class="c">2,1</div><div class="c">2,2</div><div class="c">2,3</div>
+          <div class="c">3,1</div><div class="c">3,2</div><div class="c">3,3</div>
+        </div>
+      </div>
+
+      <div class="warning-box">
+        💡 2차시에서 찾은 원기둥 새 경로 <b>(1,2)→(2,3)→(3,1)</b>: 기본영역의 (1,2)-(2,3)에서 시작 → 오른쪽 복사본의 (3,1)까지 — <b>일직선</b>으로 보입니다!
+      </div>
+
+      <div class="btn-row">
+        <a class="btn outline" href="tictactoe-analyzer.html?session=3&space=cylinder" target="_blank" rel="noopener">
+          🎮 분석기에서 "🔲 타일링 뷰" 토글로 직접 확인
+        </a>
+      </div>
+    </div>
+
+    <!-- D-2 -->
+    <div class="activity">
+      <h3><span class="num">D-2</span> 뫼비우스 타일링 뷰 — 거울상 반복! <span style="font-size:13px; color:var(--muted); font-weight:400;">(4분)</span></h3>
+      <p class="desc">
+        뫼비우스에서는 반대 방향이므로, 복사본은 <b>거울상(행 뒤집힘)</b>입니다.
+      </p>
+
+      <div class="btn-row">
+        <a class="btn purple" href="tictactoe-analyzer.html?session=3&space=mobius" target="_blank" rel="noopener">
+          🎮 분석기 (뫼비우스) — 타일링 뷰 토글로 거울상 확인!
+        </a>
+      </div>
+
+      <p class="desc"><b>실습</b>: 타일링 뷰에서 경로를 추적해 봅시다.</p>
+
+      <div class="q-row">
+        <span class="badge-req">(1)</span> 수평 경로 (1,2)→(1,3)→(3,1):
+        <div style="margin-top:6px;">
+          오른쪽 거울 타일의 1행은 실제로 <input class="short-input" type="number" min="1" max="3" data-store="d2_1_row"> 행<br>
+          거울 타일의 1행 1열 = 실제 (<input class="short-input" type="number" min="1" max="3" data-store="d2_1_r">, <input class="short-input" type="number" min="1" max="3" data-store="d2_1_c">)<br>
+          직선으로 보이는가?
+          <select data-store="d2_1_line"><option value="">?</option><option>예</option><option>아니오</option></select>
+        </div>
+      </div>
+
+      <div class="q-row">
+        <span class="badge-req">(2)</span> 대각선 경로 (1,2)→(2,3)→(1,1):
+        <div style="margin-top:6px;">
+          (1,1)에서 시작하여 <b>↘ 방향 한 칸씩 이동</b>하면 어떤 좌표를 거치게 될까요? 분석기의 타일링 뷰와 함께 따라가 보세요.<br>
+          기본영역 (1,2), (2,3) 다음 → 거울 타일에서 이어지는 칸 = 실제
+          (<input class="short-input" type="number" min="1" max="3" data-store="d2_2_r">, <input class="short-input" type="number" min="1" max="3" data-store="d2_2_c">)<br>
+          타일링 뷰에서 직선으로 보이는가?
+          <select data-store="d2_2_line"><option value="">?</option><option>예</option><option>아니오</option></select>
+        </div>
+      </div>
+
+      <div class="q-row">
+        <span class="badge-req">(3)</span> <b>핵심 발견</b>: "타일링 뷰에서 보면, 뫼비우스의 모든 경로가 ___으로 보인다."
+        <input class="text-input" data-store="d2_finding" placeholder="…" style="max-width:240px;">
+      </div>
+
+      <!-- D-2 (4) 발견 단계 — 왜 2행만 특별한가? -->
+      <div class="q-row" style="background:rgba(124,58,237,0.12); border-left:4px solid #A855F7;">
+        <span class="badge-req" style="background:#A855F7;">(4) 발견</span>
+        <b>왜 2행만 특별한가?</b>
+        <p class="desc" style="margin-top:6px;">
+          뫼비우스는 좌우 wrap 시 행이 뒤집힙니다. 즉 <b>1행 ↔ 3행</b>이 서로 바뀌고, <b>2행은 자기 자신</b>으로 돌아옵니다.
+        </p>
+        <table class="tbl" style="margin-top:6px;">
+          <thead><tr><th>행</th><th>좌우 wrap 시 어떻게 되는가</th></tr></thead>
+          <tbody>
+            <tr><td>1행</td><td>좌우 wrap → 3행으로 바뀜 (4 − 1 = 3)</td></tr>
+            <tr style="background:rgba(251,191,36,0.18);"><td>2행</td><td>좌우 wrap → <b>2행 그대로</b> (4 − 2 = 2) — 거울에 비쳐도 자기 자신</td></tr>
+            <tr><td>3행</td><td>좌우 wrap → 1행으로 바뀜 (4 − 3 = 1)</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top:10px;">⇒ 1·3행은 거울상이 따로 있어 <b>경로가 짝지어 늘어남</b> (가치 6).<br>
+        ⇒ 2행은 자기 자신이라 <b>새 경로가 덜 생김</b> (가치 4).</p>
+        <div style="margin-top:10px;">
+          <span class="q-label"><b>Q.</b> E-3 (4)에서 적었던 추측과 비교해 봅시다. 어떤 점이 달랐나요?</span>
+          <textarea class="area-input" data-store="d2_4_compare" placeholder="내가 추측한 것은 …, 실제 발견은 …"></textarea>
+        </div>
+      </div>
+
+      <div class="answer-key">
+        <h4>📋 D-2 정답</h4>
+        (1) 거울 타일 1행 = 실제 <b>3</b>행. 1행 1열 = 실제 <b>(3, 1)</b>. 직선? <b>예</b>.<br>
+        (2) (1,2)→(2,3)에서 ↘ 한 칸 = 실제 <b>(1, 1)</b>. 직선? <b>예</b>.<br>
+        (3) 모든 경로가 <b>직선(일직선)</b>으로 보인다.
+        <div class="teacher-note" style="margin-top:6px;">
+          ⚠️ 직선이 1행·3행에는 더 많이, 2행에는 더 적게 지나가므로 칸의 가치가 6-4-6이 됩니다. 이것이 2행의 "고정점" 효과!
+        </div>
+      </div>
+    </div>
+
+    <!-- D-3 -->
+    <div class="activity">
+      <h3><span class="num">D-3</span> 타일링 뷰에서 틱택토! <span style="font-size:13px; color:var(--muted); font-weight:400;">(3분 · 짝 활동)</span></h3>
+      <p class="desc">
+        짝과 함께 뫼비우스 타일링 뷰 위에서 틱택토 1판을 해 봅시다.
+        <b>규칙</b>: 기본영역에 돌을 놓으면, 양쪽 거울 타일에도 동시에 같은 돌이 표시됩니다!
+      </p>
+      <div class="btn-row">
+        <a class="btn purple" href="tictactoe-analyzer.html?session=3&space=mobius&mode=game" target="_blank" rel="noopener">
+          🎮 분석기 (뫼비우스 대전) — 타일링 뷰 ON!
+        </a>
+      </div>
+      <div class="warning-box">
+        💡 예시: 기본영역 (1,1)에 ○를 놓으면 → 왼쪽 거울의 (3,1)과 오른쪽 거울의 (3,1)에도 ○! (행 뒤집힘)<br>
+        타일링 뷰로 플레이하면, 경계를 넘는 승리 경로도 눈에 바로 보입니다!
+      </div>
+    </div>
+
+    <div class="complete-check">
+      <input type="checkbox" id="done-D" data-store="done_D">
+      <label for="done-D">D 섹션 완료 ✓</label>
+    </div>
+  </section>
+
+  <!-- ═══════════ C. 도전 (5분) ═══════════ -->
+  <section class="section locked" id="sec-C" data-step="C" data-requires="D">
+    <div class="section-header">
+      <div class="step-tag C">C</div><h2>도전</h2>
+      <span class="time">5분</span>
+    </div>
+
+    <div class="activity">
+      <h3><span class="num">C-1</span> 4종 비교 종합표 — W-1 입력 자동 회수</h3>
+      <p class="desc">평면·원기둥·토러스는 W-1에서 적은 값이 자동 표시됩니다. <b>뫼비우스 행만 새로 채우고</b>, 타일링에서 본 것을 적어 주세요.</p>
+      <div class="btn-row">
+        <a class="btn outline" href="tictactoe-analyzer.html?session=3" target="_blank" rel="noopener">
+          🎮 분석기 → "⊞ 4종 비교 모드" 토글로 한눈에!
+        </a>
+      </div>
+      <table class="tbl">
+        <thead>
+          <tr><th>공간</th><th>다이어그램</th><th>경로 수</th><th>가치 종 수</th><th>균등?</th><th>타일링 특징</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>평면</td><td>(없음)</td>
+            <td><span data-c1-display="plain_count">—</span></td>
+            <td><span data-c1-display="plain_kinds">—</span> 종</td>
+            <td><span data-c1-display="plain_uniform">—</span></td>
+            <td>해당 없음</td>
+          </tr>
+          <tr>
+            <td>원기둥</td><td>→→</td>
+            <td><span data-c1-display="cylinder_count">—</span></td>
+            <td><span data-c1-display="cylinder_kinds">—</span> 종</td>
+            <td><span data-c1-display="cylinder_uniform">—</span></td>
+            <td>동일 반복</td>
+          </tr>
+          <tr>
+            <td>토러스</td><td>→→ + →→</td>
+            <td><span data-c1-display="torus_count">—</span></td>
+            <td><span data-c1-display="torus_kinds">—</span> 종</td>
+            <td><span data-c1-display="torus_uniform">—</span></td>
+            <td>상하좌우 반복</td>
+          </tr>
+          <tr style="background:rgba(167,139,250,0.18);">
+            <td><b>뫼비우스</b></td><td>→←</td>
+            <td><input class="short-input" type="number" data-store="c1_mobius_count" style="width:60px;"></td>
+            <td><input class="short-input" type="number" data-store="c1_mobius_kinds" style="width:60px;"> 종</td>
+            <td><select data-store="c1_mobius_uniform"><option value="">?</option><option>균등</option><option>불균등</option></select></td>
+            <td><input class="text-input" data-store="c1_mobius_observation" placeholder="예: 직선이 8개 더 보임" style="max-width:160px;"></td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px; color:var(--muted); margin-top:6px;">💡 평면·원기둥·토러스 값은 W-1에서 적은 값이 자동으로 표시됩니다. (입력란이 아닌 텍스트로 보임)</p>
+      <div class="answer-key">
+        <h4>📋 C-1 정답</h4>
+        평면: 8 / 3종 / 불균등 / 해당 없음<br>
+        원기둥: 12 / 1종 / 균등 / 동일 반복<br>
+        토러스: 12 / 1종 / 균등 / 상하좌우 반복<br>
+        뫼비우스: <b>16</b> / <b>2종</b> / <b>불균등</b> / <b>거울상 반복</b>
+      </div>
+    </div>
+
+    <div class="activity">
+      <h3><span class="num">C-2</span> ★ 클라인 병 예측</h3>
+      <p class="desc">
+        지금까지 좌우만 이어붙였습니다. 만약 <b>좌우는 같은 방향, 상하는 반대 방향</b>으로 이어붙이면? 이것을 <b>클라인 병</b>이라고 합니다.
+      </p>
+      <div class="fact-box">
+        <pre style="font-family:Consolas,monospace; font-size:12px; line-height:1.4;">클라인 병:
+   ─────────
+b↑|         |↓b   ← 상하 반대!
+a→|  게임판  |→a   ← 좌우 같음
+b↑|         |↓b
+   ─────────</pre>
+      </div>
+      <div class="q-row">
+        나의 예측 — 경로 수: <input class="short-input" type="number" data-store="c2_p"> 개
+      </div>
+      <div class="q-row">
+        칸 가치 균등 여부:
+        <select data-store="c2_eq"><option value="">?</option><option>균등</option><option>불균등</option></select>
+      </div>
+      <div class="q-row">
+        <textarea class="area-input" data-store="c2_reason" placeholder="이유: …"></textarea>
+      </div>
+      <div class="answer-key">
+        <h4>📋 C-2 — 학생에게 정답을 공개하지 마세요 (4차시 도입에서 공개)</h4>
+        <div>실제 값: 경로 <b>22개</b>, <b>불균등</b>. 가치 패턴 <b>[8,6,8 / 8,6,8 / 8,6,8]</b>. 합 66.</div>
+        <div style="margin-top:6px;">뫼비우스에서는 좌우 wrap이 행을 뒤집어서 <b>2행</b>이 특별했다면(가치 4),
+        클라인 병은 상하 wrap도 추가되며 그 wrap이 열을 뒤집어서 <b>2열</b>이 특별합니다(가치 6).
+        즉 <b>1열·3열은 가치 8, 2열은 가치 6</b>인 패턴이 모든 행에서 반복.</div>
+        <div class="teacher-note" style="margin-top:6px;">
+          ⚠️ <b>4차시 도입에서 학생들과 공개</b>합니다. 학생들이 예측한 값과 비교하며 "공간을 어떻게 이어붙이느냐에 따라 어디가 특별한지가 달라진다"는 통찰을 끌어냅니다. 3차시 시점에서는 공개 금지!
+        </div>
+      </div>
+    </div>
+
+    <div class="complete-check">
+      <input type="checkbox" id="done-C" data-store="done_C">
+      <label for="done-C">C 섹션 완료 ✓</label>
+    </div>
+  </section>
+
+  <!-- ═══════════ R. 성찰 (7분) ═══════════ -->
+  <section class="section locked" id="sec-R" data-step="R" data-requires="C">
+    <div class="section-header">
+      <div class="step-tag R">R</div><h2>성찰</h2>
+      <span class="time">7분</span>
+    </div>
+
+    <div class="activity">
+      <h3><span class="num">R-1</span> 뒤집어 이어붙이면 ___________</h3>
+      <p class="desc">오늘의 핵심 발견을 한 문장으로:</p>
+      "뒤집어 이어붙이면
+      <textarea class="area-input" data-store="r1_summary" placeholder="…"></textarea>"
+      <div class="answer-key">
+        <h4>📋 R-1 모범답</h4>
+        "원기둥/토러스의 12개에서 <b>16개로 늘어나지만</b>, 칸의 가치가 다시 <b>불균등(6-4-6)</b>해진다 — 2행은 뒤집혀도 자기 자신이기 때문이다."
+      </div>
+    </div>
+
+    <div class="activity">
+      <h3><span class="num">R-2</span> 오늘 가장 놀라웠던 것</h3>
+      <textarea class="area-input" data-store="r2_surprise" placeholder="…"></textarea>
+    </div>
+
+    <!-- R-2.5 (신설): X 필승 — 1차시 큰 질문 회수 -->
+    <div class="activity">
+      <h3><span class="num">R-2.5</span> ⚡ 1차시 큰 질문 회수 — "정말 무승부?"</h3>
+      <p class="desc">
+        1차시 마지막에 우리는 <em>"틱택토는 정말 무승부 게임일까? 이기는 법은 없을까?"</em>라는 큰 질문을 던졌습니다.
+        평면에서는 무승부였지만, <b>원기둥·토러스·뫼비우스</b>에서는 어떨까요?
+      </p>
+      <div class="q-row">
+        <span class="q-label">여러분의 예측: 선공(X)이 이길 수 있는 공간은?</span>
+        <textarea class="area-input" data-store="r25_prediction" placeholder="예: 평면에선 무승부였으니 다른 공간에선 …"></textarea>
+      </div>
+      <div class="answer-key">
+        <h4>📋 R-2.5 정답 — 4차시 마무리에서 공식 공개</h4>
+        <div><b>원기둥·토러스·뫼비우스 모두 X 필승!</b></div>
+        <div style="margin-top:6px;">평면(경로 8)에서는 완벽 플레이 시 무승부였지만,
+        경로가 늘어난 변형 공간에서는 첫 수의 이점이 X 필승으로 이어집니다.
+        어느 칸에서 시작해도 세 공간 모두에서 X가 이깁니다 (미니맥스 전수 검증).</div>
+        <div class="teacher-note" style="margin-top:6px;">
+          ⚠️ 이 사실은 <b>4차시 마무리에서 학생들과 함께 공식 공개</b>합니다. 3차시에서는 학생이 예측만 적게 하고, 정답은 4차시까지 비공개.<br>
+          ⇒ <b>"우주의 모양은?"</b> — 4차시 예고: 이 수학이 진짜 우주의 모양과 어떻게 연결되는지 확인합니다.
+        </div>
+      </div>
+    </div>
+
+    <div class="activity">
+      <h3><span class="num">R-3</span> 🎮 웹앱 미션</h3>
+      <div class="mission-card" style="background:#F3E8FF; border-left:3px solid #9333EA; padding:10px 12px; border-radius:6px; margin:8px 0; display:flex; align-items:center; gap:10px;">
+        <input type="checkbox" id="r3_m1" data-store="r3_m1" style="width:20px; height:20px; cursor:pointer;">
+        <label for="r3_m1" style="cursor:pointer; font-size:14px; flex:1;"><b>미션 1</b> · 뫼비우스 모드에서 "타일링 뷰" 켜기 → 경계를 넘는 경로 3개가 직선으로 보이는지 확인</label>
+      </div>
+      <div class="mission-card" style="background:#F3E8FF; border-left:3px solid #9333EA; padding:10px 12px; border-radius:6px; margin:8px 0; display:flex; align-items:center; gap:10px;">
+        <input type="checkbox" id="r3_m2" data-store="r3_m2" style="width:20px; height:20px; cursor:pointer;">
+        <label for="r3_m2" style="cursor:pointer; font-size:14px; flex:1;"><b>미션 2</b> · "4종 비교" 모드 → 평면→원기둥→토러스→뫼비우스 경로 수 변화 추이 확인</label>
+      </div>
+      <div class="btn-row">
+        <a class="btn outline" href="tictactoe-analyzer.html?session=3" target="_blank" rel="noopener">🎮 분석기 열기</a>
+      </div>
+      <div class="q-row">
+        미션 결과:
+        <select data-store="r3_result"><option value="">선택</option><option>확인 완료</option><option>미확인</option></select>
+      </div>
+    </div>
+
+    <div class="activity">
+      <h3><span class="num">R-4</span> 다음 시간 예고</h3>
+      <div class="tip-box">
+        지금까지 2차원 세계를 탐험했습니다. 평면에서 시작해, 경계를 이어붙이는 방법에 따라 완전히 다른 세계가 만들어지는 것을 보았습니다.<br><br>
+        <strong>다음 시간 안내</strong>: 틱택토를 넘어 <b>당구, 오목, 미로, 색칠</b> — 4종의 새로운 게임에서 위상수학을 체험합니다!<br>
+        그리고 마지막에, 이 수학이 진짜 우주와 어떻게 연결되는지 확인합니다.<br><br>
+        <b>가져올 것</b>: C-2에서 적은 클라인 병 예측!
+      </div>
+    </div>
+
+    <div class="activity">
+      <h3><span class="num">R-5</span> 핵심 도구 체크리스트</h3>
+      <p class="desc">1~3차시에서 장착한 분석 도구를 점검합시다.</p>
+      <table class="tbl">
+        <thead><tr><th>도구</th><th>이해도</th><th>도입 차시</th></tr></thead>
+        <tbody>
+          <tr><td>승리 경로 열거</td>
+            <td><select data-store="r5_t1"><option>○</option><option>△</option><option>×</option></select></td>
+            <td>1차시</td></tr>
+          <tr><td>칸의 가치</td>
+            <td><select data-store="r5_t2"><option>○</option><option>△</option><option>×</option></select></td>
+            <td>1차시</td></tr>
+          <tr><td>검산 공식</td>
+            <td><select data-store="r5_t3"><option>○</option><option>△</option><option>×</option></select></td>
+            <td>1차시</td></tr>
+          <tr><td>붙이기 다이어그램</td>
+            <td><select data-store="r5_t4"><option>○</option><option>△</option><option>×</option></select></td>
+            <td>1차시</td></tr>
+          <tr><td>동등한 게임</td>
+            <td><select data-store="r5_t5"><option>○</option><option>△</option><option>×</option></select></td>
+            <td>2차시</td></tr>
+          <tr style="background:#F3E8FF;"><td><b>★ 타일링 뷰</b></td>
+            <td><select data-store="r5_t6"><option>○</option><option>△</option><option>×</option></select></td>
+            <td><b>3차시</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="complete-check">
+      <input type="checkbox" id="done-R" data-store="done_R">
+      <label for="done-R">R 섹션 완료 ✓</label>
+    </div>
+  </section>
+
+  <!-- 하단 도구바 -->
+  <div class="toolbar-bottom">
+    <div><span class="saved-state" id="saved-state">자동 저장: 대기 중</span></div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn outline" id="reset-btn" style="font-size:13px; padding:7px 14px;">전체 지우기</button>
+      <button class="btn good" id="print-btn" style="font-size:13px; padding:7px 14px;">🖨 인쇄</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+const params = new URLSearchParams(window.location.search);
+if (params.get('teacher') === '1') document.body.classList.add('teacher-mode');
+
+const STORAGE_PREFIX = 'topo_session3_';
+const savedEl = document.getElementById('saved-state');
+let saveTimer = null;
+
+function loadAll() {
+  document.querySelectorAll('[data-store]').forEach(el => {
+    const k = STORAGE_PREFIX + el.dataset.store;
+    const v = localStorage.getItem(k);
+    if (v === null) return;
+    if (el.type === 'checkbox') el.checked = (v === '1');
+    else el.value = v;
+  });
+}
+function saveOne(el) {
+  const k = STORAGE_PREFIX + el.dataset.store;
+  if (el.type === 'checkbox') localStorage.setItem(k, el.checked ? '1' : '0');
+  else localStorage.setItem(k, el.value);
+  flagSaved();
+  updateLocks();
+  updateProgress();
+}
+function flagSaved() {
+  savedEl.textContent = '✓ 저장됨';
+  savedEl.classList.add('on');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    savedEl.textContent = '자동 저장: 대기 중';
+    savedEl.classList.remove('on');
+  }, 2000);
+}
+document.querySelectorAll('[data-store]').forEach(el => {
+  const ev = (el.tagName === 'SELECT' || el.type === 'checkbox') ? 'change' : 'input';
+  el.addEventListener(ev, () => saveOne(el));
+});
+
+function isStepDone(step) {
+  const cb = document.getElementById('done-' + step);
+  return cb && cb.checked;
+}
+function updateLocks() {
+  document.querySelectorAll('.section[data-requires]').forEach(sec => {
+    const req = sec.dataset.requires;
+    if (isStepDone(req)) sec.classList.remove('locked');
+    else sec.classList.add('locked');
+  });
+}
+function updateProgress() {
+  ['W','E','D','C','R'].forEach(step => {
+    const el = document.querySelector(`.progress-bar .step[data-jump="${step}"]`);
+    if (!el) return;
+    el.classList.remove('active', 'done');
+    if (isStepDone(step)) el.classList.add('done');
+  });
+  const cur = ['W','E','D','C','R'].find(s => !isStepDone(s)) || 'R';
+  const curEl = document.querySelector(`.progress-bar .step[data-jump="${cur}"]`);
+  if (curEl) curEl.classList.add('active');
+}
+document.querySelectorAll('.progress-bar .step').forEach(el => {
+  el.addEventListener('click', () => {
+    const t = document.getElementById('sec-' + el.dataset.jump);
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  if (!confirm('이 학습지의 모든 답을 지울까요? 되돌릴 수 없습니다.')) return;
+  Object.keys(localStorage).filter(k => k.startsWith(STORAGE_PREFIX)).forEach(k => localStorage.removeItem(k));
+  location.reload();
+});
+document.getElementById('print-btn').addEventListener('click', () => window.print());
+
+/* ─── C-1: W-1 입력값 자동 회수 ─── */
+function populateC1FromW1() {
+  const spaces = ['plain', 'cylinder', 'torus'];
+  for (const sp of spaces) {
+    const count = localStorage.getItem(STORAGE_PREFIX + `w1_${sp}_count`);
+    const kinds = localStorage.getItem(STORAGE_PREFIX + `w1_${sp}_kinds`);
+    const uniform = localStorage.getItem(STORAGE_PREFIX + `w1_${sp}_uniform`);
+    const cEl = document.querySelector(`[data-c1-display="${sp}_count"]`);
+    const kEl = document.querySelector(`[data-c1-display="${sp}_kinds"]`);
+    const uEl = document.querySelector(`[data-c1-display="${sp}_uniform"]`);
+    if (cEl) cEl.textContent = count || '—';
+    if (kEl) kEl.textContent = kinds || '—';
+    if (uEl) uEl.textContent = uniform || '—';
+  }
+}
+// W-1 입력 변경 시 C-1 표시 동기화
+document.querySelectorAll('[data-store^="w1_"]').forEach(el => {
+  el.addEventListener('input', populateC1FromW1);
+  el.addEventListener('change', populateC1FromW1);
+});
+
+window.addEventListener('load', () => {
+  loadAll();
+  updateLocks();
+  updateProgress();
+  populateC1FromW1();
+});
+</script>
+</body>
+</html>

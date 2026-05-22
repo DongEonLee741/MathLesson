@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1차시 학습지 — 평면 틱택토의 숨은 수학</title>
+<style>
+:root {
+  --bg: #F8F9FA;
+  --panel: #FFFFFF;
+  --text: #1F2933;
+  --muted: #6B7280;
+  --border: #D1D5DB;
+  --accent: #2E86C1;
+  --accent-light: #EBF5FB;
+  --warm: #F59E0B;
+  --warm-light: #FEF3C7;
+  --good: #16A34A;
+  --good-light: #DCFCE7;
+  --danger: #DC2626;
+  --w: #6366F1;   /* 워밍업 — 보라 */
+  --e: #2E86C1;   /* 탐구 — 파랑 */
+  --d: #10B981;   /* 심화 — 초록 */
+  --c: #F59E0B;   /* 도전 — 주황 */
+  --r: #EC4899;   /* 성찰 — 분홍 */
+  --teacher: #7C3AED;
+  --shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: '맑은 고딕', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.container {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* ─── 헤더 ─── */
+.cover {
+  background: linear-gradient(135deg, #2E86C1 0%, #6366F1 100%);
+  color: white;
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.cover .session-tag {
+  display: inline-block;
+  background: rgba(255,255,255,0.22);
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.cover h1 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.cover .subtitle {
+  font-size: 15px;
+  opacity: 0.92;
+  margin-bottom: 14px;
+}
+.cover .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 14px;
+}
+.cover .meta-item {
+  background: rgba(255,255,255,0.18);
+  padding: 5px 12px;
+  border-radius: 8px;
+}
+.cover .meta-item input {
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px dashed rgba(255,255,255,0.6);
+  color: white;
+  font-family: inherit;
+  font-size: 14px;
+  width: 110px;
+  outline: none;
+}
+.cover .meta-item input::placeholder { color: rgba(255,255,255,0.65); }
+
+/* ─── 진행도 바 ─── */
+.progress-bar {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 50;
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.progress-bar .step {
+  flex: 1;
+  min-width: 80px;
+  text-align: center;
+  padding: 6px 4px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #F1F5F9;
+  color: var(--muted);
+  transition: all 0.2s ease;
+}
+.progress-bar .step.active { background: var(--accent); color: white; }
+.progress-bar .step.done { background: var(--good); color: white; }
+.progress-bar .step:hover { transform: translateY(-1px); }
+
+/* ─── 섹션 ─── */
+.section {
+  background: var(--panel);
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+  position: relative;
+  scroll-margin-top: 80px;
+}
+.section.locked {
+  opacity: 0.45;
+  pointer-events: none;
+  position: relative;
+}
+.section.locked::before {
+  content: "🔒 이전 섹션을 완료해 주세요";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(31, 41, 51, 0.92);
+  color: white;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+}
+.section-header .step-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: white;
+  font-weight: 800;
+  font-size: 16px;
+}
+.step-tag.W { background: var(--w); }
+.step-tag.E { background: var(--e); }
+.step-tag.D { background: var(--d); }
+.step-tag.C { background: var(--c); }
+.step-tag.R { background: var(--r); }
+
+.section-header h2 {
+  font-size: 19px;
+  font-weight: 700;
+  flex: 1;
+}
+.section-header .time {
+  font-size: 13px;
+  color: var(--muted);
+  background: #F3F4F6;
+  padding: 3px 10px;
+  border-radius: 8px;
+}
+
+.activity {
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed var(--border);
+}
+.activity:last-child { border-bottom: none; padding-bottom: 0; }
+
+.activity h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.activity h3 .num {
+  background: var(--accent-light);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.activity .desc {
+  margin-bottom: 10px;
+  color: var(--text);
+}
+
+/* ─── 인풋 ─── */
+.q-row {
+  margin: 10px 0;
+  padding: 10px 12px;
+  background: #F8FAFC;
+  border-radius: 8px;
+  border-left: 3px solid var(--accent);
+}
+.q-row .q-label {
+  font-weight: 600;
+  margin-right: 6px;
+}
+.q-row.optional { border-left-color: var(--warm); background: #FFFBEB; }
+.q-row .badge-req {
+  display: inline-block;
+  font-size: 11px;
+  background: var(--accent);
+  color: white;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-right: 6px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.q-row.optional .badge-req {
+  background: var(--warm);
+  color: white;
+}
+
+input.text-input,
+input.short-input,
+textarea.area-input {
+  font-family: inherit;
+  font-size: 15px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: white;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+input.text-input { width: 100%; max-width: 480px; }
+input.short-input { width: 60px; text-align: center; }
+input.med-input { width: 110px; }
+textarea.area-input {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+  line-height: 1.6;
+}
+input:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(46, 134, 193, 0.15);
+}
+
+select {
+  font-family: inherit;
+  font-size: 15px;
+  padding: 5px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ─── 격자 (예시·표) ─── */
+.demo-grid {
+  display: inline-grid;
+  border: 2px solid var(--text);
+  background: var(--text);
+  gap: 1px;
+  margin: 8px 0;
+}
+.demo-grid .cell {
+  background: white;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-size: 16px;
+  font-weight: 600;
+}
+.demo-grid .cell .lab {
+  position: absolute;
+  bottom: 2px;
+  left: 4px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.demo-grid .cell input {
+  width: 36px;
+  height: 28px;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ─── 표 ─── */
+table.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 14px;
+}
+table.tbl th, table.tbl td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: center;
+}
+table.tbl th {
+  background: #F3F4F6;
+  font-weight: 700;
+}
+table.tbl td input {
+  width: 100%;
+  border: none;
+  text-align: center;
+  font-family: inherit;
+  font-size: 14px;
+  background: transparent;
+  outline: none;
+}
+table.tbl td input:focus {
+  background: #FEFCE8;
+}
+
+/* ─── 버튼 ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s ease;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn.warm { background: var(--warm); }
+.btn.good { background: var(--good); }
+.btn.outline {
+  background: white;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+}
+.btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+/* ─── 다이어그램 ─── */
+.diagram-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+  justify-content: center;
+}
+.diagram {
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  background: #FAFAFA;
+  text-align: center;
+  min-width: 150px;
+}
+.diagram .name { font-weight: 700; margin-bottom: 4px; }
+.diagram .arrow-box {
+  font-family: 'Consolas', 'Courier New', monospace;
+  background: white;
+  border: 1.5px dashed var(--accent);
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  white-space: pre;
+  line-height: 1.4;
+  text-align: left;
+  color: var(--text);
+}
+.diagram .desc-sm { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+/* ─── 정답키 ─── */
+.answer-key {
+  display: none;
+  background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%);
+  border-left: 4px solid var(--teacher);
+  padding: 14px 16px;
+  margin-top: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.answer-key h4 {
+  color: var(--teacher);
+  font-weight: 700;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.answer-key code {
+  background: white;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+body.teacher-mode .answer-key { display: block; }
+
+.teacher-note {
+  display: none;
+  font-size: 13px;
+  background: #FFFBEB;
+  border-left: 3px solid var(--warm);
+  padding: 8px 12px;
+  margin: 8px 0;
+  border-radius: 6px;
+  color: #78350F;
+}
+body.teacher-mode .teacher-note { display: block; }
+
+/* ─── 자유 필기 (옵션) ─── */
+.notes-box {
+  background: #FFFBEB;
+  border: 1.5px dashed var(--warm);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+.notes-box h4 {
+  font-size: 13px;
+  color: #92400E;
+  margin-bottom: 6px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.color-btn {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--border);
+}
+.color-btn.active { transform: scale(1.15); border-color: var(--text); }
+canvas.notes-canvas {
+  width: 100%;
+  height: 180px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+/* ─── 완료 체크 ─── */
+.complete-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: var(--good-light);
+  border-radius: 8px;
+  border: 1.5px solid var(--good);
+}
+.complete-check input[type=checkbox] {
+  width: 22px; height: 22px;
+  cursor: pointer;
+}
+.complete-check label {
+  font-weight: 600;
+  color: #15803D;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* ─── 미션 카드 ─── */
+.mission-card {
+  background: #EFF6FF;
+  border-left: 3px solid var(--accent);
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mission-card input[type=checkbox] {
+  width: 20px; height: 20px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+.mission-card label {
+  cursor: pointer;
+  font-size: 14px;
+  flex: 1;
+}
+
+/* ─── 4가지 공간 다이어그램 ─── */
+.four-space-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+.four-space {
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  background: #FAFAFA;
+}
+.four-space .label {
+  font-weight: 700;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+.four-space .ascii {
+  font-family: 'Consolas', monospace;
+  font-size: 11px;
+  white-space: pre;
+  line-height: 1.3;
+  background: white;
+  padding: 6px 8px;
+  border-radius: 4px;
+  margin: 6px 0;
+}
+.four-space .note {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ─── 잠금 비활성 시각 ─── */
+.toolbar-bottom {
+  position: sticky;
+  bottom: 12px;
+  background: white;
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+  margin: 16px 0;
+  z-index: 40;
+}
+.toolbar-bottom .saved-state {
+  font-size: 13px;
+  color: var(--muted);
+}
+.toolbar-bottom .saved-state.on { color: var(--good); }
+
+/* ─── 헬프 강조 박스 ─── */
+.tip-box {
+  background: #ECFDF5;
+  border-left: 3px solid var(--good);
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin: 10px 0;
+  font-size: 14px;
+}
+.tip-box strong { color: #065F46; }
+
+.warning-box {
+  background: #FEF3C7;
+  border-left: 3px solid var(--warm);
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin: 10px 0;
+  font-size: 14px;
+  color: #78350F;
+}
+
+@media (max-width: 600px) {
+  .cover { padding: 16px; }
+  .cover h1 { font-size: 20px; }
+  .section { padding: 16px; }
+  .demo-grid .cell { width: 48px; height: 48px; font-size: 13px; }
+  .demo-grid .cell input { width: 30px; height: 24px; font-size: 12px; }
+  table.tbl { font-size: 12px; }
+  table.tbl th, table.tbl td { padding: 5px 4px; }
+}
+
+@media print {
+  body { background: white; }
+  .progress-bar, .toolbar-bottom { display: none; }
+  .section.locked { opacity: 1; pointer-events: auto; }
+  .section.locked::before { display: none; }
+  body.teacher-mode .answer-key { background: #F3E8FF; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- 표지 -->
+  <div class="cover">
+    <span class="session-tag">1차시 / 4차시</span>
+    <h1>평면 틱택토의 숨은 수학</h1>
+    <div class="subtitle">틱택토는 정말 무승부 게임일까? 이기는 법은 없을까?</div>
+    <div class="meta">
+      <span class="meta-item">수업일 <input type="date" data-store="meta_date"></span>
+      <span class="meta-item">이름 <input type="text" placeholder="홍길동" data-store="meta_name"></span>
+      <span class="meta-item">⏱ 45분</span>
+    </div>
+  </div>
+
+  <!-- 진행도 -->
+  <div class="progress-bar" role="navigation">
+    <div class="step active" data-jump="W">W 워밍업</div>
+    <div class="step" data-jump="E">E 탐구</div>
+    <div class="step" data-jump="C">C 도전</div>
+    <div class="step" data-jump="D">D 심화</div>
+    <div class="step" data-jump="R">R 성찰</div>
+  </div>
+
+  <!-- ═══════════ W. 워밍업 (5분) ═══════════ -->
+  <section class="section" id="sec-W" data-step="W">
+    <div class="section-header">
+      <div class="step-tag W">W</div>
+      <h2>워밍업</h2>
+      <span class="time">5분</span>
+    </div>
+
+    <!-- W-1 -->
+    <div class="activity">
+      <h3><span class="num">W-1</span> 틱택토 한 판!</h3>
+      <p class="desc">
+        태블릿에서 <b>틱택토 분석기</b> 앱을 열고, <b>대전 모드</b>에서 짝과 한 판 해 봅시다.
+      </p>
+      <div class="btn-row">
+        <a class="btn" href="tictactoe-analyzer.html?session=1&mode=game" target="_blank" rel="noopener">
+          🎮 틱택토 분석기 열기 (대전 모드)
+        </a>
+      </div>
+      <div class="warning-box">
+        💡 게임을 마친 후 자동으로 첫 수 위치가 기록됩니다. 시간이 허락하면 2~3판 더 해도 좋아요 — 데이터가 쌓일수록 W-2의 답이 명확해집니다.
+      </div>
+
+      <div class="q-row">
+        <span class="q-label">(1) 결과는?</span>
+        <select data-store="w1_result">
+          <option value="">선택</option>
+          <option value="승리">승리</option>
+          <option value="패배">패배</option>
+          <option value="무승부">무승부</option>
+        </select>
+      </div>
+      <div class="q-row">
+        <span class="q-label">(2) 첫 수를 어디에 두었나요?</span>
+        <input class="short-input" type="number" min="1" max="3" data-store="w1_first_r"> 행
+        <input class="short-input" type="number" min="1" max="3" data-store="w1_first_c"> 열
+      </div>
+
+      <div class="teacher-note">
+        ⚠️ <b>교사 노트</b>: 웹앱의 대전 모드를 사용합니다. 첫 수 위치가 자동 기록되며, 히트맵 토글로 학급 전체 데이터를 시각화할 수 있습니다. 웹앱 접속 불가 시에는 학생이 첫 수 위치를 직접 기억하게 합니다.
+      </div>
+    </div>
+
+    <!-- W-2 -->
+    <div class="activity">
+      <h3><span class="num">W-2</span> 직감 질문</h3>
+      <p class="desc">
+        틱택토에서 <b>첫 수를 어디에 두는 것</b>이 가장 유리할까요? 자신의 생각을 한 문장으로 적어 봅시다.
+      </p>
+      <div class="q-row">
+        <textarea class="area-input" placeholder="예) 중앙에 두는 것이 가장 유리할 것 같다. 왜냐하면 …" data-store="w2_intuition"></textarea>
+      </div>
+      <div class="answer-key">
+        <h4>📋 W-2 지도 참고</h4>
+        대부분의 학생이 "중앙" 또는 "꼭짓점"이라 답할 것. 정답은 E 섹션에서 수학적으로 확인. <b>이 단계에서 정답을 알려주지 마세요.</b>
+      </div>
+    </div>
+
+    <div class="complete-check">
+      <input type="checkbox" id="done-W" data-store="done_W">
+      <label for="done-W">W 섹션 완료 ✓</label>
+    </div>
+  </section>
+
+  <!-- ═══════════ E. 탐구 (18분) ═══════════ -->
+  <section class="section locked" id="sec-E" data-step="E" data-requires="W">
+    <div class="section-header">
+      <div class="step-tag E">E</div>
+      <h2>탐구</h2>
+      <span class="time">22~24분</span>
+    </div>
+
+    <!-- Q1 (신규) — 어떻게 이길까? -->
+    <div class="activity">
+      <h3><span class="num">Q1</span> 어떻게 하면 틱택토에서 이길 수 있을까?</h3>
+      <p class="desc">
+        익숙한 게임이지만 막상 <em>"꼭 이기려면"</em> 어떻게 해야 할지 떠올려 봅시다.
+        그리고 한 가지 더 — 틱택토에서 <b>선공이 유리할까요, 후공이 유리할까요?</b><br>
+        짝과 짧게 의견을 나누고, 자신의 생각을 적어 보세요.
+      </p>
+      <div class="q-row">
+        <span class="q-label">(1) 어떻게 하면 이길까?</span>
+        <textarea class="area-input" data-store="q1_how_to_win" placeholder="자유롭게 적어 보세요"></textarea>
+      </div>
+      <div class="q-row">
+        <span class="q-label">(2) 선공이 유리한가, 후공이 유리한가, 차이가 없는가? 그 이유는?</span>
+        <textarea class="area-input" data-store="q1_first_advantage" placeholder="자신의 생각과 이유를 적어 보세요"></textarea>
+      </div>
+      <div class="answer-key">
+        <h4>📋 Q1 교사 안내</h4>
+        <div>학생이 <b>"잘하면 무승부"</b>에 도달하면 성공.
+        <em>"선공이 약간 유리한 것 같다"</em>나 <em>"비슷하다"</em>도 가능한 답.</div>
+        <div style="margin-top:6px;">⚠️ <b>정답을 미리 알려주지 마세요.</b>
+        직감을 모은 후 <em>"우리 예상이 진짜 맞는지 확인해 봅시다"</em>로 Q2 연결.</div>
+        <div style="margin-top:6px;color:#92400E;">
+        💡 이 활동은 1차시뿐 아니라 2~3차시에서 반복 등장하는 <b>"직감 → 검증 → 결론"</b> 패턴의 첫 등장이다.
+        단축하지 말고 충분한 시간을 주어 학생이 자기 의견을 형성하도록 한다.</div>
+      </div>
+    </div>
+
+    <!-- Q1 → Q2 다리 -->
+    <div class="tip-box" style="margin:16px 0;">
+      🔗 만약 <em>"잘하면 무승부"</em>인 게임이라면, 그 <em>"잘하기"</em>의 첫걸음은 어디에 두는 것일까요?
+    </div>
+
+    <!-- Q2 (신규) — 어떤 칸이 유리할까? -->
+    <div class="activity">
+      <h3><span class="num">Q2</span> 이기기 위해서는 어떤 칸에 두는 것이 유리할까?</h3>
+      <p class="desc">
+        빈 격자판을 떠올려 보고, <b>첫 수를 둔다면 어디에 두고 싶은지</b> 짝과 토론해 보세요.
+        그리고 <em>"왜 그 칸이 유리하다고 생각하는지"</em> 이유도 함께 적어 보세요.
+      </p>
+
+      <div style="background:#EFF6FF; border-left:3px solid var(--accent); padding:8px 12px; margin:10px 0; font-size:14px; border-radius:4px;">
+        📐 칸의 위치를 말할 때는 <b>몇 행 몇 열</b>로 말해 봅시다. 예: 가운데 칸 = <b>2행 2열</b>
+      </div>
+
+      <!-- 클릭형 3×3 빈 격자 (한 칸만 선택) -->
+      <div style="text-align:center; margin:12px 0;">
+        <div class="demo-grid" id="q2-grid" style="grid-template-columns:repeat(3, 60px); display:inline-grid; gap:4px;">
+          <!-- 9개 셀, 자바스크립트로 생성 -->
+        </div>
+        <div style="font-size:13px; color:var(--muted); margin-top:6px;">
+          ↑ 첫 수를 두고 싶은 칸을 클릭하세요 (한 칸만 선택됨)
+        </div>
+        <div style="font-size:13px; color:var(--accent); margin-top:4px;">
+          선택: <span id="q2-selected" style="font-weight:700;">미선택</span>
+        </div>
+      </div>
+
+      <div class="q-row">
+        <span class="q-label">왜 그 칸이 유리하다고 생각하나요?</span>
+        <textarea class="area-input" data-store="q2_reason" placeholder="자유롭게 적어 보세요"></textarea>
+      </div>
+
+      <div class="answer-key">
+        <h4>📋 Q2 교사 안내</h4>
+        <div>학생이 <em>"일렬을 만들 가능성이 많아서"</em>,
+        <em>"가로·세로·대각선 모두 만들 수 있어서"</em> 같은 답에 도달하면 성공.</div>
+        <div style="margin-top:6px;">
+        이때 교사가 정리하며 <b>새 용어를 도입</b>:<br>
+        <em>"3개가 나란히 놓일 수 있는 줄을 우리는 「승리 경로」라고 부릅시다.
+        그러면 여러분이 말한 그 칸은 「승리 경로가 많이 지나가는 칸」이군요."</em></div>
+        <div style="margin-top:6px;">→ Q3로의 다리:
+        <em>"그렇다면 어떤 칸이 가장 많은 경로를 가지고 있는지, 직접 세어 봅시다."</em></div>
+      </div>
+    </div>
+
+    <!-- Q3 = 기존 E-1 + E-2 -->
+    <div class="activity">
+      <h3><span class="num">Q3</span> 우리 예상이 맞을까? — 직접 세어 확인하기</h3>
+      <p class="desc">
+        앞에서 우리가 예상한 <em>"승리 경로가 많이 지나가는 칸"</em>이 진짜로 그런지 확인해 봅시다.
+        먼저 <b>3×3 평면 틱택토에 승리 경로가 모두 몇 개 있는지</b> 찾아냅시다.
+      </p>
+    </div>
+
+    <!-- Q3-1 (기존 E-1) -->
+    <div class="activity">
+      <h3><span class="num">Q3-1</span> "승리 경로"란 무엇인가?</h3>
+      <div class="tip-box">
+        📐 <strong>좌표 약속</strong>: Q2에서 「행·열」로 불렀던 것을 앞으로는 <b>(행, 열)</b> 형식으로 적겠습니다. 예: 2행 2열 → <b>(2,2)</b><br>
+        예: <code>(2, 3)</code> = 2행 3열 = 위에서 둘째 가로줄, 왼쪽에서 셋째 칸
+      </div>
+      <p class="desc">
+        틱택토에서 이기려면 <b>같은 표시 3개가 한 줄에 나란히</b> 있어야 합니다. 이렇게 3개가 나란히 놓일 수 있는 줄을 <b>"승리 경로"</b>라고 부릅니다.
+      </p>
+      <p class="desc">
+        예: 1행의 세 칸 (1,1)-(1,2)-(1,3)은 하나의 승리 경로입니다.<br>
+        <b>3×3 평면 틱택토에서 승리 경로는 총 몇 개일까요?</b> 모든 경로를 빠짐없이 찾아 표에 기록하세요.
+      </p>
+
+      <table class="tbl" id="e1-table">
+        <thead>
+          <tr><th>번호</th><th>종류</th><th colspan="3">경로 (시작칸 → 끝칸)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>①</td><td>가로</td><td colspan="3">(1,1)-(1,2)-(1,3) <span style="color:#9CA3AF;font-size:12px;">(예시)</span></td></tr>
+          <tr><td>②</td><td>가로</td>
+            <td><input data-store="e1_2_a" placeholder="(?,?)"></td>
+            <td><input data-store="e1_2_b" placeholder="(?,?)"></td>
+            <td><input data-store="e1_2_c" placeholder="(?,?)"></td>
+          </tr>
+          <tr><td>③</td><td>가로</td>
+            <td><input data-store="e1_3_a" placeholder="(?,?)"></td>
+            <td><input data-store="e1_3_b" placeholder="(?,?)"></td>
+            <td><input data-store="e1_3_c" placeholder="(?,?)"></td>
+          </tr>
+          <tr><td>④</td><td>세로</td>
+            <td><input data-store="e1_4_a" placeholder="(?,?)"></td>
+            <td><input data-store="e1_4_b" placeholder="(?,?)"></td>
+            <td><input data-store="e1_4_c" placeholder="(?,?)"></td>
+          </tr>
+          <tr><td>⑤</td><td>세로</td>
+            <td><input data-store="e1_5_a" placeholder="(?,?)"></td>
+            <td><input data-store="e1_5_b" placeholder="(?,?)"></td>
+            <td><input data-store="e1_5_c" placeholder="(?,?)"></td>
+          </tr>
+          <tr><td>⑥</td><td>세로</td>
+            <td><input data-store="e1_6_a" placeholder="(?,?)"></td>
+            <td><input data-store="e1_6_b" placeholder="(?,?)"></td>
+            <td><input data-store="e1_6_c" placeholder="(?,?)"></td>
+          </tr>
+          <tr><td>⑦</td><td>대각선</td>
+            <td><input data-store="e1_7_a" placeholder="(?,?)"></td>
+            <td><input data-store="e1_7_b" placeholder="(?,?)"></td>
+            <td><input data-store="e1_7_c" placeholder="(?,?)"></td>
+          </tr>
+          <tr><td>⑧</td><td>대각선</td>
+            <td><input data-store="e1_8_a" placeholder="(?,?)"></td>
+            <td><input data-store="e1_8_b" placeholder="(?,?)"></td>
+            <td><input data-store="e1_8_c" placeholder="(?,?)"></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="q-row">
+        <span class="q-label">→ 총</span>
+        <input class="short-input" type="number" min="0" max="20" data-store="e1_total">
+        <span class="q-label">개의 승리 경로</span>
+      </div>
+      <div class="answer-key">
+        <h4>📋 E-1 정답</h4>
+        <div>가로 3개, 세로 3개, 대각선 2개 → 총 <b>8개</b></div>
+        <div style="margin-top:6px;">② (2,1)-(2,2)-(2,3) &nbsp; ③ (3,1)-(3,2)-(3,3) &nbsp; ④ (1,1)-(2,1)-(3,1) &nbsp; ⑤ (1,2)-(2,2)-(3,2) &nbsp; ⑥ (1,3)-(2,3)-(3,3) &nbsp; ⑦ (1,1)-(2,2)-(3,3) &nbsp; ⑧ (1,3)-(2,2)-(3,1)</div>
+        <div style="margin-top:6px;color:#92400E;">⚠️ 흔한 실수: 학생들이 대각선을 1개만 세는 경우가 있음. "↘ 방향과 ↗ 방향 모두 있죠?"</div>
+      </div>
+    </div>
+
+    <!-- Q3-2 (기존 E-2) -->
+    <div class="activity">
+      <h3><span class="num">Q3-2</span> 칸의 "가치" 측정하기</h3>
+      <p class="desc">
+        앞서 찾은 8개 경로를 바탕으로, 각 칸이 <b>몇 개의 승리 경로에 포함</b>되는지 세어 격자에 기록하세요.
+      </p>
+
+      <div style="text-align:center; margin:12px 0;">
+        <div class="demo-grid" style="grid-template-columns:repeat(3, 60px);">
+          <div class="cell"><input type="number" min="0" max="9" data-store="e2_1_1"><span class="lab">1,1</span></div>
+          <div class="cell"><input type="number" min="0" max="9" data-store="e2_1_2"><span class="lab">1,2</span></div>
+          <div class="cell"><input type="number" min="0" max="9" data-store="e2_1_3"><span class="lab">1,3</span></div>
+          <div class="cell"><input type="number" min="0" max="9" data-store="e2_2_1"><span class="lab">2,1</span></div>
+          <div class="cell"><input type="number" min="0" max="9" data-store="e2_2_2"><span class="lab">2,2</span></div>
+          <div class="cell"><input type="number" min="0" max="9" data-store="e2_2_3"><span class="lab">2,3</span></div>
+          <div class="cell"><input type="number" min="0" max="9" data-store="e2_3_1"><span class="lab">3,1</span></div>
+          <div class="cell"><input type="number" min="0" max="9" data-store="e2_3_2"><span class="lab">3,2</span></div>
+          <div class="cell"><input type="number" min="0" max="9" data-store="e2_3_3"><span class="lab">3,3</span></div>
+        </div>
+      </div>
+
+      <div class="warning-box">
+        💡 어렵다면 웹앱의 "🔢 칸의 가치 보기" 토글을 켜서 비교해 보세요.
+      </div>
+
+      <div class="answer-key">
+        <h4>📋 E-2 정답</h4>
+        <pre style="font-family:Consolas,monospace;background:white;padding:8px;border-radius:6px;">      1열   2열   3열
+1행    3     2     3
+2행    2     4     2
+3행    3     2     3</pre>
+        중앙(2,2)의 가치 = 가로1 + 세로1 + 대각선2 = <b>4</b>
+      </div>
+    </div>
+
+    <!-- Q4 (기존 E-3 재정렬) — 결론: 가치 = 합리적 선택 -->
+    <div class="activity">
+      <h3><span class="num">Q4</span> 결론 — 가치 = 합리적 선택 <span style="font-size:13px; color:var(--muted); font-weight:400;">(필수 4)</span></h3>
+      <p class="desc">
+        Q3-2에서 구한 칸의 가치를 다시 봅시다.
+      </p>
+
+      <div class="q-row">
+        <span class="badge-req">필수</span>
+        <span class="q-label">(1) 가장 높은 칸의 가치는 얼마이고, 어디에 있나요?</span>
+        <div style="margin-top:6px;">
+          → 가치 <input class="short-input" type="number" data-store="e3_1_v">,
+          위치: <input class="short-input" type="number" min="1" max="3" data-store="e3_1_r"> 행
+          <input class="short-input" type="number" min="1" max="3" data-store="e3_1_c"> 열
+        </div>
+      </div>
+      <div class="q-row">
+        <span class="badge-req">필수</span>
+        <span class="q-label">(2) 가장 낮은 칸의 가치는 얼마이고, 어디에 있나요?</span>
+        <div style="margin-top:6px;">
+          → 가치 <input class="short-input" type="number" data-store="e3_2_v">,
+          위치 예시: <input class="text-input" placeholder="예: 1행 2열" data-store="e3_2_pos" style="max-width:240px;">
+        </div>
+      </div>
+      <div class="q-row">
+        <span class="badge-req">필수</span>
+        <span class="q-label">(3) 9칸의 가치가 모두 같은가요, 다른가요?</span>
+        <div style="margin-top:6px;">
+          →
+          <select data-store="e3_3_eq">
+            <option value="">선택</option>
+            <option value="모두 같다">모두 같다</option>
+            <option value="다르다">다르다</option>
+          </select>,
+          <input class="short-input" type="number" min="1" max="9" data-store="e3_3_kinds"> 종류
+        </div>
+      </div>
+      <div class="q-row">
+        <span class="badge-req">필수</span>
+        <span class="q-label">(4) 왜 중앙 칸이 가장 유리한지, 자신의 말로 설명해 보세요.</span>
+        <div style="margin-top:6px;">
+          <textarea class="area-input" data-store="e3_4_reason" placeholder="중앙은 가로·세로·대각선 모두 …"></textarea>
+        </div>
+      </div>
+
+      <div class="answer-key">
+        <h4>📋 Q4 정답</h4>
+        <div>(1) 가치 <b>4</b>, 위치 <b>2행 2열</b> (중앙)</div>
+        <div>(2) 가치 <b>2</b>, 위치 (1,2), (2,1), (2,3), (3,2) 중 아무 칸 (변의 중앙 4곳)</div>
+        <div>(3) <b>다르다</b>, <b>3</b>종류 (2, 3, 4)</div>
+        <div>(4) 모범답: "중앙은 가로·세로·대각선 모두 지나가서 포함되는 경로가 가장 많다."</div>
+        <div class="teacher-note" style="margin-top:8px;">
+          ⚠️ <b>시간 관리</b>: (1)~(3)이 핵심. 5분 내 완료, (4)는 결론 정리에 필요. 검산 공식은 2차시 W-1에서 다시 등장하므로 1차시에선 부담을 줄였다.
+        </div>
+      </div>
+
+      <!-- 결론 강조 박스 -->
+      <div class="finding-box" style="border:2px solid var(--accent); background:rgba(46,134,193,0.12); padding:14px; border-radius:8px; margin-top:14px;">
+        💡 <b>오늘의 발견</b>: 9칸의 가치가 모두 같지 않다 — 이것을 <b>「불균등」</b>이라고 합니다. 불균등하기 때문에 <b>유리한 칸을 고르는 합리적 선택</b>이 가능합니다.<br>
+        <span style="font-size:13px; color:var(--muted);">
+        그렇다면 둘 다 합리적으로만 두면 어떻게 될까? — <b>바로 다음에서 확인합니다</b>.
+        </span>
+      </div>
+    </div>
+
+    <div class="complete-check">
+      <input type="checkbox" id="done-E" data-store="done_E">
+      <label for="done-E">E 섹션 완료 ✓</label>
+    </div>
+  </section>
+
+  <!-- ═══════════ C. 도전 (5분) ═══════════ -->
+  <section class="section locked" id="sec-C" data-step="C" data-requires="E">
+    <div class="section-header">
+      <div class="step-tag C">C</div>
+      <h2>도전</h2>
+      <span class="time">5분</span>
+    </div>
+
+    <div class="activity">
+      <h3><span class="num">C-1</span> 둘 다 합리적으로만 둔다면, 어떤 게임이 펼쳐질까?</h3>
+      <p class="desc">
+        E에서 우리는 알아냈습니다 — <b>가장 가치가 높은 칸이 첫 수에서 합리적 선택</b>이라고.
+        그렇다면 <b>두 사람 모두 매 수마다 가장 가치가 높은 칸만 선택</b>한다면 어떤 게임이 될까요?
+        짝과 함께 실제로 진행해 보세요.
+      </p>
+
+      <!-- 인터랙티브 격자판 -->
+      <div id="c-rational-grid-container" style="text-align:center; margin:14px 0;">
+        <div class="demo-grid" id="c-rational-grid" style="grid-template-columns:repeat(3, 70px); display:inline-grid; gap:4px;">
+          <!-- 9개 셀, JS로 생성 -->
+        </div>
+        <div style="margin-top:10px;">
+          <span id="c-turn-display" style="font-weight:700; color:var(--accent);">X 차례</span>
+          <span id="c-result" style="margin-left:10px; font-weight:700;"></span>
+        </div>
+        <div class="btn-row" style="justify-content:center; margin-top:8px;">
+          <button class="btn outline" id="c-reset" type="button">↺ 다시 시작</button>
+          <button class="btn outline" id="c-undo" type="button">↶ 한 수 무르기</button>
+        </div>
+      </div>
+
+      <div class="q-row">
+        <span class="q-label">진행하면서 무엇을 발견했나요? 어떤 순간에 <em>"어?"</em> 싶었나요?</span>
+        <textarea class="area-input" data-store="c1_discovery"
+                  placeholder="예: 어느 순간 가치 높은 칸을 두면 …"></textarea>
+      </div>
+
+      <div class="answer-key">
+        <h4>📋 C-1 교사 안내 (의도된 함정)</h4>
+        <div><b>학생이 발견해야 할 것</b>: 가치만 따라가다 보면
+        어느 시점에 <b>"막아야 하는 상황"</b>이 옵니다(상대가 두 칸 연속으로 두면,
+        가치가 낮은 칸이라도 막아야 함). 이때 학생이 <em>"가치만 보면 안 되는구나"</em>를 발견하도록 의도된 충돌.</div>
+        <div style="margin-top:6px;"><b>회수 질문 (수업 마무리에 교사가 던질 것)</b>:<br>
+        <em>"그렇다면 차시 시작에 우리가 던졌던 질문 — 「틱택토는 정말 무승부일까? 이기는 법은?」 —
+        에 대한 답은? → 둘 다 합리적이면 무승부. 이기는 길은 상대가 비합리적일 때만 열린다."</em></div>
+        <div style="margin-top:6px;color:#92400E;">
+        ⚠️ <b>가치 동률 처리</b>: 첫 수 후엔 가치 동률 칸이 여러 개일 수 있음.
+        이때 학생이 어느 칸을 골라도 OK. 도구는 추천만 시각화하고 강제하지 않음.</div>
+      </div>
+    </div>
+
+    <div class="complete-check">
+      <input type="checkbox" id="done-C" data-store="done_C">
+      <label for="done-C">C 섹션 완료 ✓</label>
+    </div>
+  </section>
+
+  <!-- ═══════════ D. 심화 (10분) ═══════════ -->
+  <section class="section locked" id="sec-D" data-step="D" data-requires="C">
+    <div class="section-header">
+      <div class="step-tag D">D</div>
+      <h2>심화</h2>
+      <span class="time">10분</span>
+    </div>
+
+    <!-- D-1 -->
+    <div class="activity">
+      <h3><span class="num">D-1</span> 게임판의 끝, 그 너머</h3>
+      <p class="desc">
+        지금까지 우리는 게임판의 <b>경계에서 줄이 끊긴다</b>고 생각했습니다.
+        하지만 만약 게임판의 <b>왼쪽 끝과 오른쪽 끝이 이어진다면</b> 어떨까요?
+      </p>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin:12px 0;">
+        <div style="border:2px solid var(--border); border-radius:8px; padding:12px; background:#FAFAFA;">
+          <div style="font-weight:700; margin-bottom:6px;">[평면] — 경계에서 줄 끊김</div>
+          <pre style="font-family:Consolas,monospace; font-size:12px; line-height:1.4;">     1열  2열  3열
+1행 [ ○ ] [    ] [    ]    ← 끝!
+2행 [    ] [ ○ ] [    ]
+3행 [    ] [    ] [ ○ ]</pre>
+          <div style="font-size:13px; color:var(--muted); margin-top:6px;">대각선 (1,1)-(2,2)-(3,3) ✓</div>
+        </div>
+        <div style="border:2px solid var(--border); border-radius:8px; padding:12px; background:#EFF6FF;">
+          <div style="font-weight:700; margin-bottom:6px;">[이어진 게임판] — 좌우가 이어짐</div>
+          <pre style="font-family:Consolas,monospace; font-size:12px; line-height:1.4;">     1열  2열  3열   ←──┐
+1행 [    ] [    ] [ ○ ] ──→ 1열로!
+2행 [    ] [ ○ ] [    ]
+3행 [ ○ ] [    ] [    ]</pre>
+          <div style="font-size:13px; color:var(--muted); margin-top:6px;">(1,3)에서 더 가면 <b>(2,1)</b>로 이어짐?</div>
+        </div>
+      </div>
+
+      <div class="q-row">
+        <span class="q-label">좌우가 이어진 게임판에서, 평면에 없던 <b>새로운 승리 경로</b>가 생길 수 있을까요?</span>
+        <div style="margin-top:6px;">
+          →
+          <select data-store="d1_yn">
+            <option value="">선택</option>
+            <option value="예">예</option>
+            <option value="아니오">아니오</option>
+          </select>
+          <textarea class="area-input" data-store="d1_reason" placeholder="이유: …"></textarea>
+        </div>
+      </div>
+
+      <div class="answer-key">
+        <h4>📋 D-1 정답</h4>
+        <b>예</b>, 새로운 승리 경로가 생긴다. (예: (1,3)에서 오른쪽으로 나가서 (2,1)로 연결되는 새 대각선 (1,3)-(2,1)-(3,2) 같은 경로)<br>
+        구체적인 모든 경로를 이 시점에서 찾을 필요는 없습니다. "새 경로가 생길 수 있다"는 직관만 확인하면 됩니다 — 2차시에서 체계적으로 찾습니다.
+      </div>
+    </div>
+
+    <!-- D-2 -->
+    <div class="activity">
+      <h3><span class="num">D-2</span> 붙이기 다이어그램 배우기</h3>
+      <p class="desc">
+        수학자들은 게임판의 연결 방식을 <b>화살표 기호</b>로 표현합니다. 이것을 <b>붙이기 다이어그램(gluing diagram)</b>이라고 합니다.
+      </p>
+      <p class="desc">
+        <b>규칙</b>: 같은 기호(a, b 등)가 적힌 변끼리 붙입니다. 화살표 방향이 <b>같으면</b> 그대로, <b>반대면</b> 뒤집어 붙입니다.
+      </p>
+
+      <div class="diagram-row">
+        <div class="diagram">
+          <div class="name">원기둥</div>
+          <div class="arrow-box">  ─────────
+ |         |
+a→|  게임판  |→a
+ |         |
+  ─────────</div>
+          <div class="desc-sm">좌우를 <b>같은 방향</b>으로 붙이기 → 종이를 말면 원기둥</div>
+        </div>
+        <div class="diagram">
+          <div class="name">뫼비우스 띠</div>
+          <div class="arrow-box">  ─────────
+ |         |
+a→|  게임판  |←a
+ |         |
+  ─────────</div>
+          <div class="desc-sm">좌우를 <b>반대 방향</b>으로 붙이기 → 한 번 비틀어 붙이면 뫼비우스 띠</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D-3 폐기 (R-4로 흡수됨). 4공간 붙이기 다이어그램은 D-2에서 안내. -->
+
+    <div class="complete-check">
+      <input type="checkbox" id="done-D" data-step-check data-store="done_D">
+      <label for="done-D">D 섹션 완료 ✓</label>
+    </div>
+  </section>
+
+  <!-- ═══════════ R. 성찰 (7분) ═══════════ -->
+  <section class="section locked" id="sec-R" data-step="R" data-requires="D">
+    <div class="section-header">
+      <div class="step-tag R">R</div>
+      <h2>성찰</h2>
+      <span class="time">7분</span>
+    </div>
+
+    <div class="activity">
+      <h3><span class="num">R-1</span> 오늘의 정리</h3>
+
+      <div class="q-row">
+        <span class="q-label">(a) 차시 시작 질문에 답하기:
+        <em>"틱택토는 정말 무승부 게임일까? 이기는 법은 없을까?"</em></span>
+        <textarea class="area-input" data-store="r1_answer_to_opening"
+                  placeholder="오늘 배운 내용을 바탕으로 답해 보세요"></textarea>
+      </div>
+
+      <div class="q-row">
+        <span class="q-label">(b) 오늘 가장 인상적이었던 발견을 한 문장으로:</span>
+        <textarea class="area-input" data-store="r1_most_striking"
+                  placeholder="가장 기억에 남는 발견을 적어 보세요"></textarea>
+      </div>
+
+      <div class="answer-key">
+        <h4>📋 R-1 모범답</h4>
+        <div><b>(a)</b> 모범답:
+        <em>"둘 다 합리적으로(가치 높은 칸을 우선해) 두면 무승부에 도달한다.
+        이기는 길은 상대가 비합리적일 때만 열린다."</em></div>
+        <div style="margin-top:6px;"><b>(b)</b> 학생 자유 답.
+        예: <em>"중앙이 가치 4로 가장 높다"</em>, <em>"가치만 따라가다 막기 충돌이 생기는 게 재밌었다"</em> 등.</div>
+      </div>
+    </div>
+
+    <div class="activity">
+      <h3><span class="num">R-2</span> 핵심 도구 체크리스트</h3>
+      <p class="desc">오늘 장착한 분석 도구를 점검하세요. 다음 시간에도 계속 사용합니다!</p>
+      <table class="tbl">
+        <thead>
+          <tr><th>도구</th><th>이해도</th><th>핵심 내용</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>승리 경로 열거</td>
+            <td><select data-store="r2_t1"><option>○</option><option>△</option><option>×</option></select></td>
+            <td>3×3 평면에서 <input class="short-input" type="number" data-store="r2_t1_v"> 개</td>
+          </tr>
+          <tr>
+            <td>칸의 가치</td>
+            <td><select data-store="r2_t2"><option>○</option><option>△</option><option>×</option></select></td>
+            <td>중앙 <input class="short-input" type="number" data-store="r2_t2_c">,
+                꼭짓점 <input class="short-input" type="number" data-store="r2_t2_v">,
+                변 중앙 <input class="short-input" type="number" data-store="r2_t2_e"></td>
+          </tr>
+          <tr>
+            <td>칸의 가치 분석</td>
+            <td><select data-store="r2_t4"><option>○</option><option>△</option><option>×</option></select></td>
+            <td>가치가 다르면 <input class="med-input" data-store="r2_t4_v" placeholder="?"></td>
+          </tr>
+          <tr>
+            <td>붙이기 다이어그램</td>
+            <td><select data-store="r2_t5"><option>○</option><option>△</option><option>×</option></select></td>
+            <td>같은 방향 = <input class="med-input" data-store="r2_t5_a" placeholder="?">,
+                반대 방향 = <input class="med-input" data-store="r2_t5_b" placeholder="?"></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="answer-key">
+        <h4>📋 R-2 정답</h4>
+        승리 경로: <b>8개</b> &middot; 중앙 <b>4</b>, 꼭짓점 <b>3</b>, 변 중앙 <b>2</b><br>
+        가치가 다르면 <b>불균등</b><br>
+        같은 방향 = <b>원기둥</b>, 반대 방향 = <b>뫼비우스 띠</b>
+      </div>
+    </div>
+
+    <div class="activity">
+      <h3><span class="num">R-3</span> 🎮 웹앱 미션</h3>
+      <p class="desc">태블릿에서 "틱택토 분석기" 웹앱을 열고, 다음 미션을 수행하세요.</p>
+      <div class="btn-row">
+        <a class="btn outline" href="tictactoe-analyzer.html?session=1&mode=analysis" target="_blank" rel="noopener">
+          🎮 분석 모드 열기
+        </a>
+      </div>
+      <div class="mission-card">
+        <input type="checkbox" id="r3_m1" data-store="r3_m1">
+        <label for="r3_m1"><b>미션 1</b> · 평면 모드에서 승리 경로 8개가 올바르게 표시되는지 확인</label>
+      </div>
+      <div class="mission-card">
+        <input type="checkbox" id="r3_m2" data-store="r3_m2">
+        <label for="r3_m2"><b>미션 2</b> · 아무 칸을 클릭하면 그 칸이 포함된 승리 경로가 하이라이트되는지 확인</label>
+      </div>
+      <div class="mission-card">
+        <input type="checkbox" id="r3_m3" data-store="r3_m3">
+        <label for="r3_m3"><b>미션 3</b> · "🔢 칸의 가치 보기" 버튼을 눌러 내가 구한 표와 일치하는지 확인</label>
+      </div>
+      <div class="q-row">
+        <span class="q-label">미션 결과:</span>
+        <select data-store="r3_result">
+          <option value="">선택</option>
+          <option value="모두 일치">모두 일치</option>
+          <option value="불일치 항목 있음">불일치 항목 있음</option>
+        </select>
+        <input class="text-input" placeholder="불일치 항목이 있다면 적어주세요" data-store="r3_mismatch" style="margin-top:6px;">
+      </div>
+    </div>
+
+    <div class="activity">
+      <h3><span class="num">R-4</span> 다음 시간 예고 — 네 가지 공간의 경로 수 예측</h3>
+      <p class="desc">
+        다음 시간에는 평면을 넘어 <b>원기둥, 토러스, 뫼비우스의 띠</b>로 들어갑니다.
+        같은 3×3 격자라도 공간이 바뀌면 승리 경로 수가 어떻게 변할지,
+        방금 적은 D-1·D-2 다이어그램과 여러분의 직감으로 먼저 예측해 보세요.
+      </p>
+
+      <table class="tbl">
+        <thead>
+          <tr><th>공간</th><th>경로 수 예측</th><th>이유</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>평면 (확인됨)</td>
+            <td><b>8</b></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>원기둥</td>
+            <td><input class="short-input" type="number" min="0" max="40" data-store="d3_cylinder_count"></td>
+            <td><input class="text-input" data-store="d3_cylinder_reason" placeholder="왜 그렇게 예측했나요?"></td>
+          </tr>
+          <tr>
+            <td>토러스</td>
+            <td><input class="short-input" type="number" min="0" max="40" data-store="d3_torus_count"></td>
+            <td><input class="text-input" data-store="d3_torus_reason" placeholder="왜?"></td>
+          </tr>
+          <tr>
+            <td>뫼비우스의 띠</td>
+            <td><input class="short-input" type="number" min="0" max="40" data-store="d3_mobius_count"></td>
+            <td><input class="text-input" data-store="d3_mobius_reason" placeholder="왜?"></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>다음 시간에는 태블릿을 들고 새로운 세계로 들어갑니다.</strong><br>
+        원기둥과 토러스 공간에서 직접 틱택토를 하고, 경계를 이으면 세상이 어떻게 달라지는지 <b>몸으로</b> 체험합니다.<br><br>
+        <b>가져올 것</b>: 방금 적은 예측! 여러분의 직감이 맞았는지 확인합시다.
+      </div>
+
+      <div class="answer-key">
+        <h4>📋 R-4 참고 (학생에게는 알려주지 마세요)</h4>
+        <div>참고값: 원기둥 <b>12</b>, 토러스 <b>12</b>, 뫼비우스 <b>16</b></div>
+        <p style="font-size:13px; color:#6B7280; margin-top:6px;">
+          ⇒ 원기둥과 토러스가 같은 12로 동등한 게임이라는 사실은 2차시에서 발견됩니다.
+          뫼비우스의 16은 3차시에서 검증됩니다.
+        </p>
+        <div class="teacher-note" style="margin-top:6px;">
+          ⚠️ 학생들의 예측을 칠판에 적어두면 2~3차시에서 확인할 때 더 강한 "아하!" 모먼트가 됩니다. 많은 학생이 "12, 균등 / 16, 균등"을 예측하는데, 뫼비우스가 불균등이라는 것이 3차시의 큰 반전입니다.
+        </div>
+      </div>
+    </div>
+
+    <div class="activity">
+      <h3>✏️ 자유 필기 / 메모</h3>
+      <p class="desc">생각나는 그림이나 메모를 자유롭게 남겨보세요. (마우스/터치)</p>
+      <div class="notes-box">
+        <div class="toolbar">
+          <div class="color-btn active" data-color="#1F2933" style="background:#1F2933;"></div>
+          <div class="color-btn" data-color="#DC2626" style="background:#DC2626;"></div>
+          <div class="color-btn" data-color="#2563EB" style="background:#2563EB;"></div>
+          <div class="color-btn" data-color="#16A34A" style="background:#16A34A;"></div>
+          <div class="color-btn" data-color="#F59E0B" style="background:#F59E0B;"></div>
+          <button class="btn" id="clear-canvas" style="padding:4px 10px; font-size:13px; background:#9CA3AF;">지우기</button>
+        </div>
+        <canvas class="notes-canvas" id="notes-canvas"></canvas>
+      </div>
+    </div>
+
+    <div class="complete-check">
+      <input type="checkbox" id="done-R" data-store="done_R">
+      <label for="done-R">R 섹션 완료 ✓</label>
+    </div>
+  </section>
+
+  <!-- 하단 도구바 -->
+  <div class="toolbar-bottom">
+    <div>
+      <span class="saved-state" id="saved-state">자동 저장: 대기 중</span>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn outline" id="reset-btn" style="font-size:13px; padding:7px 14px;">전체 지우기</button>
+      <button class="btn good" id="print-btn" style="font-size:13px; padding:7px 14px;">🖨 인쇄</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ─── 교사 모드 ─── */
+const params = new URLSearchParams(window.location.search);
+if (params.get('teacher') === '1') document.body.classList.add('teacher-mode');
+
+/* ─── 자동 저장 ─── */
+const STORAGE_PREFIX = 'topo_session1_';
+const savedEl = document.getElementById('saved-state');
+let saveTimer = null;
+
+function loadAll() {
+  document.querySelectorAll('[data-store]').forEach(el => {
+    const k = STORAGE_PREFIX + el.dataset.store;
+    const v = localStorage.getItem(k);
+    if (v === null) return;
+    if (el.type === 'checkbox') el.checked = (v === '1');
+    else el.value = v;
+  });
+}
+
+function saveOne(el) {
+  const k = STORAGE_PREFIX + el.dataset.store;
+  if (el.type === 'checkbox') localStorage.setItem(k, el.checked ? '1' : '0');
+  else localStorage.setItem(k, el.value);
+  flagSaved();
+  updateLocks();
+  updateProgress();
+}
+
+function flagSaved() {
+  savedEl.textContent = '✓ 저장됨';
+  savedEl.classList.add('on');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    savedEl.textContent = '자동 저장: 대기 중';
+    savedEl.classList.remove('on');
+  }, 2000);
+}
+
+document.querySelectorAll('[data-store]').forEach(el => {
+  const ev = (el.tagName === 'SELECT' || el.type === 'checkbox') ? 'change' : 'input';
+  el.addEventListener(ev, () => saveOne(el));
+});
+
+/* ─── 단계 잠금 ─── */
+function isStepDone(step) {
+  const cb = document.getElementById('done-' + step);
+  return cb && cb.checked;
+}
+
+function updateLocks() {
+  document.querySelectorAll('.section[data-requires]').forEach(sec => {
+    const req = sec.dataset.requires;
+    if (isStepDone(req)) sec.classList.remove('locked');
+    else sec.classList.add('locked');
+  });
+}
+
+/* ─── 진행도 바 ─── */
+function updateProgress() {
+  ['W','E','D','C','R'].forEach(step => {
+    const el = document.querySelector(`.progress-bar .step[data-jump="${step}"]`);
+    if (!el) return;
+    el.classList.remove('active', 'done');
+    if (isStepDone(step)) el.classList.add('done');
+  });
+  // 현재 활성: 완료 안 된 첫 단계
+  const cur = ['W','E','D','C','R'].find(s => !isStepDone(s)) || 'R';
+  const curEl = document.querySelector(`.progress-bar .step[data-jump="${cur}"]`);
+  if (curEl) curEl.classList.add('active');
+}
+
+document.querySelectorAll('.progress-bar .step').forEach(el => {
+  el.addEventListener('click', () => {
+    const t = document.getElementById('sec-' + el.dataset.jump);
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+/* ─── 자유 필기 캔버스 ─── */
+const canvas = document.getElementById('notes-canvas');
+const ctx = canvas.getContext('2d');
+let drawing = false, currentColor = '#1F2933';
+
+function resizeCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  const data = canvas.toDataURL();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  const img = new Image();
+  img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  img.src = data;
+}
+window.addEventListener('resize', resizeCanvas);
+
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const t = e.touches ? e.touches[0] : e;
+  return { x: t.clientX - rect.left, y: t.clientY - rect.top };
+}
+
+function startDraw(e) {
+  drawing = true;
+  const p = getPos(e);
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+  e.preventDefault();
+}
+function moveDraw(e) {
+  if (!drawing) return;
+  const p = getPos(e);
+  ctx.strokeStyle = currentColor;
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+  e.preventDefault();
+}
+function endDraw() {
+  if (!drawing) return;
+  drawing = false;
+  saveCanvas();
+}
+
+canvas.addEventListener('mousedown', startDraw);
+canvas.addEventListener('mousemove', moveDraw);
+canvas.addEventListener('mouseup', endDraw);
+canvas.addEventListener('mouseleave', endDraw);
+canvas.addEventListener('touchstart', startDraw);
+canvas.addEventListener('touchmove', moveDraw);
+canvas.addEventListener('touchend', endDraw);
+
+document.querySelectorAll('.color-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.color-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    currentColor = b.dataset.color;
+  });
+});
+
+document.getElementById('clear-canvas').addEventListener('click', () => {
+  if (!confirm('필기 내용을 모두 지울까요?')) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  saveCanvas();
+});
+
+const CANVAS_KEY = STORAGE_PREFIX + 'notes_canvas';
+function saveCanvas() {
+  try { localStorage.setItem(CANVAS_KEY, canvas.toDataURL()); flagSaved(); } catch (e) {}
+}
+function loadCanvas() {
+  const data = localStorage.getItem(CANVAS_KEY);
+  if (!data) return;
+  const img = new Image();
+  img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  img.src = data;
+}
+
+/* ─── 전체 초기화 / 인쇄 ─── */
+document.getElementById('reset-btn').addEventListener('click', () => {
+  if (!confirm('이 학습지의 모든 답을 지울까요? 되돌릴 수 없습니다.')) return;
+  Object.keys(localStorage).filter(k => k.startsWith(STORAGE_PREFIX)).forEach(k => localStorage.removeItem(k));
+  location.reload();
+});
+document.getElementById('print-btn').addEventListener('click', () => window.print());
+
+/* ─── C-1 인터랙티브 격자 (합리적 선택 시뮬레이터) ─── */
+(function initCGrid() {
+  const container = document.getElementById('c-rational-grid');
+  if (!container) return;
+
+  // 8 winning paths in 3×3 plain (0-indexed)
+  const PATHS = [
+    [0,1,2], [3,4,5], [6,7,8],         // rows
+    [0,3,6], [1,4,7], [2,5,8],         // cols
+    [0,4,8], [2,4,6]                   // diagonals
+  ];
+
+  const cState = {
+    board: new Array(9).fill(null), // null / 'X' / 'O'
+    turn: 'X',
+    history: [], // for undo
+    winner: null
+  };
+
+  function calcValues() {
+    const vals = new Array(9).fill(0);
+    for (const path of PATHS) {
+      const marks = path.map(i => cState.board[i]);
+      const hasX = marks.includes('X');
+      const hasO = marks.includes('O');
+      if (hasX && hasO) continue; // dead path
+      for (const i of path) {
+        if (cState.board[i] === null) vals[i]++;
+      }
+    }
+    return vals;
+  }
+
+  function checkWinner() {
+    for (const path of PATHS) {
+      const [a,b,c] = path;
+      const v = cState.board[a];
+      if (v && cState.board[b] === v && cState.board[c] === v) return v;
+    }
+    if (cState.board.every(x => x !== null)) return 'draw';
+    return null;
+  }
+
+  function render() {
+    container.innerHTML = '';
+    const vals = calcValues();
+    const maxVal = Math.max(...vals.filter((v, i) => cState.board[i] === null));
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      const isEmpty = cState.board[i] === null;
+      const isHighlight = isEmpty && vals[i] === maxVal && maxVal > 0 && !cState.winner;
+      cell.style.cssText = `width:70px; height:70px; border:1.5px solid ${isHighlight ? 'var(--accent)' : 'var(--border)'}; background:${isHighlight ? 'rgba(46,134,193,0.18)' : '#FFF'}; cursor:${isEmpty && !cState.winner ? 'pointer' : 'default'}; display:flex; align-items:center; justify-content:center; font-weight:800; border-radius:6px; box-shadow:${isHighlight ? '0 0 0 2px var(--accent)' : 'none'};`;
+      if (cState.board[i]) {
+        cell.style.color = cState.board[i] === 'X' ? '#E74C3C' : '#3498DB';
+        cell.style.fontSize = '28px';
+        cell.textContent = cState.board[i];
+      } else {
+        cell.style.color = isHighlight ? 'var(--accent)' : '#6B7280';
+        cell.style.fontSize = '22px';
+        cell.textContent = vals[i];
+        cell.addEventListener('click', () => placeMove(i));
+      }
+      container.appendChild(cell);
+    }
+    document.getElementById('c-turn-display').textContent =
+      cState.winner ? '' : (cState.turn + ' 차례');
+    const r = document.getElementById('c-result');
+    r.textContent = '';
+    r.style.color = '';
+    if (cState.winner === 'X') { r.textContent = '🎉 X 승!'; r.style.color = '#E74C3C'; }
+    else if (cState.winner === 'O') { r.textContent = '🎉 O 승!'; r.style.color = '#3498DB'; }
+    else if (cState.winner === 'draw') { r.textContent = '무승부'; r.style.color = 'var(--muted)'; }
+    saveCState();
+  }
+
+  function placeMove(i) {
+    if (cState.winner || cState.board[i] !== null) return;
+    cState.history.push({ board: [...cState.board], turn: cState.turn });
+    cState.board[i] = cState.turn;
+    cState.winner = checkWinner();
+    if (!cState.winner) cState.turn = cState.turn === 'X' ? 'O' : 'X';
+    render();
+  }
+
+  function saveCState() {
+    localStorage.setItem(STORAGE_PREFIX + 'c1_state', JSON.stringify({
+      board: cState.board, turn: cState.turn, winner: cState.winner
+    }));
+  }
+  function loadCState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_PREFIX + 'c1_state');
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      cState.board = s.board || new Array(9).fill(null);
+      cState.turn = s.turn || 'X';
+      cState.winner = s.winner || null;
+    } catch (e) {}
+  }
+
+  document.getElementById('c-reset').addEventListener('click', () => {
+    cState.board = new Array(9).fill(null);
+    cState.turn = 'X';
+    cState.history = [];
+    cState.winner = null;
+    render();
+  });
+  document.getElementById('c-undo').addEventListener('click', () => {
+    if (!cState.history.length) return;
+    const prev = cState.history.pop();
+    cState.board = prev.board;
+    cState.turn = prev.turn;
+    cState.winner = null;
+    render();
+  });
+
+  loadCState();
+  render();
+})();
+
+/* ─── Q2 클릭형 격자 (한 칸만 선택, data-store="q2_first_move") ─── */
+(function initQ2Grid() {
+  const grid = document.getElementById('q2-grid');
+  if (!grid) return;
+  // 9개 셀 생성 (1-based 라벨)
+  for (let r = 1; r <= 3; r++) {
+    for (let c = 1; c <= 3; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.style.cssText = 'width:60px; height:60px; border:1.5px solid var(--border); background:#FFF; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:700; border-radius:6px;';
+      cell.dataset.cell = `${r},${c}`;
+      cell.addEventListener('click', () => selectQ2Cell(cell));
+      grid.appendChild(cell);
+    }
+  }
+
+  // 저장된 값 복원
+  const saved = localStorage.getItem(STORAGE_PREFIX + 'q2_first_move');
+  if (saved) {
+    const target = grid.querySelector(`[data-cell="${saved}"]`);
+    if (target) selectQ2Cell(target, false);
+  }
+})();
+function selectQ2Cell(cell, save = true) {
+  const grid = document.getElementById('q2-grid');
+  if (!grid) return;
+  grid.querySelectorAll('.cell').forEach(c => {
+    c.style.background = '#FFF';
+    c.style.color = 'inherit';
+    c.textContent = '';
+  });
+  cell.style.background = 'var(--accent)';
+  cell.style.color = 'white';
+  cell.textContent = 'X';
+  const val = cell.dataset.cell;
+  document.getElementById('q2-selected').textContent = `(${val})`;
+  if (save) localStorage.setItem(STORAGE_PREFIX + 'q2_first_move', val);
+}
+
+/* ─── 초기화 ─── */
+window.addEventListener('load', () => {
+  resizeCanvas();
+  loadAll();
+  loadCanvas();
+  updateLocks();
+  updateProgress();
+});
+</script>
+</body>
+</html>

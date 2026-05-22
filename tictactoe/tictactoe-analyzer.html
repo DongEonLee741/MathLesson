@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>틱택토 공간 분석기</title>
+<style>
+:root {
+  --bg: #F8F9FA;
+  --panel: #FFFFFF;
+  --text: #1F2933;
+  --muted: #6B7280;
+  --border: #D1D5DB;
+  --grid-border: #343A40;
+  --accent: #2E86C1;
+  --o-color: #2196F3;
+  --x-color: #F44336;
+  --highlight-yellow: #FFF9C4;
+  --highlight-blue: #D6EAF8;
+  --highlight-purple: #E8DAEF;
+  --value-text: #1B4F72;
+  --base-tile: #2E86C1;
+  --shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: '맑은 고딕', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* ─── 헤더 ─── */
+.header {
+  background: var(--panel);
+  border-bottom: 2px solid var(--border);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow);
+}
+.header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent);
+  flex: 1;
+}
+.header .session-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+.header select {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ─── 메인 레이아웃 ─── */
+.main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  padding: 16px;
+}
+@media (max-width: 900px) {
+  .main { grid-template-columns: 1fr; }
+}
+
+/* ─── 격자 뷰 영역 ─── */
+.grid-area {
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 520px;
+}
+
+.grid-area .grid-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.grid-wrap {
+  position: relative;
+  display: inline-block;
+  margin: 8px 0 12px 0;
+}
+
+.grid {
+  display: grid;
+  border: 3px solid var(--grid-border);
+  background: var(--grid-border);
+  gap: 2px;
+  position: relative;
+  user-select: none;
+  transition: transform 0.18s ease;
+  touch-action: none;
+}
+.grid-wrap.draggable .grid { cursor: grab; }
+.grid-wrap.draggable .grid:active { cursor: grabbing; }
+
+.cell {
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  position: relative;
+}
+.cell:hover { background: #EEF2F7; }
+.cell.selected { background: var(--highlight-blue); }
+.cell.path-highlight { background: var(--highlight-yellow); }
+.cell.o { color: var(--o-color); }
+.cell.x { color: var(--x-color); }
+.cell.win-cell {
+  background: var(--highlight-yellow) !important;
+  animation: winPulse 0.6s ease 3;
+}
+@keyframes winPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+.cell .value-num {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--value-text);
+  pointer-events: none;
+}
+.cell .coord-label {
+  position: absolute;
+  bottom: 3px;
+  left: 5px;
+  font-size: 10px;
+  color: var(--muted);
+  pointer-events: none;
+  letter-spacing: 0.5px;
+}
+
+.cell.value-2 { background: #FADBD8; }
+.cell.value-3 { background: #FDEBD0; }
+.cell.value-4 { background: #D5F5E3; }
+.cell.value-6 { background: #D4EFDF; }
+
+.cell.value-2.path-highlight,
+.cell.value-3.path-highlight,
+.cell.value-4.path-highlight,
+.cell.value-6.path-highlight {
+  background: var(--highlight-yellow);
+}
+
+.paths-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+
+/* ─── 타일링 뷰 ─── */
+.tiling-wrap {
+  position: relative;
+  display: inline-block;
+  margin: 8px 0 12px 0;
+}
+.tiling-grid {
+  display: grid;
+  background: var(--grid-border);
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+}
+.tile-block {
+  display: grid;
+  background: var(--grid-border);
+  gap: 2px;
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  position: relative;
+}
+.tile-block.center {
+  border-color: var(--accent);
+  border-width: 3px;
+  box-shadow: 0 0 0 2px rgba(46, 134, 193, 0.18);
+}
+.tile-block.copy { opacity: 0.7; }
+.tile-block .cell {
+  font-size: 22px;
+}
+
+/* ─── 4종 비교 뷰 ─── */
+.compare-wrap {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  width: 100%;
+  margin: 8px 0 12px 0;
+}
+@media (min-width: 900px) { .compare-wrap { grid-template-columns: repeat(4, 1fr); } }
+.compare-card {
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+}
+.compare-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(46, 134, 193, 0.18);
+}
+.compare-card .cmp-name {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.compare-card .cmp-grid {
+  display: inline-grid;
+  gap: 1px;
+  background: var(--grid-border);
+  border: 1.5px solid var(--grid-border);
+  margin: 4px auto;
+}
+.compare-card .cmp-cell {
+  width: 32px;
+  height: 32px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--value-text);
+}
+.compare-card .cmp-cell.value-2 { background: #FADBD8; }
+.compare-card .cmp-cell.value-3 { background: #FDEBD0; }
+.compare-card .cmp-cell.value-4 { background: #D5F5E3; }
+.compare-card .cmp-cell.value-6 { background: #D4EFDF; }
+.compare-card .cmp-info {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.45;
+}
+.compare-card .cmp-info b { color: var(--text); }
+
+.paths-overlay polyline,
+.paths-overlay line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.paths-overlay .wrap-segment {
+  stroke-dasharray: 6, 4;
+  opacity: 0.95;
+}
+
+.grid-hint {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ─── 정보 패널 ─── */
+.info-panel {
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 14px;
+}
+
+.panel-section h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel-section h3 .badge {
+  background: var(--accent);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+.btn-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: white;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--text);
+}
+.btn:hover { background: #F1F5F9; }
+.btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+.btn:disabled {
+  background: #F3F4F6;
+  color: #9CA3AF;
+  cursor: not-allowed;
+  border-color: var(--border);
+}
+
+.btn-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  width: 100%;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.btn-toggle.on {
+  border-color: var(--accent);
+  background: #EBF5FB;
+  color: var(--accent);
+}
+.btn-toggle .check {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+.btn-toggle.on .check {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+.stats {
+  background: #F8FAFC;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border-left: 3px solid var(--accent);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.stats .label { color: var(--muted); }
+.stats .val { font-weight: 700; color: var(--text); }
+.stats .ok { color: #16A34A; }
+
+.game-status {
+  background: #FFF7E6;
+  border-left: 3px solid #F59E0B;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.game-status.win-o { background: #DBEAFE; border-left-color: var(--o-color); color: #1E40AF; }
+.game-status.win-x { background: #FEE2E2; border-left-color: var(--x-color); color: #991B1B; }
+.game-status.draw { background: #F3F4F6; border-left-color: #6B7280; color: #4B5563; }
+
+.heatmap-wrap {
+  margin-top: 8px;
+}
+.heatmap {
+  display: grid;
+  gap: 2px;
+  background: var(--grid-border);
+  border: 2px solid var(--grid-border);
+  border-radius: 4px;
+  margin: 0 auto;
+  width: fit-content;
+}
+.heat-cell {
+  background: white;
+  width: 70px;
+  height: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  text-align: center;
+  padding: 4px;
+}
+.heat-cell .games { color: var(--muted); font-size: 10px; }
+.heat-cell .rate { font-weight: 700; font-size: 13px; }
+
+/* ─── 하단 모드 바 ─── */
+.mode-bar {
+  background: var(--panel);
+  border-top: 2px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.mode-bar .btn {
+  min-width: 90px;
+}
+
+/* ─── 뱃지/유틸 ─── */
+.badge-info {
+  display: inline-block;
+  background: #EFF6FF;
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  margin-left: 4px;
+}
+.tag-locked {
+  font-size: 11px;
+  color: var(--muted);
+  margin-left: 4px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 4px 0;
+}
+
+.scroll-hint {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 6px;
+}
+
+@media (max-width: 600px) {
+  .header h1 { font-size: 17px; }
+  .grid-area { padding: 12px; min-height: 420px; }
+  .info-panel { padding: 12px; }
+  .heat-cell { width: 56px; height: 56px; font-size: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ─── 헤더 ─── -->
+  <div class="header">
+    <h1>🎯 틱택토 공간 분석기</h1>
+    <div class="session-selector">
+      <label for="session-select">차시</label>
+      <select id="session-select">
+        <option value="1">1차시 (평면)</option>
+        <option value="2">2차시 (원기둥·토러스)</option>
+        <option value="3">3차시 (뫼비우스·타일링)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ─── 메인 ─── -->
+  <div class="main">
+
+    <!-- 격자 뷰 -->
+    <div class="grid-area">
+      <div class="grid-title" id="grid-title">평면 3×3</div>
+
+      <div class="grid-wrap" id="grid-wrap">
+        <div class="grid" id="grid"></div>
+        <svg class="paths-overlay" id="paths-overlay"></svg>
+      </div>
+
+      <!-- 타일링 뷰 컨테이너 -->
+      <div class="tiling-wrap" id="tiling-wrap" style="display:none;">
+        <div class="tiling-grid" id="tiling-grid"></div>
+        <svg class="paths-overlay" id="tiling-paths-overlay"></svg>
+      </div>
+
+      <!-- 4종 비교 뷰 -->
+      <div class="compare-wrap" id="compare-wrap" style="display:none;"></div>
+
+      <div class="grid-hint" id="grid-hint">
+        칸을 클릭하면 그 칸이 포함된 경로가 강조됩니다.
+      </div>
+    </div>
+
+    <!-- 정보 패널 -->
+    <div class="info-panel">
+
+      <!-- 격자 크기 (1차시 전용) -->
+      <div class="panel-section" id="size-section">
+        <h3>격자 크기</h3>
+        <div class="btn-row" id="size-btns">
+          <button class="btn active" data-size="3">3×3</button>
+          <button class="btn" data-size="4">4×4</button>
+        </div>
+      </div>
+
+      <!-- 공간 모드 -->
+      <div class="panel-section" id="space-section">
+        <h3>공간 모드</h3>
+        <div class="btn-row" id="space-btns">
+          <button class="btn active" data-space="plain">평면</button>
+          <button class="btn" data-space="cylinder">원기둥</button>
+          <button class="btn" data-space="torus">토러스</button>
+          <button class="btn" data-space="mobius">뫼비우스</button>
+        </div>
+      </div>
+
+      <!-- 분석 토글 -->
+      <div class="panel-section" id="toggles-section">
+        <h3>분석 도구</h3>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <button class="btn-toggle" id="toggle-paths">
+            <span class="check" id="check-paths">·</span>
+            <span>🔍 경로 보기</span>
+          </button>
+          <button class="btn-toggle" id="toggle-values">
+            <span class="check" id="check-values">·</span>
+            <span>🔢 칸의 가치 보기</span>
+          </button>
+          <button class="btn-toggle" id="toggle-tiling" style="display:none;">
+            <span class="check" id="check-tiling">·</span>
+            <span>🔲 타일링 뷰</span>
+          </button>
+          <button class="btn-toggle" id="toggle-compare" style="display:none;">
+            <span class="check" id="check-compare">·</span>
+            <span>⊞ 4종 비교 모드</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 변환 컨트롤 (2차시+) -->
+      <div class="panel-section" id="transform-section" style="display:none;">
+        <h3>동등한 게임 변환</h3>
+        <div style="font-size:12px; color:var(--muted); margin-bottom:6px;" id="transform-hint">
+          게임판을 밀거나 돌려보세요. 같은 게임이 다른 모습으로!
+        </div>
+        <div class="btn-row" id="shift-buttons">
+          <button class="btn" id="shift-left" title="열을 왼쪽으로 1칸">← 좌</button>
+          <button class="btn" id="shift-right" title="열을 오른쪽으로 1칸">우 →</button>
+          <button class="btn" id="shift-up" title="행을 위로 1칸">↑ 상</button>
+          <button class="btn" id="shift-down" title="행을 아래로 1칸">↓ 하</button>
+        </div>
+        <div class="btn-row" style="margin-top:6px;">
+          <button class="btn" id="rotate-180" title="180° 회전 (토러스)">🔄 180°</button>
+          <button class="btn" id="reset-transform">원위치</button>
+        </div>
+        <div class="stats" style="margin-top:8px; font-size:12px;">
+          <span class="label">현재 변환:</span>
+          <span class="val" id="transform-state">시프트 (0,0)</span>
+        </div>
+      </div>
+
+      <!-- 통계 -->
+      <div class="panel-section">
+        <h3>통계</h3>
+        <div class="stats" id="stats">
+          <div><span class="label">현재 공간:</span> <span class="val" id="stat-space">평면</span></div>
+          <div><span class="label">승리 경로:</span> <span class="val" id="stat-paths">8</span>개</div>
+          <div><span class="label">칸의 가치:</span> <span class="val" id="stat-values">3종</span></div>
+          <div><span class="label">검산:</span> <span class="val" id="stat-checksum">24 = 8 × 3</span> <span class="ok">✓</span></div>
+          <div><span class="label">균등 여부:</span> <span class="val" id="stat-uniform">불균등</span></div>
+        </div>
+      </div>
+
+      <!-- 게임 상태 (대전 모드 전용) -->
+      <div class="panel-section" id="game-section" style="display:none;">
+        <h3>대전 상황</h3>
+        <div class="game-status" id="game-status">○ 차례입니다.</div>
+        <div class="btn-row" style="margin-top:8px;">
+          <button class="btn" id="btn-reset">새 게임</button>
+        </div>
+      </div>
+
+      <!-- 첫 수 히트맵 (대전 모드 전용) -->
+      <div class="panel-section" id="heatmap-section" style="display:none;">
+        <h3>첫 수 통계 히트맵 <span class="badge-info" id="heatmap-count">0판</span></h3>
+        <button class="btn-toggle" id="toggle-heatmap" style="margin-bottom:8px;">
+          <span class="check" id="check-heatmap">·</span>
+          <span>📊 히트맵 보기</span>
+        </button>
+        <div class="heatmap-wrap" id="heatmap-wrap" style="display:none;">
+          <div class="heatmap" id="heatmap"></div>
+          <div class="scroll-hint">선공(○)이 첫 수를 둔 칸별 승률<br>색이 진할수록 선공 승률 높음</div>
+          <div style="text-align:center;margin-top:8px;">
+            <button class="btn" id="btn-heatmap-reset">통계 초기화</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 하단 모드 바 -->
+  <div class="mode-bar">
+    <button class="btn active" data-mode="analysis">📊 분석 모드</button>
+    <button class="btn" data-mode="game">🎮 대전 모드</button>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ═════════════════════════════════════════════════════════════
+ *  1. 핵심 엔진 — Ghost-tile algorithm (2.15와 동일)
+ *
+ *  중앙 타일 + mode별 ghost 타일을 글로벌 그리드에 배치한 뒤,
+ *  4방향(→ ↓ ↘ ↗)으로 n-in-a-row를 검출. 같은 라인은 dedup.
+ *
+ *  뫼비우스의 좌우 wrap은 FLIP_V 인덱스 변환(1행↔n행 거울상)으로
+ *  표현되어 게임 파일(topo_tictactoe_2d/3d)과 100% 알고리즘 일치.
+ *
+ *  반환 형식은 기존과 호환: {cells:[{r,c}], dirSym, wraps, dr, dc}
+ * ═════════════════════════════════════════════════════════════ */
+
+const FLIP_V_CACHE = {};
+/** n×n 격자에서 i행 ↔ (n-1-i)행을 swap하는 인덱스 perm. 0-indexed. */
+function flipVPerm(n) {
+  if (FLIP_V_CACHE[n]) return FLIP_V_CACHE[n];
+  const arr = new Array(n * n);
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      arr[i * n + j] = (n - 1 - i) * n + j;
+    }
+  }
+  FLIP_V_CACHE[n] = arr;
+  return arr;
+}
+
+/** mode별 ghost 타일 정의. perm=null은 항등(중앙 타일과 동일). */
+function getGhosts(mode, n) {
+  const FLIP = flipVPerm(n);
+  switch (mode) {
+    case 'plain':
+      return [];
+    case 'cylinder':
+      return [
+        { dr: 0, dc: -1, perm: null },
+        { dr: 0, dc:  1, perm: null },
+      ];
+    case 'torus':
+      return [
+        { dr: -1, dc: -1, perm: null }, { dr: -1, dc: 0, perm: null }, { dr: -1, dc: 1, perm: null },
+        { dr:  0, dc: -1, perm: null },                                { dr:  0, dc: 1, perm: null },
+        { dr:  1, dc: -1, perm: null }, { dr:  1, dc: 0, perm: null }, { dr:  1, dc: 1, perm: null },
+      ];
+    case 'mobius':
+      return [
+        { dr: 0, dc: -1, perm: FLIP },
+        { dr: 0, dc:  1, perm: FLIP },
+      ];
+    default:
+      return [];
+  }
+}
+
+/** 4방향(중복 없는 라인 dedup 기준). */
+const ENUM_DIRS = [
+  { dy: 0,  dx: 1, sym: '→' },
+  { dy: 1,  dx: 0, sym: '↓' },
+  { dy: 1,  dx: 1, sym: '↘' },
+  { dy: -1, dx: 1, sym: '↗' },
+];
+
+/** 글로벌 (Y, X) → 중앙 인덱스. perm 역변환 포함. 범위 밖이거나 빈 타일이면 null. */
+function globalToCentralIdx(Y, X, tiles, tileLookup, n, H, W, rMin, cMin) {
+  if (Y < 0 || Y >= H || X < 0 || X >= W) return null;
+  const tr = Math.floor(Y / n) + rMin;
+  const tc = Math.floor(X / n) + cMin;
+  const tile = tileLookup.get(`${tr},${tc}`);
+  if (!tile) return null;
+  const local = (Y % n) * n + (X % n);
+  if (!tile.perm) return { centralIdx: local, tileKey: `${tr},${tc}` };
+  // tile.perm[i] = j 의미: 중앙 i가 ghost local j로 보임.
+  // 역변환: 글로벌 local 위치 → 중앙 i (perm.indexOf(local)).
+  const centralIdx = tile.perm.indexOf(local);
+  if (centralIdx < 0) return null;
+  return { centralIdx, tileKey: `${tr},${tc}` };
+}
+
+/**
+ * mode 공간의 n×n 격자에서 모든 n-in-a-row 승리 라인 enumerate.
+ * @returns {Array<{cells:Array<{r,c}>, dirSym, wraps:number, dr:number, dc:number}>}
+ */
+function findAllPaths(mode, n) {
+  const ghosts = getGhosts(mode, n);
+  const tiles = [{ dr: 0, dc: 0, perm: null }, ...ghosts];
+  const tileLookup = new Map();
+  for (const t of tiles) tileLookup.set(`${t.dr},${t.dc}`, t);
+
+  const rs = tiles.map(t => t.dr);
+  const cs = tiles.map(t => t.dc);
+  const rMin = Math.min(...rs), rMax = Math.max(...rs);
+  const cMin = Math.min(...cs), cMax = Math.max(...cs);
+  const H = (rMax - rMin + 1) * n;
+  const W = (cMax - cMin + 1) * n;
+
+  const centralBaseRow = (0 - rMin) * n;
+  const centralBaseCol = (0 - cMin) * n;
+
+  const seen = new Set();
+  const paths = [];
+
+  for (let r0 = centralBaseRow; r0 < centralBaseRow + n; r0++) {
+    for (let c0 = centralBaseCol; c0 < centralBaseCol + n; c0++) {
+      for (const d of ENUM_DIRS) {
+        const idxs = [];
+        const tileKeys = new Set();
+        let valid = true;
+        for (let s = 0; s < n; s++) {
+          const Y = r0 + s * d.dy;
+          const X = c0 + s * d.dx;
+          const info = globalToCentralIdx(Y, X, tiles, tileLookup, n, H, W, rMin, cMin);
+          if (!info) { valid = false; break; }
+          idxs.push(info.centralIdx);
+          tileKeys.add(info.tileKey);
+        }
+        if (!valid) continue;
+        // 모든 셀이 서로 다른 중앙 인덱스여야 유효한 라인
+        if (new Set(idxs).size !== n) continue;
+        const sorted = [...idxs].sort((a, b) => a - b);
+        const key = sorted.join(',');
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const cells = idxs.map(i => ({
+          r: Math.floor(i / n) + 1,
+          c: (i % n) + 1,
+        }));
+        paths.push({
+          cells,
+          dirSym: d.sym,
+          dr: d.dy,
+          dc: d.dx,
+          wraps: Math.max(0, tileKeys.size - 1),
+        });
+      }
+    }
+  }
+  return paths;
+}
+
+/** 각 칸의 가치 (포함된 경로 수) 계산. */
+function calculateCellValues(n, paths) {
+  const grid = Array.from({ length: n }, () => Array(n).fill(0));
+  for (const p of paths) {
+    for (const { r, c } of p.cells) {
+      grid[r - 1][c - 1] += 1;
+    }
+  }
+  return grid;
+}
+
+/** 자가 검증. 콘솔 출력. */
+function selfTest() {
+  const cases = [
+    { space: 'plain',    n: 3, expected: 8  },
+    { space: 'plain',    n: 4, expected: 10 },
+    { space: 'cylinder', n: 3, expected: 12 },
+    { space: 'torus',    n: 3, expected: 12 },
+    { space: 'mobius',   n: 3, expected: 16 }
+  ];
+
+  let allPass = true;
+  console.log('%c[selfTest] 시작', 'color:#2E86C1;font-weight:bold');
+  for (const t of cases) {
+    const paths = findAllPaths(t.space, t.n);
+    const values = calculateCellValues(t.n, paths);
+    const sum = values.flat().reduce((a, b) => a + b, 0);
+    const expectSum = t.expected * t.n;
+    const ok = paths.length === t.expected && sum === expectSum;
+    if (!ok) allPass = false;
+    console.log(
+      `%c${ok ? '✓' : '✗'} ${t.space} ${t.n}×${t.n}: 경로 ${paths.length}/${t.expected}, 검산 ${sum} = ${t.expected}×${t.n} (=${expectSum})`,
+      `color:${ok ? '#16A34A' : '#DC2626'}`
+    );
+  }
+  console.log(allPass ? '%c[selfTest] 전체 통과 ✓' : '%c[selfTest] 실패 ✗',
+    `color:${allPass ? '#16A34A' : '#DC2626'};font-weight:bold`);
+  return allPass;
+}
+
+// 페이지 로드 시 자가검증 실행
+selfTest();
+
+/* ═════════════════════════════════════════════════════════════
+ *  2. 색상 팔레트
+ * ═════════════════════════════════════════════════════════════ */
+
+const PATH_COLORS = [
+  '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
+  '#F7B731', '#A55EEA', '#26C281', '#E67E22',
+  '#2D98DA', '#EB3B5A', '#8854D0', '#0FB9B1',
+  '#F368E0', '#1DD1A1', '#FF9F43', '#5F27CD'
+];
+
+/* ═════════════════════════════════════════════════════════════
+ *  3. 상태 관리
+ * ═════════════════════════════════════════════════════════════ */
+
+const state = {
+  session: 1,
+  spaceType: 'plain',
+  n: 3,
+  viewMode: 'analysis',          // 'analysis' | 'game'
+  showPaths: false,
+  showValues: false,
+  showHeatmap: false,
+  showTiling: false,
+  showCompare: false,
+  selectedCell: null,            // {r,c} | null (real coords)
+  // 대전 모드 상태
+  board: [],
+  currentPlayer: 'O',
+  gameOver: false,
+  winningPath: null,
+  currentFirstMove: null,
+  // 변환 (2차시+: 동등한 게임 시각화)
+  colShift: 0,                   // 열 시프트 (정수)
+  rowShift: 0,                   // 행 시프트 (정수, 토러스만)
+  rotated180: false,             // 180° 회전 (토러스 동등성)
+  // 캐시
+  paths: [],
+  cellValues: [],
+};
+
+// 드래그 추적
+let dragInfo = null;
+
+/* ─── 변환: 실제 좌표 ↔ 표시 좌표 ─────────────────────────────── */
+
+/** 실제 좌표(r,c)를 colShift/rowShift/rotated180 적용 후 표시 좌표로 변환. */
+function realToDisplay(r, c) {
+  const n = state.n;
+  let nr = r, nc = c;
+
+  // 열 시프트: 정방향
+  let dCol = state.colShift;
+  while (dCol > 0) {
+    nc += 1;
+    if (nc > n) {
+      nc = 1;
+      if (state.spaceType === 'mobius') nr = (n + 1) - nr;
+    }
+    dCol -= 1;
+  }
+  while (dCol < 0) {
+    nc -= 1;
+    if (nc < 1) {
+      nc = n;
+      if (state.spaceType === 'mobius') nr = (n + 1) - nr;
+    }
+    dCol += 1;
+  }
+  // 행 시프트 (토러스만)
+  if (state.spaceType === 'torus') {
+    let dRow = state.rowShift;
+    while (dRow > 0) {
+      nr += 1;
+      if (nr > n) nr = 1;
+      dRow -= 1;
+    }
+    while (dRow < 0) {
+      nr -= 1;
+      if (nr < 1) nr = n;
+      dRow += 1;
+    }
+  }
+  // 180° 회전 (토러스만)
+  if (state.rotated180 && state.spaceType === 'torus') {
+    nr = (n + 1) - nr;
+    nc = (n + 1) - nc;
+  }
+  return { r: nr, c: nc };
+}
+
+/** 표시 좌표(dr,dc)를 실제 좌표로 역변환. */
+function displayToReal(dr, dc) {
+  const n = state.n;
+  let nr = dr, nc = dc;
+  // 180° 역회전 (자기 자신과 동일)
+  if (state.rotated180 && state.spaceType === 'torus') {
+    nr = (n + 1) - nr;
+    nc = (n + 1) - nc;
+  }
+  // 행 역시프트
+  if (state.spaceType === 'torus') {
+    let dRow = -state.rowShift;
+    while (dRow > 0) {
+      nr += 1;
+      if (nr > n) nr = 1;
+      dRow -= 1;
+    }
+    while (dRow < 0) {
+      nr -= 1;
+      if (nr < 1) nr = n;
+      dRow += 1;
+    }
+  }
+  // 열 역시프트
+  let dCol = -state.colShift;
+  while (dCol > 0) {
+    nc += 1;
+    if (nc > n) {
+      nc = 1;
+      if (state.spaceType === 'mobius') nr = (n + 1) - nr;
+    }
+    dCol -= 1;
+  }
+  while (dCol < 0) {
+    nc -= 1;
+    if (nc < 1) {
+      nc = n;
+      if (state.spaceType === 'mobius') nr = (n + 1) - nr;
+    }
+    dCol += 1;
+  }
+  return { r: nr, c: nc };
+}
+
+function resetTransform() {
+  state.colShift = 0;
+  state.rowShift = 0;
+  state.rotated180 = false;
+}
+
+function initBoard(n) {
+  return Array.from({ length: n }, () => Array(n).fill(null));
+}
+
+function recomputeCache() {
+  state.paths = findAllPaths(state.spaceType, state.n);
+  state.cellValues = calculateCellValues(state.n, state.paths);
+}
+
+function resetGame() {
+  state.board = initBoard(state.n);
+  state.currentPlayer = 'O';
+  state.gameOver = false;
+  state.winningPath = null;
+  state.currentFirstMove = null;
+}
+
+/* ═════════════════════════════════════════════════════════════
+ *  4. localStorage — 첫 수 히트맵
+ * ═════════════════════════════════════════════════════════════ */
+
+function heatmapKey() {
+  return `topo_firstMoveStats_${state.spaceType}_${state.n}`;
+}
+
+function loadHeatmap() {
+  try {
+    const raw = localStorage.getItem(heatmapKey());
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveHeatmap(stats) {
+  try {
+    localStorage.setItem(heatmapKey(), JSON.stringify(stats));
+  } catch (e) { /* ignore */ }
+}
+
+function recordFirstMove(rc, result) {
+  const stats = loadHeatmap();
+  const k = `${rc.r},${rc.c}`;
+  if (!stats[k]) stats[k] = { total: 0, wins_O: 0, wins_X: 0, draws: 0 };
+  stats[k].total += 1;
+  if (result === 'O') stats[k].wins_O += 1;
+  else if (result === 'X') stats[k].wins_X += 1;
+  else stats[k].draws += 1;
+  saveHeatmap(stats);
+}
+
+function clearHeatmap() {
+  saveHeatmap({});
+}
+
+function totalGames() {
+  const stats = loadHeatmap();
+  return Object.values(stats).reduce((a, s) => a + s.total, 0);
+}
+
+/* ═════════════════════════════════════════════════════════════
+ *  5. 셀 크기 계산
+ * ═════════════════════════════════════════════════════════════ */
+
+function cellSize() {
+  // 격자 영역 폭과 n에 따라 셀 크기 결정
+  const w = window.innerWidth;
+  if (w >= 1100) return state.n === 3 ? 100 : 80;
+  if (w >= 700)  return state.n === 3 ? 86  : 70;
+  if (w >= 500)  return state.n === 3 ? 72  : 58;
+  return state.n === 3 ? 60 : 48;
+}
+
+/* ═════════════════════════════════════════════════════════════
+ *  6. 렌더링 — 격자 본체
+ * ═════════════════════════════════════════════════════════════ */
+
+const $ = id => document.getElementById(id);
+
+function renderGrid() {
+  const grid = $('grid');
+  const n = state.n;
+  const sz = cellSize();
+  grid.style.gridTemplateColumns = `repeat(${n}, ${sz}px)`;
+  grid.style.gridTemplateRows = `repeat(${n}, ${sz}px)`;
+  grid.innerHTML = '';
+
+  // 분석 모드 — 선택된 실제 칸 포함 경로의 실제 셀들
+  const highlightCells = new Set();
+  if (state.viewMode === 'analysis' && state.selectedCell) {
+    for (const p of state.paths) {
+      const includes = p.cells.some(c =>
+        c.r === state.selectedCell.r && c.c === state.selectedCell.c);
+      if (includes) {
+        for (const cc of p.cells) highlightCells.add(`${cc.r},${cc.c}`);
+      }
+    }
+  }
+  // 대전 모드 — 승리 경로 (실제 좌표)
+  const winCellSet = new Set();
+  if (state.viewMode === 'game' && state.winningPath) {
+    for (const cc of state.winningPath.cells) winCellSet.add(`${cc.r},${cc.c}`);
+  }
+
+  // 표시 위치 (dr, dc)를 순회하며, 그 위치에 어떤 실제 셀의 데이터가 표시될지 계산
+  for (let dr = 1; dr <= n; dr++) {
+    for (let dc = 1; dc <= n; dc++) {
+      const real = displayToReal(dr, dc);
+      const r = real.r, c = real.c;
+
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.style.width = sz + 'px';
+      cell.style.height = sz + 'px';
+      cell.style.fontSize = Math.round(sz * 0.5) + 'px';
+      cell.dataset.dr = dr;
+      cell.dataset.dc = dc;
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+
+      // 선택 + 강조 (실제 좌표 기준)
+      if (state.viewMode === 'analysis' &&
+          state.selectedCell && state.selectedCell.r === r && state.selectedCell.c === c) {
+        cell.classList.add('selected');
+      }
+      if (highlightCells.has(`${r},${c}`)) cell.classList.add('path-highlight');
+      if (winCellSet.has(`${r},${c}`)) cell.classList.add('win-cell');
+
+      // 칸의 가치 배경 색
+      const val = state.cellValues[r - 1][c - 1];
+      if (state.viewMode === 'analysis' && state.showValues) {
+        if (val === 2) cell.classList.add('value-2');
+        else if (val === 3) cell.classList.add('value-3');
+        else if (val === 4) cell.classList.add('value-4');
+        else if (val === 6) cell.classList.add('value-6');
+      }
+
+      // 좌표 라벨 (실제 좌표 표시 — 학생이 어떤 셀이 어디로 갔는지 알 수 있게)
+      const lbl = document.createElement('span');
+      lbl.className = 'coord-label';
+      lbl.textContent = `${r},${c}`;
+      cell.appendChild(lbl);
+
+      // 칸의 가치 숫자
+      if (state.viewMode === 'analysis' && state.showValues) {
+        const v = document.createElement('span');
+        v.className = 'value-num';
+        v.textContent = val;
+        cell.appendChild(v);
+      }
+
+      // 돌 (대전 모드)
+      if (state.viewMode === 'game') {
+        const stone = state.board[r - 1][c - 1];
+        if (stone === 'O') { cell.classList.add('o'); cell.append(document.createTextNode('○')); }
+        else if (stone === 'X') { cell.classList.add('x'); cell.append(document.createTextNode('×')); }
+      }
+
+      cell.addEventListener('click', () => onCellClick(r, c));
+      grid.appendChild(cell);
+    }
+  }
+
+  // 격자 크기에 맞춰 SVG 오버레이 사이즈 조정
+  const totalSize = n * sz + (n - 1) * 2;
+  const svg = $('paths-overlay');
+  svg.setAttribute('width', totalSize + 6);
+  svg.setAttribute('height', totalSize + 6);
+  svg.setAttribute('viewBox', `0 0 ${totalSize + 6} ${totalSize + 6}`);
+
+  renderPathsOverlay();
+}
+
+/* ═════════════════════════════════════════════════════════════
+ *  7. 렌더링 — 경로 SVG 오버레이
+ * ═════════════════════════════════════════════════════════════ */
+
+/** 표시 좌표(dr, dc)의 픽셀 중심. */
+function cellCenterPx(dr, dc) {
+  const sz = cellSize();
+  // 격자 외곽 테두리(3px) + 내부 gap(2px)
+  const x = 3 + (dc - 1) * (sz + 2) + sz / 2;
+  const y = 3 + (dr - 1) * (sz + 2) + sz / 2;
+  return { x, y };
+}
+
+function renderPathsOverlay() {
+  const svg = $('paths-overlay');
+  svg.innerHTML = '';
+
+  if (!state.showPaths && !(state.viewMode === 'analysis' && state.selectedCell) && !state.winningPath) {
+    return;
+  }
+
+  const sz = cellSize();
+  const totalSize = state.n * sz + (state.n - 1) * 2;
+  const ns = 'http://www.w3.org/2000/svg';
+
+  let pathsToDraw = [];
+
+  if (state.viewMode === 'game' && state.winningPath) {
+    // 대전 모드 — 승리 경로만
+    pathsToDraw.push({ p: state.winningPath, color: '#FFC107', idx: 0, wide: true });
+  } else if (state.viewMode === 'analysis') {
+    if (state.selectedCell) {
+      // 선택 칸 포함 경로만
+      const r0 = state.selectedCell.r, c0 = state.selectedCell.c;
+      const filtered = state.paths.filter(p =>
+        p.cells.some(cc => cc.r === r0 && cc.c === c0));
+      filtered.forEach((p, idx) => {
+        pathsToDraw.push({ p, color: PATH_COLORS[idx % PATH_COLORS.length], idx });
+      });
+    } else if (state.showPaths) {
+      // 모든 경로
+      state.paths.forEach((p, idx) => {
+        pathsToDraw.push({ p, color: PATH_COLORS[idx % PATH_COLORS.length], idx });
+      });
+    }
+  }
+
+  for (const { p, color, wide } of pathsToDraw) {
+    drawOnePath(svg, p, color, totalSize, sz, ns, !!wide);
+  }
+}
+
+function drawOnePath(svg, pathObj, color, totalSize, sz, ns, wide) {
+  const cells = pathObj.cells;
+  const sw = wide ? 6 : 4;
+  const opacity = wide ? 1.0 : 0.85;
+
+  // 실제 좌표를 표시 좌표로 변환
+  const dispCells = cells.map(({ r, c }) => realToDisplay(r, c));
+
+  for (let i = 0; i < dispCells.length - 1; i++) {
+    const a = dispCells[i], b = dispCells[i + 1];
+    const wrapped = isWrapBetweenDisplay(a, b);
+
+    if (!wrapped) {
+      const A = cellCenterPx(a.r, a.c);
+      const B = cellCenterPx(b.r, b.c);
+      const line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', A.x); line.setAttribute('y1', A.y);
+      line.setAttribute('x2', B.x); line.setAttribute('y2', B.y);
+      line.setAttribute('stroke', color);
+      line.setAttribute('stroke-width', sw);
+      line.setAttribute('opacity', opacity);
+      svg.appendChild(line);
+    } else {
+      drawWrapSegment(svg, a, b, color, sz, ns, sw, opacity);
+    }
+  }
+}
+
+/** 표시 좌표 두 점이 격자 위에서 인접 불가능한 거리(=감싸기로 연결됨)인지. */
+function isWrapBetweenDisplay(a, b) {
+  const dr = Math.abs(a.r - b.r);
+  const dc = Math.abs(a.c - b.c);
+  return Math.max(dr, dc) > 1;
+}
+
+function drawWrapSegment(svg, a, b, color, sz, ns, sw, opacity) {
+  // 감싸기는 두 점이 격자에서 멀리 떨어져 있음 → 점선 직선으로 두 칸을 연결
+  // 시각적으로: 격자 가장자리에 짧은 화살표 선만 표시
+  const A = cellCenterPx(a.r, a.c);
+  const B = cellCenterPx(b.r, b.c);
+  // 단순화: 점선 직선 두 개 — A에서 격자 밖 짧게, B에서 격자 밖 짧게
+  // 좀 더 표현력 있게: 격자 중심을 향한 짧은 점선 화살표 두 개
+  const cx = state.n * sz / 2 + 3;
+  const cy = state.n * sz / 2 + 3;
+
+  // A → 가장자리 방향
+  const drawShortArrow = (P, Q) => {
+    // P에서 Q쪽 방향으로 짧게 (셀 너비의 60%)
+    const dx = Q.x - P.x, dy = Q.y - P.y;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    const ux = dx / len, uy = dy / len;
+    const t = sz * 0.55;
+    // 시작은 P에서 약간 안쪽, 끝은 P + t × 단위벡터
+    const x1 = P.x;
+    const y1 = P.y;
+    const x2 = P.x + ux * t;
+    const y2 = P.y + uy * t;
+    const line = document.createElementNS(ns, 'line');
+    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+    line.setAttribute('stroke', color);
+    line.setAttribute('stroke-width', sw);
+    line.setAttribute('opacity', opacity);
+    line.classList.add('wrap-segment');
+    svg.appendChild(line);
+  };
+
+  // A→B 방향과 B→A 방향에 짧은 점선 그리기
+  drawShortArrow(A, B);
+  drawShortArrow(B, A);
+}
+
+/* ═════════════════════════════════════════════════════════════
+ *  8. 렌더링 — 통계, 히트맵
+ * ═════════════════════════════════════════════════════════════ */
+
+const SPACE_NAMES = {
+  plain:    '평면',
+  cylinder: '원기둥',
+  torus:    '토러스',
+  mobius:   '뫼비우스'
+};
+
+function renderStats() {
+  const sum = state.cellValues.flat().reduce((a, b) => a + b, 0);
+  const uniqueVals = new Set(state.cellValues.flat());
+  const isUniform = uniqueVals.size === 1;
+
+  $('stat-space').textContent = SPACE_NAMES[state.spaceType] + ` ${state.n}×${state.n}`;
+  $('stat-paths').textContent = state.paths.length;
+  $('stat-values').textContent =
+    [...uniqueVals].sort((a, b) => a - b).join(',') + ` (${uniqueVals.size}종)`;
+  $('stat-checksum').textContent = `${sum} = ${state.paths.length} × ${state.n}`;
+  $('stat-uniform').textContent = isUniform ? '균등' : '불균등';
+
+  $('grid-title').textContent = `${SPACE_NAMES[state.spaceType]} ${state.n}×${state.n}`;
+}
+
+function renderHeatmap() {
+  if (state.viewMode !== 'game') return;
+  const stats = loadHeatmap();
+  $('heatmap-count').textContent = `${totalGames()}판`;
+
+  const wrap = $('heatmap-wrap');
+  wrap.style.display = state.showHeatmap ? 'block' : 'none';
+  if (!state.showHeatmap) return;
+
+  const hm = $('heatmap');
+  hm.style.gridTemplateColumns = `repeat(${state.n}, 1fr)`;
+  hm.innerHTML = '';
+
+  for (let r = 1; r <= state.n; r++) {
+    for (let c = 1; c <= state.n; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'heat-cell';
+      const k = `${r},${c}`;
+      const s = stats[k];
+      if (!s || s.total < 3) {
+        cell.innerHTML = `<div class="games">${s ? s.total : 0}판</div><div class="rate" style="color:#9CA3AF;font-size:11px;">데이터<br>부족</div>`;
+        cell.style.background = '#F8FAFC';
+      } else {
+        const winRate = s.wins_O / s.total;
+        const pct = Math.round(winRate * 100);
+        // 진한 초록 = 높은 승률
+        const lightness = 95 - winRate * 50;
+        cell.style.background = `hsl(140, 60%, ${lightness}%)`;
+        cell.innerHTML = `<div class="games">${s.total}판</div><div class="rate">${pct}%</div>`;
+      }
+      hm.appendChild(cell);
+    }
+  }
+}
+
+function renderGameStatus() {
+  if (state.viewMode !== 'game') return;
+  const el = $('game-status');
+  el.classList.remove('win-o', 'win-x', 'draw');
+
+  if (!state.gameOver) {
+    el.textContent = `${state.currentPlayer === 'O' ? '○' : '×'} 차례입니다.`;
+    return;
+  }
+  if (state.winningPath) {
+    const winner = state.winningPath.player;
+    el.textContent = `${winner === 'O' ? '○' : '×'} 승리!`;
+    el.classList.add(winner === 'O' ? 'win-o' : 'win-x');
+  } else {
+    el.textContent = '무승부!';
+    el.classList.add('draw');
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════
+ *  9. 입력 핸들러
+ * ═════════════════════════════════════════════════════════════ */
+
+function onCellClick(r, c) {
+  // 드래그 직후의 클릭은 무시
+  if (dragInfo && dragInfo.moved) {
+    dragInfo.moved = false;
+    return;
+  }
+  if (state.viewMode === 'analysis') {
+    // 같은 칸 다시 클릭 → 해제
+    if (state.selectedCell && state.selectedCell.r === r && state.selectedCell.c === c) {
+      state.selectedCell = null;
+    } else {
+      state.selectedCell = { r, c };
+    }
+    renderGrid();
+  } else if (state.viewMode === 'game') {
+    if (state.gameOver) return;
+    if (state.board[r - 1][c - 1] !== null) return;
+    state.board[r - 1][c - 1] = state.currentPlayer;
+
+    // 첫 수 기록
+    const stoneCount = state.board.flat().filter(s => s !== null).length;
+    if (stoneCount === 1) {
+      state.currentFirstMove = { r, c };
+    }
+
+    // 승리 체크
+    const win = checkWinner();
+    if (win) {
+      state.gameOver = true;
+      state.winningPath = win;
+      if (state.currentFirstMove) {
+        recordFirstMove(state.currentFirstMove, win.player);
+      }
+    } else if (state.board.flat().every(s => s !== null)) {
+      // 무승부
+      state.gameOver = true;
+      state.winningPath = null;
+      if (state.currentFirstMove) {
+        recordFirstMove(state.currentFirstMove, 'draw');
+      }
+    } else {
+      state.currentPlayer = state.currentPlayer === 'O' ? 'X' : 'O';
+    }
+    render();
+  }
+}
+
+function checkWinner() {
+  for (const path of state.paths) {
+    const stones = path.cells.map(({ r, c }) => state.board[r - 1][c - 1]);
+    if (stones[0] && stones.every(s => s === stones[0])) {
+      return { cells: path.cells, player: stones[0] };
+    }
+  }
+  return null;
+}
+
+/* ═════════════════════════════════════════════════════════════
+ *  10. 차시별 프리셋
+ * ═════════════════════════════════════════════════════════════ */
+
+function applySessionPreset(s) {
+  state.session = s;
+  // 격자 크기 영역 표시 — 1차시만
+  $('size-section').style.display = (s === 1) ? '' : 'none';
+  // 변환 컨트롤 — 2차시+
+  $('transform-section').style.display = (s >= 2) ? '' : 'none';
+  // 타일링 / 비교 토글 — 3차시+
+  $('toggle-tiling').style.display = (s >= 3) ? '' : 'none';
+  $('toggle-compare').style.display = (s >= 3) ? '' : 'none';
+  if (s < 3) {
+    state.showTiling = false;
+    state.showCompare = false;
+  }
+
+  // 공간 모드 활성/비활성
+  const spaceBtns = document.querySelectorAll('#space-btns .btn');
+  spaceBtns.forEach(btn => {
+    const sp = btn.dataset.space;
+    let enabled = false;
+    if (s === 1) enabled = (sp === 'plain');
+    else if (s === 2) enabled = (sp === 'plain' || sp === 'cylinder' || sp === 'torus');
+    else if (s === 3) enabled = true;
+    btn.disabled = !enabled;
+    btn.title = enabled ? '' : `${s}차시에서는 사용 불가`;
+  });
+
+  // 1차시는 평면 강제, 2차시는 plain/cyl/torus 중 현재값 유지하되 mobius면 plain으로, 3차시는 그대로
+  if (s === 1) {
+    state.spaceType = 'plain';
+  } else if (s === 2 && state.spaceType === 'mobius') {
+    state.spaceType = 'plain';
+  }
+
+  // 1차시 외에는 4×4 모드 비활성 → 3×3로 강제
+  if (s !== 1) state.n = 3;
+
+  resetTransform();
+  applyAllUI();
+}
+
+/** 변환 UI 가시성 업데이트 */
+function refreshTransformControls() {
+  if (state.session < 2) return;
+  const sp = state.spaceType;
+  // 시프트 버튼: 평면이면 모두 비활성
+  const allowH = (sp === 'cylinder' || sp === 'torus' || sp === 'mobius');
+  const allowV = (sp === 'torus');
+  $('shift-left').disabled  = !allowH;
+  $('shift-right').disabled = !allowH;
+  $('shift-up').disabled    = !allowV;
+  $('shift-down').disabled  = !allowV;
+  $('rotate-180').disabled  = (sp !== 'torus');
+
+  // 힌트
+  let hint = '평면은 변환 없음 — 다른 공간을 선택해 보세요.';
+  if (sp === 'cylinder') hint = '좌우 시프트로 동일한 게임이 다른 모습으로!';
+  else if (sp === 'torus') hint = '좌우+상하 시프트와 180° 회전 모두 가능!';
+  else if (sp === 'mobius') hint = '좌우 시프트 시 행이 뒤집혀 돌아옵니다!';
+  $('transform-hint').textContent = hint;
+
+  $('transform-state').textContent =
+    `시프트 (${state.colShift},${state.spaceType === 'torus' ? state.rowShift : 0})` +
+    (state.rotated180 ? ', 180° 회전' : '');
+}
+
+/* ═════════════════════════════════════════════════════════════
+ *  11. 모드/뷰 전환
+ * ═════════════════════════════════════════════════════════════ */
+
+function setViewMode(m) {
+  state.viewMode = m;
+  // 분석 → 대전: 보드 초기화
+  if (m === 'game') resetGame();
+  // 분석 모드 진입 시 선택 셀 해제는 유지
+  state.selectedCell = null;
+  state.winningPath = null;
+
+  // UI 토글
+  document.querySelectorAll('.mode-bar .btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === m));
+
+  $('toggles-section').style.display = (m === 'analysis') ? '' : 'none';
+  $('game-section').style.display = (m === 'game') ? '' : 'none';
+  $('heatmap-section').style.display = (m === 'game') ? '' : 'none';
+
+  $('grid-hint').textContent = (m === 'analysis')
+    ? '칸을 클릭하면 그 칸이 포함된 경로가 강조됩니다.'
+    : `짝과 ${state.n}목 대전. 감싸기 경로 포함 자동 감지.`;
+
+  applyAllUI();
+}
+
+function setSpaceType(sp) {
+  state.spaceType = sp;
+  state.selectedCell = null;
+  state.winningPath = null;
+  resetTransform();
+  if (state.viewMode === 'game') resetGame();
+  applyAllUI();
+}
+
+function setN(n) {
+  state.n = n;
+  state.selectedCell = null;
+  state.winningPath = null;
+  if (state.viewMode === 'game') resetGame();
+  applyAllUI();
+}
+
+function applyAllUI() {
+  recomputeCache();
+
+  // 공간 버튼 active
+  document.querySelectorAll('#space-btns .btn').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.space === state.spaceType));
+
+  // 크기 버튼 active
+  document.querySelectorAll('#size-btns .btn').forEach(btn =>
+    btn.classList.toggle('active', Number(btn.dataset.size) === state.n));
+
+  // 토글 시각
+  $('toggle-paths').classList.toggle('on', state.showPaths);
+  $('toggle-values').classList.toggle('on', state.showValues);
+  $('toggle-heatmap').classList.toggle('on', state.showHeatmap);
+  $('toggle-tiling').classList.toggle('on', state.showTiling);
+  $('toggle-compare').classList.toggle('on', state.showCompare);
+  $('check-paths').textContent = state.showPaths ? '✓' : '·';
+  $('check-values').textContent = state.showValues ? '✓' : '·';
+  $('check-heatmap').textContent = state.showHeatmap ? '✓' : '·';
+  $('check-tiling').textContent = state.showTiling ? '✓' : '·';
+  $('check-compare').textContent = state.showCompare ? '✓' : '·';
+
+  refreshTransformControls();
+  // 드래그 가능 여부 — 평면 외 + 2차시 이상
+  $('grid-wrap').classList.toggle(
+    'draggable',
+    state.session >= 2 && state.spaceType !== 'plain'
+  );
+  render();
+}
+
+/* ─── 변환 액션 ─── */
+function shiftBy(dCol, dRow) {
+  const sp = state.spaceType;
+  if (sp === 'plain') return;
+  if (sp === 'cylinder' || sp === 'mobius') {
+    state.colShift += dCol;
+    // 행 시프트는 무시
+  } else if (sp === 'torus') {
+    state.colShift += dCol;
+    state.rowShift += dRow;
+  }
+  applyAllUI();
+}
+
+function toggle180() {
+  if (state.spaceType !== 'torus') return;
+  state.rotated180 = !state.rotated180;
+  applyAllUI();
+}
+
+function render() {
+  // 4종 비교 모드
+  if (state.showCompare) {
+    $('grid-wrap').style.display = 'none';
+    $('tiling-wrap').style.display = 'none';
+    $('compare-wrap').style.display = 'grid';
+    renderCompare();
+    renderStats();
+    return;
+  }
+  // 타일링 뷰
+  if (state.showTiling) {
+    $('grid-wrap').style.display = 'none';
+    $('tiling-wrap').style.display = 'inline-block';
+    $('compare-wrap').style.display = 'none';
+    renderTiling();
+    renderStats();
+    renderGameStatus();
+    renderHeatmap();
+    return;
+  }
+  // 기본 격자 뷰
+  $('grid-wrap').style.display = 'inline-block';
+  $('tiling-wrap').style.display = 'none';
+  $('compare-wrap').style.display = 'none';
+  renderGrid();
+  renderStats();
+  renderGameStatus();
+  renderHeatmap();
+}
+
+/* ═════════════════════════════════════════════════════════════
+ *  타일링 뷰 렌더링
+ * ═════════════════════════════════════════════════════════════ */
+
+function getTilingRange(spaceType) {
+  if (spaceType === 'plain')    return { xMin: 0, xMax: 0, yMin: 0, yMax: 0 };
+  if (spaceType === 'cylinder') return { xMin: -1, xMax: 1, yMin: 0, yMax: 0 };
+  if (spaceType === 'mobius')   return { xMin: -1, xMax: 1, yMin: 0, yMax: 0 };
+  if (spaceType === 'torus')    return { xMin: -1, xMax: 1, yMin: -1, yMax: 1 };
+  return { xMin: 0, xMax: 0, yMin: 0, yMax: 0 };
+}
+
+/** 타일 (tileX, tileY)의 local (lr, lc) 위치에 표시되는 실제 셀. */
+function tileLocalToReal(spaceType, tileX, tileY, lr, lc, n) {
+  // 뫼비우스: 원점에서 멀어질수록 행 뒤집힘이 누적 (x 방향만)
+  let r = lr, c = lc;
+  if (spaceType === 'mobius') {
+    const flipCount = Math.abs(tileX) % 2;
+    if (flipCount) r = (n + 1) - lr;
+  }
+  // 토러스/원기둥: 모든 타일에서 동일 매핑
+  return { r, c };
+}
+
+function renderTiling() {
+  const tilingGrid = $('tiling-grid');
+  tilingGrid.innerHTML = '';
+  const n = state.n;
+  const sz = Math.max(40, Math.round(cellSize() * 0.7));
+  const sp = state.spaceType;
+  const { xMin, xMax, yMin, yMax } = getTilingRange(sp);
+  const tilesX = xMax - xMin + 1;
+  const tilesY = yMax - yMin + 1;
+
+  tilingGrid.style.gridTemplateColumns = `repeat(${tilesX}, auto)`;
+  tilingGrid.style.gridTemplateRows = `repeat(${tilesY}, auto)`;
+
+  for (let ty = yMin; ty <= yMax; ty++) {
+    for (let tx = xMin; tx <= xMax; tx++) {
+      const block = document.createElement('div');
+      block.className = 'tile-block ' + (tx === 0 && ty === 0 ? 'center' : 'copy');
+      block.style.gridTemplateColumns = `repeat(${n}, ${sz}px)`;
+      block.style.gridTemplateRows = `repeat(${n}, ${sz}px)`;
+
+      for (let lr = 1; lr <= n; lr++) {
+        for (let lc = 1; lc <= n; lc++) {
+          const real = tileLocalToReal(sp, tx, ty, lr, lc, n);
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.style.width = sz + 'px';
+          cell.style.height = sz + 'px';
+          cell.style.fontSize = Math.round(sz * 0.45) + 'px';
+
+          // 칸의 가치 색
+          const val = state.cellValues[real.r - 1][real.c - 1];
+          if (state.showValues) {
+            if (val === 2) cell.classList.add('value-2');
+            else if (val === 3) cell.classList.add('value-3');
+            else if (val === 4) cell.classList.add('value-4');
+            else if (val === 6) cell.classList.add('value-6');
+          }
+          // 좌표 라벨
+          const lbl = document.createElement('span');
+          lbl.className = 'coord-label';
+          lbl.textContent = `${real.r},${real.c}`;
+          cell.appendChild(lbl);
+
+          // 칸의 가치 숫자
+          if (state.showValues) {
+            const v = document.createElement('span');
+            v.className = 'value-num';
+            v.textContent = val;
+            cell.appendChild(v);
+          }
+          // 돌 (대전 모드 — 기본 영역과 복사본 모두 표시)
+          if (state.viewMode === 'game') {
+            const stone = state.board[real.r - 1][real.c - 1];
+            if (stone === 'O') { cell.classList.add('o'); cell.append(document.createTextNode('○')); }
+            else if (stone === 'X') { cell.classList.add('x'); cell.append(document.createTextNode('×')); }
+          }
+          // 클릭은 기본영역만 처리
+          if (tx === 0 && ty === 0) {
+            cell.addEventListener('click', () => onCellClick(real.r, real.c));
+            cell.style.cursor = 'pointer';
+          } else {
+            cell.style.cursor = 'default';
+          }
+          block.appendChild(cell);
+        }
+      }
+      tilingGrid.appendChild(block);
+    }
+  }
+
+  // 경로 SVG 오버레이
+  renderTilingPaths(sz);
+}
+
+/** 타일링 좌표(tileX, tileY, lr, lc)의 픽셀 중심 (tilingGrid 기준). */
+function tilingCellCenterPx(tx, ty, lr, lc, sz, sp) {
+  const { xMin, yMin } = getTilingRange(sp);
+  const tilePadding = 8;
+  const tileGap = 8;
+  const tileBorder = 2;
+  const tileSize = n_cells_to_px(state.n, sz);
+  const tileIdxX = tx - xMin;
+  const tileIdxY = ty - yMin;
+  const tileOriginX = tilePadding + tileIdxX * (tileSize + tileGap) + tileBorder;
+  const tileOriginY = tilePadding + tileIdxY * (tileSize + tileGap) + tileBorder;
+  const x = tileOriginX + (lc - 1) * (sz + 2) + sz / 2;
+  const y = tileOriginY + (lr - 1) * (sz + 2) + sz / 2;
+  return { x, y };
+}
+
+function n_cells_to_px(n, sz) {
+  // n개의 셀 + (n-1)개의 gap(2px)
+  return n * sz + (n - 1) * 2;
+}
+
+function renderTilingPaths(sz) {
+  const sp = state.spaceType;
+  const svg = $('tiling-paths-overlay');
+  svg.innerHTML = '';
+
+  const tilingGrid = $('tiling-grid');
+  const w = tilingGrid.offsetWidth;
+  const h = tilingGrid.offsetHeight;
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+
+  if (!state.showPaths && !(state.viewMode === 'analysis' && state.selectedCell)) return;
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const { xMin, xMax, yMin, yMax } = getTilingRange(sp);
+
+  let pathsToDraw = [];
+  if (state.viewMode === 'analysis' && state.selectedCell) {
+    const r0 = state.selectedCell.r, c0 = state.selectedCell.c;
+    const filtered = state.paths.filter(p =>
+      p.cells.some(cc => cc.r === r0 && cc.c === c0));
+    filtered.forEach((p, idx) => {
+      pathsToDraw.push({ p, color: PATH_COLORS[idx % PATH_COLORS.length] });
+    });
+  } else if (state.showPaths) {
+    state.paths.forEach((p, idx) => {
+      pathsToDraw.push({ p, color: PATH_COLORS[idx % PATH_COLORS.length] });
+    });
+  }
+
+  for (const { p, color } of pathsToDraw) {
+    drawPathInTiling(svg, p, color, sz, sp, ns, xMin, xMax, yMin, yMax);
+  }
+}
+
+/**
+ * 경로를 타일링 공간에서 추적하여 직선으로 그린다.
+ * 시작 셀을 기본 타일에 두고, 방향 (dr, dc)를 누적 적용.
+ * 경계 통과 시 타일을 옮기고 (뫼비우스의 경우 행 뒤집힘 누적).
+ */
+function drawPathInTiling(svg, path, color, sz, sp, ns, xMin, xMax, yMin, yMax) {
+  const n = state.n;
+  const { dr, dc } = path;
+  const start = path.cells[0];
+  // 글로벌 (타일 좌표 + 로컬) 추적
+  let tileX = 0, tileY = 0;
+  let lr = start.r, lc = start.c;
+  let flipParity = 0;  // 뫼비우스 누적 뒤집힘
+  const points = [tilingCellCenterPx(tileX, tileY, lr, lc, sz, sp)];
+
+  let cr = start.r, cc = start.c;
+  for (let i = 1; i < path.cells.length; i++) {
+    let nr = cr + dr, nc = cc + dc;
+
+    // 열 감싸기
+    if (nc > n) {
+      nc -= n;
+      tileX += 1;
+      if (sp === 'mobius') { flipParity ^= 1; nr = (n + 1) - nr; }
+    } else if (nc < 1) {
+      nc += n;
+      tileX -= 1;
+      if (sp === 'mobius') { flipParity ^= 1; nr = (n + 1) - nr; }
+    }
+    // 행 감싸기 (토러스만)
+    if (nr > n) { nr -= n; tileY += 1; }
+    else if (nr < 1) { nr += n; tileY -= 1; }
+
+    // 타일링 표시 영역 내부에 있을 때만 그리기 (밖으로 나가면 중단)
+    if (tileX < xMin || tileX > xMax || tileY < yMin || tileY > yMax) break;
+
+    // 타일 내 표시 위치: 뫼비우스 + 뒤집힘 상태에서 lr→n+1-lr
+    let dispLr = nr, dispLc = nc;
+    if (sp === 'mobius' && flipParity === 1) dispLr = (n + 1) - nr;
+
+    points.push(tilingCellCenterPx(tileX, tileY, dispLr, dispLc, sz, sp));
+    cr = nr; cc = nc;
+  }
+
+  // polyline 그리기
+  if (points.length >= 2) {
+    const pl = document.createElementNS(ns, 'polyline');
+    pl.setAttribute('points', points.map(p => `${p.x},${p.y}`).join(' '));
+    pl.setAttribute('stroke', color);
+    pl.setAttribute('stroke-width', 4);
+    pl.setAttribute('stroke-opacity', 0.85);
+    pl.setAttribute('fill', 'none');
+    pl.setAttribute('stroke-linecap', 'round');
+    pl.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(pl);
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════
+ *  4종 비교 뷰 렌더링
+ * ═════════════════════════════════════════════════════════════ */
+
+function renderCompare() {
+  const wrap = $('compare-wrap');
+  wrap.innerHTML = '';
+  const SPACES = [
+    { key: 'plain',    name: '평면',    icon: '⬜' },
+    { key: 'cylinder', name: '원기둥',  icon: '🧻' },
+    { key: 'torus',    name: '토러스',  icon: '🍩' },
+    { key: 'mobius',   name: '뫼비우스', icon: '♾️' }
+  ];
+  for (const sp of SPACES) {
+    const card = document.createElement('div');
+    card.className = 'compare-card';
+    if (sp.key === state.spaceType) card.classList.add('active');
+    const paths = findAllPaths(sp.key, 3);
+    const values = calculateCellValues(3, paths);
+    const uniqueVals = [...new Set(values.flat())].sort((a, b) => a - b);
+    const isUniform = uniqueVals.length === 1;
+    const sum = values.flat().reduce((a, b) => a + b, 0);
+
+    const grid = document.createElement('div');
+    grid.className = 'cmp-grid';
+    grid.style.gridTemplateColumns = 'repeat(3, 32px)';
+    grid.style.gridTemplateRows = 'repeat(3, 32px)';
+    for (let r = 1; r <= 3; r++) {
+      for (let c = 1; c <= 3; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'cmp-cell value-' + values[r-1][c-1];
+        cell.textContent = values[r-1][c-1];
+        grid.appendChild(cell);
+      }
+    }
+
+    card.innerHTML = `
+      <div class="cmp-name">${sp.icon} ${sp.name}</div>
+    `;
+    card.appendChild(grid);
+    const info = document.createElement('div');
+    info.className = 'cmp-info';
+    info.innerHTML = `
+      경로: <b>${paths.length}</b>개<br>
+      칸 가치: <b>${uniqueVals.join(',')}</b> (${uniqueVals.length}종)<br>
+      균등: <b>${isUniform ? '✓ 균등' : '✗ 불균등'}</b><br>
+      검산: ${sum} = ${paths.length}×3 ${sum === paths.length * 3 ? '✓' : '✗'}
+    `;
+    card.appendChild(info);
+    card.addEventListener('click', () => {
+      // 클릭하면 해당 공간으로 전환 + 비교 모드 OFF
+      state.showCompare = false;
+      setSpaceType(sp.key);
+    });
+    wrap.appendChild(card);
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════
+ *  12. 이벤트 바인딩
+ * ═════════════════════════════════════════════════════════════ */
+
+document.querySelectorAll('#space-btns .btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.disabled) return;
+    setSpaceType(btn.dataset.space);
+  });
+});
+
+document.querySelectorAll('#size-btns .btn').forEach(btn => {
+  btn.addEventListener('click', () => setN(Number(btn.dataset.size)));
+});
+
+document.querySelectorAll('.mode-bar .btn').forEach(btn => {
+  btn.addEventListener('click', () => setViewMode(btn.dataset.mode));
+});
+
+$('toggle-paths').addEventListener('click', () => {
+  state.showPaths = !state.showPaths;
+  if (state.showPaths) state.selectedCell = null;
+  applyAllUI();
+});
+$('toggle-values').addEventListener('click', () => {
+  state.showValues = !state.showValues;
+  applyAllUI();
+});
+$('toggle-heatmap').addEventListener('click', () => {
+  state.showHeatmap = !state.showHeatmap;
+  applyAllUI();
+});
+$('toggle-tiling').addEventListener('click', () => {
+  state.showTiling = !state.showTiling;
+  if (state.showTiling) {
+    state.showCompare = false;
+    state.selectedCell = null;
+  }
+  applyAllUI();
+});
+$('toggle-compare').addEventListener('click', () => {
+  state.showCompare = !state.showCompare;
+  if (state.showCompare) {
+    state.showTiling = false;
+    state.selectedCell = null;
+  }
+  applyAllUI();
+});
+
+$('btn-reset').addEventListener('click', () => {
+  resetGame();
+  render();
+});
+
+$('btn-heatmap-reset').addEventListener('click', () => {
+  if (confirm('첫 수 통계를 정말 초기화할까요?')) {
+    clearHeatmap();
+    render();
+  }
+});
+
+$('session-select').addEventListener('change', e => {
+  applySessionPreset(Number(e.target.value));
+});
+
+// 변환 버튼
+$('shift-left').addEventListener('click', () => shiftBy(-1, 0));
+$('shift-right').addEventListener('click', () => shiftBy(1, 0));
+$('shift-up').addEventListener('click', () => shiftBy(0, -1));
+$('shift-down').addEventListener('click', () => shiftBy(0, 1));
+$('rotate-180').addEventListener('click', () => toggle180());
+$('reset-transform').addEventListener('click', () => {
+  resetTransform();
+  applyAllUI();
+});
+
+/* ─── 드래그 스크롤 ─── */
+function gridDragStart(e) {
+  if (state.session < 2) return;
+  if (state.spaceType === 'plain') return;
+  // 분석/대전 모두 가능. 단, 빈 셀이 아닌 곳을 드래그해야 의도가 분명
+  const point = e.touches ? e.touches[0] : e;
+  dragInfo = {
+    startX: point.clientX,
+    startY: point.clientY,
+    startColShift: state.colShift,
+    startRowShift: state.rowShift,
+    moved: false
+  };
+}
+function gridDragMove(e) {
+  if (!dragInfo) return;
+  const point = e.touches ? e.touches[0] : e;
+  const dx = point.clientX - dragInfo.startX;
+  const dy = point.clientY - dragInfo.startY;
+  if (Math.abs(dx) > 6 || Math.abs(dy) > 6) dragInfo.moved = true;
+  // 라이브 미리보기: translate
+  const grid = $('grid');
+  if (state.spaceType === 'cylinder' || state.spaceType === 'mobius') {
+    grid.style.transform = `translateX(${dx}px)`;
+  } else if (state.spaceType === 'torus') {
+    grid.style.transform = `translate(${dx}px, ${dy}px)`;
+  }
+  if (dragInfo.moved) e.preventDefault();
+}
+function gridDragEnd(e) {
+  if (!dragInfo) return;
+  const grid = $('grid');
+  grid.style.transform = '';
+
+  if (dragInfo.moved) {
+    const point = e.changedTouches ? e.changedTouches[0] : e;
+    const dx = point.clientX - dragInfo.startX;
+    const dy = point.clientY - dragInfo.startY;
+    const sz = cellSize() + 2;
+    const dCol = Math.round(dx / sz);
+    const dRow = Math.round(dy / sz);
+    if (dCol !== 0 || dRow !== 0) {
+      // 방향: 오른쪽으로 드래그 = 시프트 +1
+      shiftBy(dCol, dRow);
+    } else {
+      // 작은 드래그 → 셀 클릭으로 전파되지 않도록 무시
+    }
+    // 클릭 이벤트가 같은 시퀀스에서 함께 발생할 수 있으므로 차단
+    if (e.cancelable) e.preventDefault();
+  }
+  dragInfo = null;
+}
+
+const gridWrap = $('grid-wrap');
+gridWrap.addEventListener('mousedown', gridDragStart);
+window.addEventListener('mousemove', gridDragMove);
+window.addEventListener('mouseup', gridDragEnd);
+gridWrap.addEventListener('touchstart', gridDragStart, { passive: false });
+window.addEventListener('touchmove', gridDragMove, { passive: false });
+window.addEventListener('touchend', gridDragEnd);
+
+// (드래그 직후 셀 클릭 차단은 onCellClick 함수 내부에서 dragInfo.moved 검사로 처리)
+
+window.addEventListener('resize', () => render());
+
+/* ═════════════════════════════════════════════════════════════
+ *  13. 초기화
+ * ═════════════════════════════════════════════════════════════ */
+
+function init() {
+  // URL 파라미터 처리
+  const params = new URLSearchParams(window.location.search);
+  const sParam = Number(params.get('session'));
+  const mParam = params.get('mode');
+  const spParam = params.get('space');
+  const nParam = Number(params.get('n'));
+
+  let s = (sParam >= 1 && sParam <= 3) ? sParam : 1;
+  $('session-select').value = String(s);
+  applySessionPreset(s);
+
+  if (mParam === 'game') setViewMode('game');
+  if (spParam && SPACE_NAMES[spParam] && !document.querySelector(`#space-btns .btn[data-space="${spParam}"]`).disabled) {
+    setSpaceType(spParam);
+  }
+  if ((nParam === 3 || nParam === 4) && s === 1) setN(nParam);
+
+  resetGame();
+  render();
+}
+
+init();
+</script>
+</body>
+</html>

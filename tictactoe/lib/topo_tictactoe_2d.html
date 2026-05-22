@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2D 위상 틱택토 — 기본 다각형</title>
+<style>
+  :root {
+    --bg:#F8F9FA; --panel:#FFFFFF; --text:#1F2933; --muted:#6B7280;
+    --border:#D1D5DB; --accent:#2E86C1;
+    --x-color:#E74C3C; --o-color:#3498DB;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { min-height:100%; }
+  body {
+    font-family:'맑은 고딕','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    background:var(--bg); color:var(--text); min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; padding:18px 12px;
+  }
+  h1 { font-size:20px; margin-bottom:4px; color:var(--accent); }
+  .sub { font-size:13px; color:var(--muted); margin-bottom:14px; }
+  .panel {
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:14px 16px; box-shadow:0 4px 14px rgba(0,0,0,0.06);
+    width:100%; max-width:760px;
+  }
+  .row { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+  .pill {
+    padding:6px 12px; border-radius:14px; font-size:12px; font-weight:700;
+    background:rgba(46,134,193,0.12); color:var(--accent);
+  }
+  .status {
+    margin-left:auto; font-size:14px; font-weight:700;
+    padding:5px 12px; border-radius:8px; background:#F3F4F6;
+  }
+  .status.x { color:var(--x-color); }
+  .status.o { color:var(--o-color); }
+  .status.win { background:#FEF3C7; }
+  .canvas-wrap { display:flex; justify-content:center; margin:8px 0 12px; }
+  canvas { background:#FFF; touch-action:none; border-radius:10px;
+           box-shadow:0 2px 8px rgba(0,0,0,0.06);
+           max-width:100%; height:auto; aspect-ratio:1/1; }
+  .controls { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .btn {
+    background:#FFF; border:1px solid var(--border); border-radius:8px;
+    padding:8px 14px; font-size:13px; cursor:pointer;
+  }
+  .btn.primary { background:var(--accent); color:#FFF; border-color:var(--accent); }
+  .btn:hover { background:#EFF6FF; }
+  .btn.primary:hover { background:#1B6FA8; }
+  .toggle { background:#F3F4F6; }
+  .toggle.on { background:#DBEAFE; color:var(--accent); font-weight:700; }
+  .hint {
+    margin-top:10px; padding:10px 12px; background:#FFFBEB; border-left:3px solid #F59E0B;
+    font-size:13px; border-radius:6px; color:#92400E;
+  }
+  .arrow-legend { display:flex; gap:14px; font-size:12px; color:var(--muted); margin-top:6px; flex-wrap:wrap; }
+  .arrow-legend span { display:inline-flex; align-items:center; gap:4px; }
+  .arrow-legend .swatch { display:inline-block; width:18px; height:3px; border-radius:2px; }
+  .mode-select { margin:16px 0; text-align:center; }
+  .mode-card {
+    display:inline-block; margin:8px; padding:18px 22px;
+    background:#FFF; border:2px solid var(--border); border-radius:12px;
+    cursor:pointer; min-width:180px; text-align:center;
+  }
+  .mode-card:hover { border-color:var(--accent); background:#EFF6FF; }
+  .mode-card .icon { font-size:32px; }
+  .mode-card .name { font-weight:700; margin-top:6px; }
+  .mode-card .desc { font-size:12px; color:var(--muted); margin-top:4px; }
+  .back-link {
+    margin-bottom:10px; font-size:13px; color:var(--muted); text-decoration:none;
+    align-self:flex-start;
+  }
+  .back-link:hover { color:var(--accent); }
+</style>
+</head>
+<body>
+  <a class="back-link" href="javascript:history.back()">← 돌아가기</a>
+  <h1>2D 위상 틱택토 — 기본 다각형 표현</h1>
+  <div class="sub">평면 격자판에 화살표로 「경계 잇기」를 표현했습니다. 회색 ghost 타일이 옆 칸과 같은 칸임을 보여줍니다.</div>
+
+  <div id="mode-select" class="mode-select" style="display:none;">
+    <h2 style="font-size:16px; margin-bottom:10px;">공간을 선택하세요</h2>
+    <div class="mode-card" data-mode="cylinder">
+      <div class="icon">🥫</div><div class="name">원기둥</div>
+      <div class="desc">좌우만 이어붙임 (같은 방향)</div>
+    </div>
+    <div class="mode-card" data-mode="torus">
+      <div class="icon">🍩</div><div class="name">토러스</div>
+      <div class="desc">좌우 + 상하 이어붙임</div>
+    </div>
+    <div class="mode-card" data-mode="mobius">
+      <div class="icon">♾️</div><div class="name">뫼비우스</div>
+      <div class="desc">좌우 반대 방향 이어붙임</div>
+    </div>
+  </div>
+
+  <div id="game-panel" class="panel" style="display:none;">
+    <div class="row">
+      <span class="pill" id="mode-pill">원기둥</span>
+      <span class="status" id="status">X 차례</span>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="board" width="540" height="540"></canvas>
+    </div>
+    <div class="arrow-legend">
+      <span><span class="swatch" style="background:#E74C3C;"></span> 좌우 (같은 방향)</span>
+      <span id="legend-tb" style="display:none;"><span class="swatch" style="background:#3498DB;"></span> 상하 (같은 방향)</span>
+      <span id="legend-flip" style="display:none;"><span class="swatch" style="background:#E74C3C;"></span> 좌우 (반대 방향, 거울상)</span>
+    </div>
+    <div class="hint">옆 회색 ghost 타일에 보이는 돌은 <b>같은 칸</b>입니다 — 경계가 이어진 결과예요. 거기까지 경로가 닿으면 승리!</div>
+    <div class="controls" style="margin-top:14px;">
+      <button class="btn primary" id="reset">↺ 다시 시작</button>
+      <button class="btn toggle on" id="toggle-tiling">⊞ 타일링 보기</button>
+      <button class="btn" id="back-select">공간 선택</button>
+    </div>
+  </div>
+
+<script>
+"use strict";
+
+/* ═══════════════════════════════════════════════════════════
+ * 1. 핵심 엔진 — 2.15 ghost-tile 알고리즘
+ *    분석기와 100% 동일한 winLines 산출
+ * ═══════════════════════════════════════════════════════════ */
+const N = 3;
+
+function flipVPerm(n) {
+  const arr = new Array(n*n);
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      arr[i*n + j] = (n-1-i)*n + j;
+    }
+  }
+  return arr;
+}
+const FLIP_V = flipVPerm(N);
+const ID = (() => { const a = new Array(N*N); for (let k=0; k<N*N; k++) a[k]=k; return a; })();
+
+function getGhosts(mode) {
+  switch (mode) {
+    case 'cylinder':
+      return [{dr:0, dc:-1, perm:null}, {dr:0, dc:1, perm:null}];
+    case 'torus':
+      return [
+        {dr:-1, dc:-1, perm:null}, {dr:-1, dc:0, perm:null}, {dr:-1, dc:1, perm:null},
+        {dr: 0, dc:-1, perm:null},                            {dr: 0, dc:1, perm:null},
+        {dr: 1, dc:-1, perm:null}, {dr: 1, dc:0, perm:null},  {dr: 1, dc:1, perm:null},
+      ];
+    case 'mobius':
+      return [{dr:0, dc:-1, perm:FLIP_V}, {dr:0, dc:1, perm:FLIP_V}];
+    default: return [];
+  }
+}
+
+const ENUM_DIRS = [
+  {dy:0, dx:1}, {dy:1, dx:0}, {dy:1, dx:1}, {dy:-1, dx:1}
+];
+
+function computeWinLines(mode) {
+  const ghosts = getGhosts(mode);
+  const tiles = [{dr:0, dc:0, perm:null}, ...ghosts];
+  const tileLookup = new Map();
+  for (const t of tiles) tileLookup.set(`${t.dr},${t.dc}`, t);
+  const rs = tiles.map(t => t.dr), cs = tiles.map(t => t.dc);
+  const rMin = Math.min(...rs), rMax = Math.max(...rs);
+  const cMin = Math.min(...cs), cMax = Math.max(...cs);
+  const H = (rMax - rMin + 1) * N;
+  const W = (cMax - cMin + 1) * N;
+  const baseR = (0 - rMin) * N, baseC = (0 - cMin) * N;
+
+  function g2c(Y, X) {
+    if (Y < 0 || Y >= H || X < 0 || X >= W) return null;
+    const tr = Math.floor(Y/N) + rMin;
+    const tc = Math.floor(X/N) + cMin;
+    const tile = tileLookup.get(`${tr},${tc}`);
+    if (!tile) return null;
+    const local = (Y % N) * N + (X % N);
+    if (!tile.perm) return local;
+    return tile.perm.indexOf(local);
+  }
+
+  const seen = new Set();
+  const lines = [];
+  for (let r0 = baseR; r0 < baseR + N; r0++) {
+    for (let c0 = baseC; c0 < baseC + N; c0++) {
+      for (const d of ENUM_DIRS) {
+        const idxs = [];
+        let valid = true;
+        for (let s = 0; s < N; s++) {
+          const v = g2c(r0 + s*d.dy, c0 + s*d.dx);
+          if (v === null || v < 0) { valid = false; break; }
+          idxs.push(v);
+        }
+        if (!valid) continue;
+        if (new Set(idxs).size !== N) continue;
+        const sorted = [...idxs].sort((a,b)=>a-b);
+        const key = sorted.join(',');
+        if (seen.has(key)) continue;
+        seen.add(key);
+        lines.push(idxs);
+      }
+    }
+  }
+  return lines;
+}
+
+/* ═══════════════════════════════════════════════════════════
+ * 2. 게임 상태
+ * ═══════════════════════════════════════════════════════════ */
+const state = {
+  mode: null,
+  board: new Array(9).fill(null),  // null / 'X' / 'O'
+  turn: 'X',
+  winLines: [],
+  winner: null,
+  winLine: null,
+  showTiling: true,
+};
+
+/* ═══════════════════════════════════════════════════════════
+ * 3. 렌더링
+ * ═══════════════════════════════════════════════════════════ */
+const canvas = document.getElementById('board');
+const ctx = canvas.getContext('2d');
+
+const CW = 540; // canvas width
+const CELL = 60;
+const PAD = 20;
+const CENTRAL_OFFSET_X = (CW - 3 * N * CELL) / 2 + N * CELL; // central tile starts here
+const CENTRAL_OFFSET_Y = (CW - 3 * N * CELL) / 2 + N * CELL;
+
+function getTilesForRender() {
+  const g = getGhosts(state.mode);
+  return [{dr:0, dc:0, perm:null}, ...g];
+}
+
+function tileGlobalRect(tile) {
+  // central tile top-left in canvas coords:
+  const cx = CENTRAL_OFFSET_X + tile.dc * N * CELL;
+  const cy = CENTRAL_OFFSET_Y + tile.dr * N * CELL;
+  return { x: cx, y: cy };
+}
+
+function render() {
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const tiles = getTilesForRender();
+  const centralTile = tiles[0];
+
+  // Draw ghost tiles (if tiling enabled), then central tile on top
+  for (const tile of tiles) {
+    const isCentral = tile === centralTile;
+    if (!isCentral && !state.showTiling) continue;
+    drawTile(tile, isCentral);
+  }
+
+  // Draw arrows on the central tile borders
+  drawArrows(centralTile);
+
+  // Draw winning line if any
+  if (state.winLine) drawWinLine();
+}
+
+function drawTile(tile, isCentral) {
+  const { x: tx, y: ty } = tileGlobalRect(tile);
+  const w = N * CELL;
+  ctx.fillStyle = isCentral ? '#FFFFFF' : 'rgba(240, 240, 245, 0.7)';
+  ctx.fillRect(tx, ty, w, w);
+  // Grid lines
+  ctx.strokeStyle = isCentral ? '#9CA3AF' : '#D1D5DB';
+  ctx.lineWidth = isCentral ? 2 : 1;
+  for (let i = 0; i <= N; i++) {
+    ctx.beginPath();
+    ctx.moveTo(tx + i*CELL, ty);
+    ctx.lineTo(tx + i*CELL, ty + w);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(tx, ty + i*CELL);
+    ctx.lineTo(tx + w, ty + i*CELL);
+    ctx.stroke();
+  }
+
+  // Draw stones
+  for (let i = 0; i < 9; i++) {
+    const localIdx = tile.perm ? tile.perm[i] : i;
+    const r = Math.floor(localIdx / N);
+    const c = localIdx % N;
+    const stone = state.board[i];
+    if (!stone) continue;
+    const cx = tx + c*CELL + CELL/2;
+    const cy = ty + r*CELL + CELL/2;
+    drawStone(cx, cy, stone, isCentral);
+  }
+}
+
+function drawStone(cx, cy, stone, isCentral) {
+  ctx.lineWidth = isCentral ? 5 : 3;
+  if (stone === 'X') {
+    ctx.strokeStyle = isCentral ? '#E74C3C' : 'rgba(231, 76, 60, 0.45)';
+    const d = CELL * 0.28;
+    ctx.beginPath();
+    ctx.moveTo(cx - d, cy - d); ctx.lineTo(cx + d, cy + d);
+    ctx.moveTo(cx + d, cy - d); ctx.lineTo(cx - d, cy + d);
+    ctx.stroke();
+  } else {
+    ctx.strokeStyle = isCentral ? '#3498DB' : 'rgba(52, 152, 219, 0.45)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, CELL * 0.30, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function drawArrows(centralTile) {
+  const { x: tx, y: ty } = tileGlobalRect(centralTile);
+  const w = N * CELL;
+  const mode = state.mode;
+
+  // 좌우: 항상 표시 (3종 공간 모두). 색은 빨강.
+  // 원기둥/토러스: 같은 방향 (둘 다 위로 ↑)
+  // 뫼비우스: 반대 방향 (왼쪽 ↑, 오른쪽 ↓)
+  const lrColor = '#E74C3C';
+  const flip = (mode === 'mobius');
+  drawSideArrows(tx, ty, w, 'left', lrColor, 'up');
+  drawSideArrows(tx + w, ty, w, 'right', lrColor, flip ? 'down' : 'up');
+
+  // 상하: 토러스만
+  if (mode === 'torus') {
+    const tbColor = '#3498DB';
+    drawSideArrows(tx, ty, w, 'top', tbColor, 'right');
+    drawSideArrows(tx, ty + w, w, 'bottom', tbColor, 'right');
+  }
+}
+
+function drawSideArrows(x, y, len, side, color, dir) {
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 3;
+  // For left/right side: arrow runs vertically along x line
+  // For top/bottom side: arrow runs horizontally along y line
+  const isVert = (side === 'left' || side === 'right');
+  const offset = (side === 'left') ? -10 : (side === 'right') ? 10 : (side === 'top') ? -10 : 10;
+  if (isVert) {
+    const lineX = x + (side === 'left' ? -2 : 2);
+    const top = y + 8, bot = y + len - 8;
+    ctx.beginPath();
+    ctx.moveTo(lineX, top); ctx.lineTo(lineX, bot);
+    ctx.stroke();
+    // Arrow head
+    if (dir === 'up') drawArrowHead(lineX, top, 0, -1, color);
+    else drawArrowHead(lineX, bot, 0, 1, color);
+  } else {
+    const lineY = y + (side === 'top' ? -2 : 2);
+    const left = x + 8, right = x + len - 8;
+    ctx.beginPath();
+    ctx.moveTo(left, lineY); ctx.lineTo(right, lineY);
+    ctx.stroke();
+    if (dir === 'right') drawArrowHead(right, lineY, 1, 0, color);
+    else drawArrowHead(left, lineY, -1, 0, color);
+  }
+}
+
+function drawArrowHead(x, y, dx, dy, color) {
+  const size = 8;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x - dx*size - dy*size*0.6, y - dy*size + dx*size*0.6);
+  ctx.lineTo(x - dx*size + dy*size*0.6, y - dy*size - dx*size*0.6);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawWinLine() {
+  const line = state.winLine;
+  // Highlight winning cells in the central tile
+  const { x: tx, y: ty } = tileGlobalRect({dr:0, dc:0});
+  ctx.fillStyle = 'rgba(255, 235, 59, 0.35)';
+  for (const idx of line) {
+    const r = Math.floor(idx / N);
+    const c = idx % N;
+    ctx.fillRect(tx + c*CELL + 2, ty + r*CELL + 2, CELL - 4, CELL - 4);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+ * 4. 인터랙션
+ * ═══════════════════════════════════════════════════════════ */
+function canvasToCell(px, py) {
+  const { x: tx, y: ty } = tileGlobalRect({dr:0, dc:0});
+  const cx = px - tx, cy = py - ty;
+  if (cx < 0 || cx >= N*CELL || cy < 0 || cy >= N*CELL) return null;
+  const r = Math.floor(cy / CELL);
+  const c = Math.floor(cx / CELL);
+  return r * N + c;
+}
+
+function checkWinner() {
+  for (const line of state.winLines) {
+    const s0 = state.board[line[0]];
+    if (!s0) continue;
+    if (state.board[line[1]] === s0 && state.board[line[2]] === s0) {
+      return { winner: s0, line };
+    }
+  }
+  // Draw check
+  if (state.board.every(c => c !== null)) {
+    return { winner: 'draw', line: null };
+  }
+  return null;
+}
+
+function placeStone(idx) {
+  if (state.winner) return;
+  if (state.board[idx] !== null) return;
+  state.board[idx] = state.turn;
+  const result = checkWinner();
+  if (result) {
+    state.winner = result.winner;
+    state.winLine = result.line;
+  } else {
+    state.turn = state.turn === 'X' ? 'O' : 'X';
+  }
+  updateStatus();
+  render();
+  saveStorage();
+}
+
+function updateStatus() {
+  const status = document.getElementById('status');
+  status.classList.remove('x', 'o', 'win');
+  if (state.winner === 'X') {
+    status.textContent = '🎉 X 승!'; status.classList.add('x', 'win');
+  } else if (state.winner === 'O') {
+    status.textContent = '🎉 O 승!'; status.classList.add('o', 'win');
+  } else if (state.winner === 'draw') {
+    status.textContent = '무승부';
+  } else {
+    status.textContent = state.turn + ' 차례';
+    status.classList.add(state.turn.toLowerCase());
+  }
+}
+
+function canvasCoords(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return {
+    x: (clientX - rect.left) * scaleX,
+    y: (clientY - rect.top) * scaleY,
+  };
+}
+canvas.addEventListener('click', e => {
+  const { x, y } = canvasCoords(e.clientX, e.clientY);
+  const idx = canvasToCell(x, y);
+  if (idx !== null) placeStone(idx);
+});
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length !== 1) return;
+  const { x, y } = canvasCoords(e.touches[0].clientX, e.touches[0].clientY);
+  const idx = canvasToCell(x, y);
+  if (idx !== null) placeStone(idx);
+  e.preventDefault();
+}, { passive: false });
+
+/* ═══════════════════════════════════════════════════════════
+ * 5. UI / 모드 전환
+ * ═══════════════════════════════════════════════════════════ */
+function setMode(mode) {
+  if (!['cylinder', 'torus', 'mobius'].includes(mode)) {
+    showSelector();
+    return;
+  }
+  state.mode = mode;
+  state.board = new Array(9).fill(null);
+  state.turn = 'X';
+  state.winner = null;
+  state.winLine = null;
+  state.winLines = computeWinLines(mode);
+  document.getElementById('mode-select').style.display = 'none';
+  document.getElementById('game-panel').style.display = 'block';
+  document.getElementById('mode-pill').textContent =
+    {cylinder:'🥫 원기둥', torus:'🍩 토러스', mobius:'♾️ 뫼비우스'}[mode];
+  // Legend
+  document.getElementById('legend-tb').style.display = mode === 'torus' ? 'inline-flex' : 'none';
+  document.getElementById('legend-flip').style.display = mode === 'mobius' ? 'inline-flex' : 'none';
+  loadStorage();
+  updateStatus();
+  render();
+}
+
+function showSelector() {
+  document.getElementById('mode-select').style.display = 'block';
+  document.getElementById('game-panel').style.display = 'none';
+  state.mode = null;
+}
+
+document.querySelectorAll('.mode-card').forEach(card => {
+  card.addEventListener('click', () => setMode(card.dataset.mode));
+});
+document.getElementById('reset').addEventListener('click', () => {
+  state.board = new Array(9).fill(null);
+  state.turn = 'X';
+  state.winner = null;
+  state.winLine = null;
+  updateStatus();
+  render();
+  saveStorage();
+});
+document.getElementById('back-select').addEventListener('click', showSelector);
+document.getElementById('toggle-tiling').addEventListener('click', () => {
+  state.showTiling = !state.showTiling;
+  document.getElementById('toggle-tiling').classList.toggle('on', state.showTiling);
+  render();
+});
+
+/* ═══════════════════════════════════════════════════════════
+ * 6. localStorage (prefix: topo_2dgame_)
+ * ═══════════════════════════════════════════════════════════ */
+function storageKey() { return `topo_2dgame_${state.mode}`; }
+function saveStorage() {
+  if (!state.mode) return;
+  localStorage.setItem(storageKey(), JSON.stringify({
+    board: state.board, turn: state.turn,
+    winner: state.winner, winLine: state.winLine,
+  }));
+}
+function loadStorage() {
+  if (!state.mode) return;
+  try {
+    const raw = localStorage.getItem(storageKey());
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    state.board = s.board || new Array(9).fill(null);
+    state.turn = s.turn || 'X';
+    state.winner = s.winner || null;
+    state.winLine = s.winLine || null;
+  } catch (e) {}
+}
+
+/* ═══════════════════════════════════════════════════════════
+ * 7. URL ?mode= 파싱
+ * ═══════════════════════════════════════════════════════════ */
+const params = new URLSearchParams(location.search);
+const urlMode = params.get('mode');
+if (urlMode && ['cylinder', 'torus', 'mobius'].includes(urlMode)) {
+  setMode(urlMode);
+} else {
+  showSelector();
+}
+</script>
+</body>
+</html>
