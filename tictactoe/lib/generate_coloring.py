@@ -53,11 +53,11 @@ STAGE_PLAN: List[Dict] = [
     {"key": "plain_4",    "space": "plain",    "regions": 14, "chi": 4, "maxColors": 5},
     {"key": "plain_5",    "space": "plain",    "regions": 18, "chi": 4, "maxColors": 5},
     {"key": "cylinder_1", "space": "cylinder", "regions": 8,  "chi": 4, "maxColors": 5},
-    # cylinder_2..5: chi capped at 4 (cylinder is planar; chi=5 impossible)
-    {"key": "cylinder_2", "space": "cylinder", "regions": 10, "chi": 4, "maxColors": 5},
-    {"key": "cylinder_3", "space": "cylinder", "regions": 12, "chi": 4, "maxColors": 5},
-    {"key": "cylinder_4", "space": "cylinder", "regions": 14, "chi": 4, "maxColors": 5},
-    {"key": "cylinder_5", "space": "cylinder", "regions": 16, "chi": 4, "maxColors": 5},
+    # cylinder_2..5: chi=5 enabled by king-move (8-direction) adjacency
+    {"key": "cylinder_2", "space": "cylinder", "regions": 10, "chi": 5, "maxColors": 6},
+    {"key": "cylinder_3", "space": "cylinder", "regions": 12, "chi": 5, "maxColors": 6},
+    {"key": "cylinder_4", "space": "cylinder", "regions": 14, "chi": 5, "maxColors": 6},
+    {"key": "cylinder_5", "space": "cylinder", "regions": 16, "chi": 5, "maxColors": 6},
     {"key": "torus_1",    "space": "torus",    "regions": 8,  "chi": 5, "maxColors": 6},
     {"key": "torus_2",    "space": "torus",    "regions": 10, "chi": 5, "maxColors": 6},
     {"key": "torus_3",    "space": "torus",    "regions": 12, "chi": 6, "maxColors": 7},
@@ -101,15 +101,58 @@ def cell_neighbors(r: int, c: int, rows: int, cols: int, space: str):
         yield (rows - 1, c)
 
 
+def cell_neighbors_8(r: int, c: int, rows: int, cols: int, space: str):
+    """4 cardinal + 4 diagonal neighbors with space-aware wrap.
+
+    Adjacency-purpose only: two regions are 'adjacent' iff they share a
+    cell-edge OR a cell-corner (king-move). Used by build_adjacency to
+    obtain a denser graph where chi > 4 is reachable on cylinder.
+    Region growth and connectivity still use the 4-direction cell_neighbors.
+    """
+    for dr in (-1, 0, 1):
+        for dc in (-1, 0, 1):
+            if dr == 0 and dc == 0:
+                continue
+            nr, nc = r + dr, c + dc
+            # column boundary first (may also flip row in mobius)
+            if nc < 0 or nc >= cols:
+                if space == "plain":
+                    continue
+                if space == "cylinder" or space == "torus":
+                    nc = nc % cols
+                elif space == "mobius":
+                    nc = nc % cols
+                    nr = rows - 1 - nr
+            # row boundary
+            if nr < 0 or nr >= rows:
+                if space == "torus":
+                    nr = nr % rows
+                else:
+                    continue
+            yield (nr, nc)
+
+
 # -----------------------------------------------------------------------------
 # Region helpers
 # -----------------------------------------------------------------------------
 def build_adjacency(grid, rows, cols, space, num_regions):
+    """Adjacency neighbor rule:
+    - cylinder: king-move (4 cardinal + 4 diagonal). Two regions are adjacent
+      if they share a cell-edge OR a cell-corner. Makes the graph non-planar
+      on the cylinder, enabling chi >= 5 for cylinder_2..5.
+    - plain/torus/mobius: 4 cardinal (cell_neighbors). Preserves existing
+      chi values for these spaces (no regressions).
+    Region growth/connectivity still uses 4-direction everywhere.
+    """
+    if space == "cylinder":
+        nbr_fn = cell_neighbors_8
+    else:
+        nbr_fn = cell_neighbors
     adj = [set() for _ in range(num_regions)]
     for r in range(rows):
         for c in range(cols):
             rid = grid[r][c]
-            for nr, nc in cell_neighbors(r, c, rows, cols, space):
+            for nr, nc in nbr_fn(r, c, rows, cols, space):
                 nid = grid[nr][nc]
                 if nid != rid:
                     adj[rid].add(nid)
@@ -644,11 +687,12 @@ def main():
     print("     plain-connected regions). Space-aware connectivity matches the")
     print("     lesson's pedagogical intent (regions are single pieces on the")
     print("     actual surface).")
-    print("  2. cylinder_2..5 chi target reduced from 5 to 4 (with maxColors")
-    print("     5). Rationale: cylinder is topologically an annulus, which")
-    print("     embeds in the plane; by the 4-color theorem chi <= 4 for any")
-    print("     cylinder map. chi=5 on a cylinder is mathematically")
-    print("     unreachable.")
+    print("  2. CYLINDER adjacency uses king-move (4 cardinal + 4 diagonal)")
+    print("     instead of pure 4-direction. Two regions are 'adjacent' if")
+    print("     they share a cell-edge OR a cell-corner. This makes the")
+    print("     adjacency graph non-planar on the cylinder, allowing chi>=5")
+    print("     for cylinder_2..5 (originally specified at chi=5).")
+    print("     Plain/torus/mobius keep pure 4-direction adjacency.")
     print("  3. plain_1 edge-density floor relaxed from 1.5*n to n. Rationale:")
     print("     bipartite planar graphs have at most 2n-4 edges, which is")
     print("     below 1.5n for small n; the original 1.5*n bound is infeasible")

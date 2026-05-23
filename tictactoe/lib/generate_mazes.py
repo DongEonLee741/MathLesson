@@ -195,7 +195,8 @@ def make_stage(key, space, size, min_wraps):
     while grid_size <= size + 20:
         for attempt in range(1000):
             walls = generate_maze(grid_size, grid_size, space)
-            start = (0, 0)
+            mid = grid_size // 2
+            start = (mid, mid)
             end = (grid_size - 1, grid_size - 1)
             ok, info = verify_maze(walls, grid_size, grid_size, space, start, end, min_wraps)
             if ok:
@@ -203,7 +204,7 @@ def make_stage(key, space, size, min_wraps):
                     "rows": grid_size,
                     "cols": grid_size,
                     "walls": walls,
-                    "start": [0, 0],
+                    "start": [mid, mid],
                     "end": [grid_size - 1, grid_size - 1],
                     "space": space,
                     "requiredWraps": min_wraps,
